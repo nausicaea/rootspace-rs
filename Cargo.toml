@@ -1,0 +1,6 @@
+[package]
+name = "rootspace-rs"
+version = "0.1.0"
+authors = ["Eleanore Young"]
+
+[dependencies]
