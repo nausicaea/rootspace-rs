@@ -9,8 +9,7 @@ use super::component_group::{ComponentTrait, ComponentGroup};
 macro_rules! impl_read {
     ($name:ident, $t:tt) => {
         pub fn $name<$t: ComponentTrait>(&self) -> Vec<&$t> {
-            self.entities
-                .values()
+            self.entities.values()
                 .filter(|g| g.has::<$t>())
                 .map(|g| g.borrow::<$t>().unwrap_or_else(|_| unreachable!()))
                 .collect()
@@ -18,8 +17,7 @@ macro_rules! impl_read {
     };
     ($name:ident, $($t:tt),*) => {
         pub fn $name<$($t: ComponentTrait),*>(&self) -> Vec<($(&$t),*)> {
-            self.entities
-                .values()
+            self.entities.values()
                 .filter(|g| $(g.has::<$t>())&&*)
                 .map(|g| ($(g.borrow::<$t>().unwrap_or_else(|_| unreachable!())),*))
                 .collect()
@@ -33,8 +31,7 @@ macro_rules! impl_read {
 macro_rules! impl_read_filtered {
     ($name:ident, $t:tt) => {
         pub fn $name<F, $t: ComponentTrait>(&self, filter: F) -> Vec<&$t> where for<'r> F: FnMut(&'r &$t) -> bool {
-            self.entities
-                .values()
+            self.entities.values()
                 .filter(|g| g.has::<$t>())
                 .map(|g| g.borrow::<$t>().unwrap_or_else(|_| unreachable!()))
                 .filter(filter)
@@ -43,8 +40,7 @@ macro_rules! impl_read_filtered {
     };
     ($name:ident, $($t:tt),*) => {
         pub fn $name<F, $($t: ComponentTrait),*>(&self, filter: F) -> Vec<($(&$t),*)> where for<'r> F: FnMut(&'r ($(&$t),*)) -> bool {
-            self.entities
-                .values()
+            self.entities.values()
                 .filter(|g| $(g.has::<$t>())&&*)
                 .map(|g| ($(g.borrow::<$t>().unwrap_or_else(|_| unreachable!())),*))
                 .filter(filter)
@@ -192,8 +188,7 @@ impl Assembly {
     impl_read_single_filtered!(rsf5, rf5, A, B, C, D, E);
     /// Provides mutable access to all instances of the specified component type.
     pub fn w1<C: ComponentTrait>(&mut self) -> Vec<&mut C> {
-        self.entities
-            .values_mut()
+        self.entities.values_mut()
             .filter(|g| g.has::<C>())
             .map(|g| g.borrow_mut::<C>().unwrap_or_else(|_| unreachable!()))
             .collect()
@@ -201,8 +196,7 @@ impl Assembly {
     /// Provides mutable access to all entities' components that match the specified type and
     /// supplied filter.
     pub fn wf1<F, C: ComponentTrait>(&mut self, filter: F) -> Vec<&mut C> where for<'r> F: FnMut(&'r &mut C) -> bool {
-        self.entities
-            .values_mut()
+        self.entities.values_mut()
             .filter(|g| g.has::<C>())
             .map(|g| g.borrow_mut::<C>().unwrap_or_else(|_| unreachable!()))
             .filter(filter)
