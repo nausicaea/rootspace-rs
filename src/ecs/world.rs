@@ -87,7 +87,7 @@ impl<E: EventTrait> World<E> {
         }
     }
     /// Sends an event to the queue.
-    fn dispatch(&mut self, event: E) {
+    pub fn dispatch(&mut self, event: E) {
         self.event_queue.push_back(event);
     }
     /// In its functioning analogous to `update` and `render`.

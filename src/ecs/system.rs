@@ -1,6 +1,7 @@
 use std::time::Duration;
 
-use super::event::EventTrait;
+use super::event::{EventFlag, EventTrait};
+use super::loop_stage::LoopStageFlag;
 use super::assembly::Assembly;
 
 /// Every system encodes behaviour and every system must supply at least one of the methods
@@ -8,10 +9,10 @@ use super::assembly::Assembly;
 pub trait SystemTrait<E: EventTrait> {
     /// Returns a bitmask that corresponds to a combination of `LoopStage`s. Based on that value,
     /// `World` will thus regularly call the other methods.
-    fn get_loop_stage_filter(&self) -> u8;
+    fn get_loop_stage_filter(&self) -> LoopStageFlag;
     /// Returns a bitmask that corresponds to a combination of events. Based on that value, `World`
     /// will call `handle_event` only with the selected events.
-    fn get_event_filter(&self) -> u64 {
+    fn get_event_filter(&self) -> EventFlag {
         unimplemented!("Did you forget to implement the get_event_filter method for your system?");
     }
     /// Processes events received by the `World`, and in turn, by the engine. May optionally return
