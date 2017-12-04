@@ -1,10 +1,7 @@
-use std::u64;
+use ecs::{EventFlag, EventTrait, WorldEvent};
 
-use ecs::{EventTrait, WorldEvent};
-
-pub const SHUTDOWN: u64 = 0b01;
-pub const IMMEDIATE_SHUTDOWN: u64 = 0b10;
-pub const ALL_EVENTS: u64 = u64::MAX;
+pub const SHUTDOWN: EventFlag = 0b01;
+pub const IMMEDIATE_SHUTDOWN: EventFlag = 0b10;
 
 #[derive(Debug, Clone)]
 pub enum Event {
@@ -13,8 +10,8 @@ pub enum Event {
 }
 
 impl EventTrait for Event {
-    fn match_filter(&self, filter: u64) -> bool {
-        let value: u64 = self.clone().into();
+    fn match_filter(&self, filter: EventFlag) -> bool {
+        let value: EventFlag = self.clone().into();
         (value & filter) > 0
     }
     fn as_world_event(&self) -> Option<WorldEvent> {
@@ -26,8 +23,8 @@ impl EventTrait for Event {
     }
 }
 
-impl From<Event> for u64 {
-    fn from(value: Event) -> u64 {
+impl From<Event> for EventFlag {
+    fn from(value: Event) -> EventFlag {
         use self::Event::*;
         match value {
             Shutdown => SHUTDOWN,

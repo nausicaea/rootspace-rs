@@ -3,6 +3,7 @@ use std::time;
 
 use ecs::World;
 use super::event::Event;
+use super::debugging::EventMonitor;
 
 pub struct Orchestrator {
     delta_time: time::Duration,
@@ -25,6 +26,11 @@ impl Orchestrator {
         self.main_loop();
     }
     fn initialize(&mut self) {
+        if self.debug {
+            self.world.add_system(EventMonitor::new());
+        }
+
+        self.world.dispatch(Event::Shutdown);
     }
     fn main_loop(&mut self) {
         let mut game_time = time::Duration::new(0, 0);
