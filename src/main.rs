@@ -6,6 +6,7 @@ extern crate log;
 extern crate fern;
 
 mod ecs;
+mod engine;
 mod game;
 
 use std::io;

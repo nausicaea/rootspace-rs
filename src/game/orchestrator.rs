@@ -2,8 +2,8 @@ use std::cmp;
 use std::time;
 
 use ecs::World;
+use engine::debugging::event_monitor::EventMonitor;
 use super::event::Event;
-use super::debugging::event_monitor::EventMonitor;
 
 pub struct Orchestrator {
     delta_time: time::Duration,
