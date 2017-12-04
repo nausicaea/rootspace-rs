@@ -9,10 +9,10 @@ use clap::{Arg, App};
 use game::Orchestrator;
 
 fn main() {
-    let matches = App::new("Rootspace")
-        .version("0.1.0")
-        .author("Eleanore Young")
-        .about("A game wrapped in uncertainty and mis(t)ery")
+    let matches = App::new(env!("CARGO_PKG_NAME"))
+        .version(env!("CARGO_PKG_VERSION"))
+        .author(env!("CARGO_PKG_AUTHORS"))
+        .about(env!("CARGO_PKG_DESCRIPTION"))
         .arg(Arg::with_name("debugging")
              .short("d")
              .long("debug")
