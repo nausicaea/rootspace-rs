@@ -1,7 +1,10 @@
+use std::u64;
+
 use ecs::{EventTrait, WorldEvent};
 
 pub const SHUTDOWN: u64 = 0b01;
 pub const IMMEDIATE_SHUTDOWN: u64 = 0b10;
+pub const ALL_EVENTS: u64 = u64::MAX;
 
 #[derive(Debug, Clone)]
 pub enum Event {
