@@ -4,3 +4,4 @@ version = "0.1.0"
 authors = ["Eleanore Young"]
 
 [dependencies]
+clap = "^2.28.0"
