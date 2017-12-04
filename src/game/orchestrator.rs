@@ -21,6 +21,12 @@ impl Orchestrator {
         }
     }
     pub fn run(&mut self) {
+        self.initialize();
+        self.main_loop();
+    }
+    fn initialize(&mut self) {
+    }
+    fn main_loop(&mut self) {
         let mut game_time = time::Duration::new(0, 0);
         let mut accumulator = time::Duration::new(0, 0);
         let mut loop_time = time::Instant::now();
