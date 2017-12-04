@@ -7,7 +7,7 @@ Rust because of its wonderful type system and the resulting guarantees.
 
 You must have a recent version of nightly rust to build the project. Ideally,
 go to [rustup.rs](https://www.rustup.rs/) and follow the instructions to obtain
-rust and cargo. Currently, the project builds and runs an all architectures
+rust and cargo. Currently, the project builds and runs on all architectures
 supported by rust itself.
 
 Then, you have to install nightly rust with
