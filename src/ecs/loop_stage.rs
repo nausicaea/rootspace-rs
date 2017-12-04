@@ -19,8 +19,7 @@ pub enum LoopStage {
 impl LoopStage {
     /// Returns `true` if the supplied bitmask filter selects the current enum variant.
     pub fn match_filter(&self, filter: LoopStageFlag) -> bool {
-        let value: LoopStageFlag = self.clone().into();
-        (value & filter) > 0
+        (LoopStageFlag::from(self.clone()) & filter) > 0
     }
 }
 

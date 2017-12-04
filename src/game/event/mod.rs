@@ -11,8 +11,7 @@ pub enum Event {
 
 impl EventTrait for Event {
     fn match_filter(&self, filter: EventFlag) -> bool {
-        let value: EventFlag = self.clone().into();
-        (value & filter) > 0
+        (EventFlag::from(self.clone()) & filter) > 0
     }
     fn as_world_event(&self) -> Option<WorldEvent> {
         use self::Event::*;
