@@ -30,7 +30,6 @@ impl<E: EventTrait> Orchestrator<E> {
     pub fn run<F>(&mut self, init: F) where F: FnOnce(&mut Orchestrator<E>) {
         init(self);
         self.world.dispatch(EcsEvent::Ready.into());
-        self.world.dispatch(EcsEvent::Shutdown.into());
         self.main_loop();
     }
     /// Runs the actual game loop. This loop uses a fixed time-step method to ensure that
