@@ -3,7 +3,7 @@ use std::time;
 
 use ecs::World;
 use super::event::Event;
-use super::debugging::EventMonitor;
+use super::debugging::event_monitor::EventMonitor;
 
 pub struct Orchestrator {
     delta_time: time::Duration,
