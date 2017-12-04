@@ -8,7 +8,9 @@
 //! latter must be linked to an `Entity` however, which must first be created by the `Assembly` (or
 //! the `World` via Deref trait).
 
-/// Returns the names of multiple types as String.
+/// Returns the names of multiple types as String. Uses `std::intrinsics::type_name` and thus
+/// requires the unstable feature `core_intrinsics` only available on rust nightly. Without this,
+/// ECS errors are practically impossible to diagnose.
 macro_rules! type_names {
     ($t:tt) => {{
         use std::intrinsics::type_name;
