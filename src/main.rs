@@ -13,8 +13,9 @@ use std::io;
 use clap::{Arg, App};
 use log::LogLevelFilter;
 use fern::Dispatch;
+use engine::orchestrator::Orchestrator;
 use engine::debugging::event_monitor::EventMonitor;
-use game::Orchestrator;
+use game::Event;
 
 fn main() {
     // Define the command line interface.
@@ -70,7 +71,7 @@ fn main() {
         .unwrap();
 
     // Create the engine instance and run it.
-    let mut orchestrator = Orchestrator::new(debugging);
+    let mut orchestrator: Orchestrator<Event> = Orchestrator::new(debugging);
     orchestrator.run(|o| {
         if o.debug {
             o.world.add_system(EventMonitor::new());

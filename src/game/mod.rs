@@ -1,4 +1,3 @@
 mod event;
-mod orchestrator;
 
-pub use self::orchestrator::Orchestrator;
+pub use self::event::Event;

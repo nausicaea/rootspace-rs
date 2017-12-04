@@ -1,18 +1,17 @@
 use std::cmp;
 use std::time;
 
-use ecs::{World, EcsEvent};
-use super::event::Event;
+use ecs::{World, EcsEvent, EventTrait};
 
-pub struct Orchestrator {
+pub struct Orchestrator<E: EventTrait> {
     pub delta_time: time::Duration,
     pub max_frame_time: time::Duration,
     pub debug: bool,
-    pub world: World<Event>,
+    pub world: World<E>,
 }
 
-impl Orchestrator {
-    pub fn new(debug: bool) -> Orchestrator {
+impl<E: EventTrait> Orchestrator<E> {
+    pub fn new(debug: bool) -> Orchestrator<E> {
         Orchestrator {
             delta_time: time::Duration::from_millis(100),
             max_frame_time: time::Duration::from_millis(250),
@@ -20,7 +19,7 @@ impl Orchestrator {
             world: World::new(),
         }
     }
-    pub fn run<F>(&mut self, init: F) where F: FnOnce(&mut Orchestrator) {
+    pub fn run<F>(&mut self, init: F) where F: FnOnce(&mut Orchestrator<E>) {
         init(self);
         self.world.dispatch(EcsEvent::Ready.into());
         self.main_loop();
