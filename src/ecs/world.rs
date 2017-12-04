@@ -15,6 +15,7 @@ pub struct World<E: EventTrait> {
     assembly: Assembly,
 }
 
+#[allow(dead_code)]
 impl<E: EventTrait> World<E> {
     /// Creates a new, empty instance of `World`.
     pub fn new() -> World<E> {

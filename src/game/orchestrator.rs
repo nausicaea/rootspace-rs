@@ -1,7 +1,7 @@
 use std::cmp;
 use std::time;
 
-use ecs::{EventTrait, World};
+use ecs::World;
 use super::event::Event;
 
 pub struct Orchestrator {
