@@ -24,7 +24,7 @@ Clone the repository with
 
     $ git clone https://github.com/nausicaea/rootspace-rs.git
 
-Then, build the project with
+Then, build the project (the release flag is optional) with
 
     $ cd rootspace-rs
     $ cargo build [--release]
