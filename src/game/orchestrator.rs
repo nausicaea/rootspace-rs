@@ -1,15 +1,14 @@
 use std::cmp;
 use std::time;
 
-use ecs::World;
-use engine::debugging::event_monitor::EventMonitor;
+use ecs::{World, EcsEvent};
 use super::event::Event;
 
 pub struct Orchestrator {
-    delta_time: time::Duration,
-    max_frame_time: time::Duration,
-    debug: bool,
-    world: World<Event>,
+    pub delta_time: time::Duration,
+    pub max_frame_time: time::Duration,
+    pub debug: bool,
+    pub world: World<Event>,
 }
 
 impl Orchestrator {
@@ -21,16 +20,10 @@ impl Orchestrator {
             world: World::new(),
         }
     }
-    pub fn run(&mut self) {
-        self.initialize();
+    pub fn run<F>(&mut self, init: F) where F: FnOnce(&mut Orchestrator) {
+        init(self);
+        self.world.dispatch(EcsEvent::Ready.into());
         self.main_loop();
-    }
-    fn initialize(&mut self) {
-        if self.debug {
-            self.world.add_system(EventMonitor::new());
-        }
-
-        self.world.dispatch(Event::Shutdown);
     }
     fn main_loop(&mut self) {
         let mut game_time = time::Duration::new(0, 0);

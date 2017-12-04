@@ -15,7 +15,6 @@ pub struct World<E: EventTrait> {
     assembly: Assembly,
 }
 
-#[allow(dead_code)]
 impl<E: EventTrait> World<E> {
     /// Creates a new, empty instance of `World`.
     pub fn new() -> World<E> {
@@ -36,7 +35,7 @@ impl<E: EventTrait> World<E> {
         for e in events.into_iter() {
             match e.as_ecs_event() {
                 Some(EcsEvent::Shutdown) => return false,
-                None => self.dispatch_immediate(e),
+                _ => self.dispatch_immediate(e),
             }
         }
 

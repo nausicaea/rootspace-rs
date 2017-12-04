@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 /// Returns the names of multiple types as String.
 macro_rules! type_names {
     ($t:tt) => {{

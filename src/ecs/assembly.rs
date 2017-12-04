@@ -114,7 +114,6 @@ pub struct Assembly {
     entities: HashMap<Entity, ComponentGroup>,
 }
 
-#[allow(dead_code)]
 impl Assembly {
     /// Creates a new, empty `Assembly`.
     pub fn new() -> Assembly {

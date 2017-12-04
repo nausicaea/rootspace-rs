@@ -14,7 +14,6 @@ pub struct ComponentGroup {
     components: HashMap<TypeId, Box<Any>>
 }
 
-#[allow(dead_code)]
 impl ComponentGroup {
     /// Creates a new, empty group.
     pub fn new() -> ComponentGroup {

@@ -13,6 +13,7 @@ use std::io;
 use clap::{Arg, App};
 use log::LogLevelFilter;
 use fern::Dispatch;
+use engine::debugging::event_monitor::EventMonitor;
 use game::Orchestrator;
 
 fn main() {
@@ -70,5 +71,9 @@ fn main() {
 
     // Create the engine instance and run it.
     let mut orchestrator = Orchestrator::new(debugging);
-    orchestrator.run();
+    orchestrator.run(|o| {
+        if o.debug {
+            o.world.add_system(EventMonitor::new());
+        }
+    });
 }
