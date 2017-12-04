@@ -6,3 +6,5 @@ authors = ["Eleanore Young"]
 
 [dependencies]
 clap = "^2.28.0"
+log = "^0.3.8"
+fern = "^0.4.3"
