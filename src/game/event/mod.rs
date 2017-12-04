@@ -18,9 +18,9 @@ impl EventTrait for Event {
     fn as_ecs_event(&self) -> Option<EcsEvent> {
         use self::Event::*;
         match *self {
-            ImmediateShutdown => Some(EcsEvent::Shutdown),
+            Shutdown => Some(EcsEvent::Shutdown),
+            ImmediateShutdown => Some(EcsEvent::ImmediateShutdown),
             Ready => Some(EcsEvent::Ready),
-            _ => None,
         }
     }
 }
@@ -28,7 +28,8 @@ impl EventTrait for Event {
 impl From<EcsEvent> for Event {
     fn from(value: EcsEvent) -> Event {
         match value {
-            EcsEvent::Shutdown => Event::ImmediateShutdown,
+            EcsEvent::ImmediateShutdown => Event::ImmediateShutdown,
+            EcsEvent::Shutdown => Event::Shutdown,
             EcsEvent::Ready => Event::Ready,
         }
     }

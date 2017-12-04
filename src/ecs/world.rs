@@ -31,15 +31,22 @@ impl<E: EventTrait> World<E> {
     /// Iterates over all queued events and dispatches them to the relevant systems.
     pub fn handle_events(&mut self) -> bool {
         let events = self.event_queue.iter().cloned().collect::<Vec<_>>();
+        self.event_queue.clear();
 
         for e in events.into_iter() {
             match e.as_ecs_event() {
-                Some(EcsEvent::Shutdown) => return false,
+                Some(EcsEvent::ImmediateShutdown) => {
+                    info!("Shutting down now! At this point, all unsaved state is lost.");
+                    return false
+                },
+                Some(EcsEvent::Shutdown) => {
+                    self.dispatch_immediate(e);
+                    self.dispatch(EcsEvent::ImmediateShutdown.into())
+                },
                 _ => self.dispatch_immediate(e),
             }
         }
 
-        self.event_queue.clear();
         true
     }
     /// Updated the current simulation of the `World`.

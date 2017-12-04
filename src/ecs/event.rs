@@ -6,6 +6,7 @@ use std::u64;
 #[derive(Debug, Clone)]
 pub enum EcsEvent {
     Shutdown,
+    ImmediateShutdown,
     Ready,
 }
 
