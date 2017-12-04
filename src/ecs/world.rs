@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 use std::ops::{Deref, DerefMut};
 use std::time::Duration;
 
-use super::event::{WorldEvent, EventTrait};
+use super::event::{EcsEvent, EventTrait};
 use super::loop_stage::LoopStage;
 use super::assembly::Assembly;
 use super::system::SystemTrait;
@@ -34,8 +34,8 @@ impl<E: EventTrait> World<E> {
         let events = self.event_queue.iter().cloned().collect::<Vec<_>>();
 
         for e in events.into_iter() {
-            match e.as_world_event() {
-                Some(WorldEvent::Shutdown) => return false,
+            match e.as_ecs_event() {
+                Some(EcsEvent::Shutdown) => return false,
                 None => self.dispatch_immediate(e),
             }
         }

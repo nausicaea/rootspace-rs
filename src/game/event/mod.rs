@@ -1,4 +1,4 @@
-use ecs::{EventFlag, EventTrait, WorldEvent};
+use ecs::{EventFlag, EventTrait, EcsEvent};
 
 pub const SHUTDOWN: EventFlag = 0b01;
 pub const IMMEDIATE_SHUTDOWN: EventFlag = 0b10;
@@ -13,10 +13,10 @@ impl EventTrait for Event {
     fn match_filter(&self, filter: EventFlag) -> bool {
         (EventFlag::from(self.clone()) & filter) > 0
     }
-    fn as_world_event(&self) -> Option<WorldEvent> {
+    fn as_ecs_event(&self) -> Option<EcsEvent> {
         use self::Event::*;
         match *self {
-            ImmediateShutdown => Some(WorldEvent::Shutdown),
+            ImmediateShutdown => Some(EcsEvent::Shutdown),
             _ => None,
         }
     }
