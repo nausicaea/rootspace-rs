@@ -1,5 +1,8 @@
 #![feature(core_intrinsics)]
 
+extern crate failure;
+#[macro_use]
+extern crate failure_derive;
 extern crate clap;
 #[macro_use]
 extern crate log;
