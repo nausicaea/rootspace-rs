@@ -13,8 +13,7 @@ use std::io;
 use clap::{Arg, App};
 use log::LogLevelFilter;
 use fern::Dispatch;
-use engine::orchestrator::Orchestrator;
-use engine::debugging::event_monitor::EventMonitor;
+use engine::{Orchestrator, EventMonitor};
 use game::Event;
 
 fn main() {
