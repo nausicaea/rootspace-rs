@@ -16,7 +16,7 @@ use std::io;
 use clap::{Arg, App};
 use log::LogLevelFilter;
 use fern::Dispatch;
-use engine::{Orchestrator, EventMonitor};
+use engine::{Orchestrator, EventMonitor, DebugConsole};
 use game::Event;
 
 fn main() {
@@ -77,6 +77,7 @@ fn main() {
     orchestrator.run(|o| {
         if o.debug {
             o.world.add_system(EventMonitor::new());
+            o.world.add_system(DebugConsole::new(io::stdin()));
         }
     });
 }
