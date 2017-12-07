@@ -18,8 +18,7 @@ use std::io;
 use clap::{Arg, App};
 use log::LogLevelFilter;
 use fern::Dispatch;
-use engine::{Orchestrator, EventMonitor, DebugConsole};
-use game::{Event, DebugShell};
+use engine::{Orchestrator, Event, EventMonitor, DebugConsole, DebugShell};
 
 fn main() {
     // Define the command line interface.
