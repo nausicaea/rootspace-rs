@@ -17,7 +17,7 @@ use clap::{Arg, App};
 use log::LogLevelFilter;
 use fern::Dispatch;
 use engine::{Orchestrator, EventMonitor, DebugConsole};
-use game::Event;
+use game::{Event, DebugShell};
 
 fn main() {
     // Define the command line interface.
@@ -78,6 +78,7 @@ fn main() {
         if o.debug {
             o.world.add_system(EventMonitor::new());
             o.world.add_system(DebugConsole::new(io::stdin()));
+            o.world.add_system(DebugShell::new());
         }
     });
 }
