@@ -1,4 +1,4 @@
-use ecs::{LoopStageFlag, EventFlag, ALL_EVENTS, HANDLE_EVENT, EventTrait, SystemTrait, Assembly};
+use ecs::{LoopStageFlag, EventFlag, ALL_EVENTS, EventTrait, SystemTrait, Assembly};
 
 /// Defines a system that logs all events on the bus to the console (log level TRACE).
 pub struct EventMonitor;
@@ -12,7 +12,7 @@ impl EventMonitor {
 
 impl<E: EventTrait> SystemTrait<E> for EventMonitor {
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
-        HANDLE_EVENT
+        LoopStageFlag::HANDLE_EVENT
     }
     fn get_event_filter(&self) -> EventFlag {
         ALL_EVENTS

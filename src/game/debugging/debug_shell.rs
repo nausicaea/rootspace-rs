@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use ecs::{EcsEvent, Assembly, EventFlag, HANDLE_EVENT, LoopStageFlag, SystemTrait};
+use ecs::{EcsEvent, Assembly, EventFlag, LoopStageFlag, SystemTrait};
 use super::super::event::{CONSOLE_COMMAND, Event};
 
 #[derive(Debug, Fail)]
@@ -71,7 +71,7 @@ impl DebugShell {
 
 impl SystemTrait<Event> for DebugShell {
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
-        HANDLE_EVENT
+        LoopStageFlag::HANDLE_EVENT
     }
     fn get_event_filter(&self) -> EventFlag {
         CONSOLE_COMMAND
