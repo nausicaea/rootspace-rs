@@ -10,24 +10,38 @@ pub enum DebugShellError {
 
 type ShellResult = Result<Option<Vec<Event>>, DebugShellError>;
 
-pub trait DebugCommand {
+/// Represents a basic shell command.
+pub trait CustomCommand {
+    /// Executes the command given a set of command line arguments. The first argument refers to
+    /// the command name.
     fn run(&self, args: &[String]) -> ShellResult;
 }
 
+/// The `DebugShell` listens for ConsoleCommand events and interprets them as commands. The shell
+/// provides both builtin commands and the ability to register custom commands through the
+/// `CustomCommand` trait.
 pub struct DebugShell {
-    registry: HashMap<String, Box<DebugCommand>>,
+    registry: HashMap<String, Box<CustomCommand>>,
 }
 
 impl DebugShell {
+    /// Creates a new, default `DebugShell`.
     pub fn new() -> DebugShell {
         DebugShell {
             registry: HashMap::new(),
         }
     }
-    pub fn add_command<C>(&mut self, name: &str, command: C) where C: DebugCommand + 'static {
+    /// Adds a custom command to the registry.
+    pub fn add_command<C>(&mut self, name: &str, command: C) where C: CustomCommand + 'static {
         self.registry.insert(name.into(), Box::new(command));
     }
-    fn interpret_command(&self, args: &[String]) -> ShellResult {
+    /// Removes a custom command from the registry.
+    pub fn remove_command(&mut self, name: &str) {
+        self.registry.remove(name);
+    }
+    /// Interprets a set of arguments as a command line (first argument specifies the command
+    /// name).
+    fn interpret(&self, args: &[String]) -> ShellResult {
         if args.len() > 0 {
             match args[0].as_str() {
                 "help" => self.help(),
@@ -41,6 +55,7 @@ impl DebugShell {
             Ok(None)
         }
     }
+    /// Displays all known commands.
     fn help(&self) -> ShellResult {
         println!("\
                  For more information on a specific command, type COMMAND-NAME --help.\
@@ -48,6 +63,7 @@ impl DebugShell {
                  \nexit\tShuts down the engine.");
         Ok(None)
     }
+    /// Sends the shutdown event to the bus to exit the engine.
     fn exit(&self) -> ShellResult {
         Ok(Some(vec![EcsEvent::Shutdown.into()]))
     }
@@ -62,10 +78,7 @@ impl SystemTrait<Event> for DebugShell {
     }
     fn handle_event(&mut self, _: &mut Assembly, event: &Event) -> Option<Vec<Event>> {
         match *event {
-            Event::ConsoleCommand(ref c) => {
-                self.interpret_command(&c)
-                    .unwrap_or_else(|e| {println!("{}", e); None})
-            },
+            Event::ConsoleCommand(ref c) => self.interpret(&c).unwrap_or_else(|e| {println!("{}", e); None}),
             _ => None,
         }
     }
