@@ -13,11 +13,15 @@ enum DebugConsoleError {
     Utf8Error(FromUtf8Error),
 }
 
+/// Describes a system that captures user input from a stream in a non-blocking fashion (via
+/// separate thread) and dispatches each entered line as a vector of command arguments to the event
+/// bus. The line splitting algorithm honours whitespace, quoted and escaped input.
 pub struct DebugConsole {
     worker_rx: Receiver<Result<String, DebugConsoleError>>,
 }
 
 impl DebugConsole {
+    /// Given an input stream (e.g. stdin), creates a new `DebugConsole`.
     pub fn new<S>(mut stream: S) -> DebugConsole where S: Read + Send + 'static {
         //let mut stream = stdin();
         let (tx, rx) = channel();
@@ -49,6 +53,7 @@ impl DebugConsole {
             worker_rx: rx,
         }
     }
+    /// Polls the worker thread for any completed input line.
     fn try_read_line(&self) -> Option<String> {
         match self.worker_rx.try_recv() {
             Ok(Ok(s)) => return Some(s),
@@ -58,6 +63,7 @@ impl DebugConsole {
         };
         None
     }
+    /// Splits a command line (String) into a vector of arguments.
     fn split_arguments(&self, arg_string: String) -> Vec<String> {
         let mut args = Vec::new();
 
