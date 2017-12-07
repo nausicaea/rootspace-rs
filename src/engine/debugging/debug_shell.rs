@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use ecs::{EcsEvent, Assembly, EventFlag, LoopStageFlag, SystemTrait};
-use super::super::event::{CONSOLE_COMMAND, Event};
+use super::super::event::{CONSOLE_COMMAND, EngineEvent};
 
 #[derive(Debug, Fail)]
 pub enum DebugShellError {
@@ -8,7 +8,7 @@ pub enum DebugShellError {
     CommandNotFound(String),
 }
 
-type ShellResult = Result<Option<Vec<Event>>, DebugShellError>;
+type ShellResult = Result<Option<Vec<EngineEvent>>, DebugShellError>;
 
 /// Represents a basic shell command.
 pub trait CustomCommand {
@@ -69,16 +69,16 @@ impl DebugShell {
     }
 }
 
-impl SystemTrait<Event> for DebugShell {
+impl SystemTrait<EngineEvent> for DebugShell {
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         LoopStageFlag::HANDLE_EVENT
     }
     fn get_event_filter(&self) -> EventFlag {
         CONSOLE_COMMAND
     }
-    fn handle_event(&mut self, _: &mut Assembly, event: &Event) -> Option<Vec<Event>> {
+    fn handle_event(&mut self, _: &mut Assembly, event: &EngineEvent) -> Option<Vec<EngineEvent>> {
         match *event {
-            Event::ConsoleCommand(ref c) => self.interpret(&c).unwrap_or_else(|e| {println!("{}", e); None}),
+            EngineEvent::ConsoleCommand(ref c) => self.interpret(&c).unwrap_or_else(|e| {println!("{}", e); None}),
             _ => None,
         }
     }

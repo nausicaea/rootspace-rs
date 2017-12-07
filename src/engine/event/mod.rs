@@ -6,19 +6,19 @@ pub const READY: EventFlag = 0b100;
 pub const CONSOLE_COMMAND: EventFlag = 0b1000;
 
 #[derive(Debug, Clone)]
-pub enum Event {
+pub enum EngineEvent {
     Shutdown,
     ImmediateShutdown,
     Ready,
     ConsoleCommand(Vec<String>),
 }
 
-impl EventTrait for Event {
+impl EventTrait for EngineEvent {
     fn match_filter(&self, filter: EventFlag) -> bool {
         (EventFlag::from(self.clone()) & filter) > 0
     }
     fn as_ecs_event(&self) -> Option<EcsEvent> {
-        use self::Event::*;
+        use self::EngineEvent::*;
         match *self {
             Shutdown => Some(EcsEvent::Shutdown),
             ImmediateShutdown => Some(EcsEvent::ImmediateShutdown),
@@ -28,20 +28,20 @@ impl EventTrait for Event {
     }
 }
 
-impl From<EcsEvent> for Event {
-    fn from(value: EcsEvent) -> Event {
+impl From<EcsEvent> for EngineEvent {
+    fn from(value: EcsEvent) -> EngineEvent {
         match value {
-            EcsEvent::ImmediateShutdown => Event::ImmediateShutdown,
-            EcsEvent::Shutdown => Event::Shutdown,
-            EcsEvent::Ready => Event::Ready,
-            EcsEvent::ConsoleCommand(c) => Event::ConsoleCommand(c),
+            EcsEvent::ImmediateShutdown => EngineEvent::ImmediateShutdown,
+            EcsEvent::Shutdown => EngineEvent::Shutdown,
+            EcsEvent::Ready => EngineEvent::Ready,
+            EcsEvent::ConsoleCommand(c) => EngineEvent::ConsoleCommand(c),
         }
     }
 }
 
-impl From<Event> for EventFlag {
-    fn from(value: Event) -> EventFlag {
-        use self::Event::*;
+impl From<EngineEvent> for EventFlag {
+    fn from(value: EngineEvent) -> EventFlag {
+        use self::EngineEvent::*;
         match value {
             Shutdown => SHUTDOWN,
             ImmediateShutdown => IMMEDIATE_SHUTDOWN,
