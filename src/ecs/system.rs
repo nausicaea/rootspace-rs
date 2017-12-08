@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use super::event::{EventFlag, EventTrait};
+use super::event::EventTrait;
 use super::loop_stage::LoopStageFlag;
 use super::assembly::Assembly;
 
@@ -12,7 +12,7 @@ pub trait SystemTrait<E: EventTrait> {
     fn get_loop_stage_filter(&self) -> LoopStageFlag;
     /// Returns a bitmask that corresponds to a combination of events. Based on that value, `World`
     /// will call `handle_event` only with the selected events.
-    fn get_event_filter(&self) -> EventFlag {
+    fn get_event_filter(&self) -> E::EventFlag {
         unimplemented!("Did you forget to implement the get_event_filter method for your system?");
     }
     /// Processes events received by the `World`, and in turn, by the engine. May optionally return

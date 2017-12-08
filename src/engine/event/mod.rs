@@ -1,9 +1,15 @@
-use ecs::{EventFlag, EventTrait, EcsEvent};
+use std::u64;
+use ecs::{EventTrait, EcsEvent};
 
-pub const SHUTDOWN: EventFlag = 0b1;
-pub const IMMEDIATE_SHUTDOWN: EventFlag = 0b10;
-pub const READY: EventFlag = 0b100;
-pub const CONSOLE_COMMAND: EventFlag = 0b1000;
+bitflags! {
+    pub struct EngineEventFlag: u64 {
+        const SHUTDOWN = 0b1;
+        const IMMEDIATE_SHUTDOWN = 0b10;
+        const READY = 0b100;
+        const CONSOLE_COMMAND = 0b1000;
+        const ALL_EVENTS = u64::MAX;
+    }
+}
 
 #[derive(Debug, Clone)]
 pub enum EngineEvent {
@@ -14,8 +20,9 @@ pub enum EngineEvent {
 }
 
 impl EventTrait for EngineEvent {
-    fn match_filter(&self, filter: EventFlag) -> bool {
-        (EventFlag::from(self.clone()) & filter) > 0
+    type EventFlag = EngineEventFlag;
+    fn match_filter(&self, filter: EngineEventFlag) -> bool {
+        filter.contains(EngineEventFlag::from(self.clone()))
     }
     fn as_ecs_event(&self) -> Option<EcsEvent> {
         use self::EngineEvent::*;
@@ -38,14 +45,14 @@ impl From<EcsEvent> for EngineEvent {
     }
 }
 
-impl From<EngineEvent> for EventFlag {
-    fn from(value: EngineEvent) -> EventFlag {
+impl From<EngineEvent> for EngineEventFlag {
+    fn from(value: EngineEvent) -> EngineEventFlag {
         use self::EngineEvent::*;
         match value {
-            Shutdown => SHUTDOWN,
-            ImmediateShutdown => IMMEDIATE_SHUTDOWN,
-            Ready => READY,
-            ConsoleCommand(_) => CONSOLE_COMMAND,
+            Shutdown => EngineEventFlag::SHUTDOWN,
+            ImmediateShutdown => EngineEventFlag::IMMEDIATE_SHUTDOWN,
+            Ready => EngineEventFlag::READY,
+            ConsoleCommand(_) => EngineEventFlag::CONSOLE_COMMAND,
         }
     }
 }

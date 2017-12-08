@@ -34,7 +34,7 @@ mod assembly;
 mod world;
 
 pub use self::error::EcsError;
-pub use self::event::{ALL_EVENTS, EventFlag, EcsEvent, EventTrait};
+pub use self::event::{EcsEvent, EventTrait};
 pub use self::loop_stage::{LoopStageFlag, LoopStage};
 pub use self::entity::Entity;
 pub use self::system::SystemTrait;

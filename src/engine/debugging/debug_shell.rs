@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use ecs::{EcsEvent, Assembly, EventFlag, LoopStageFlag, SystemTrait};
-use super::super::event::{CONSOLE_COMMAND, EngineEvent};
+use ecs::{EcsEvent, Assembly, LoopStageFlag, SystemTrait};
+use super::super::event::{EngineEventFlag, EngineEvent};
 
 #[derive(Debug, Fail)]
 pub enum DebugShellError {
@@ -73,8 +73,8 @@ impl SystemTrait<EngineEvent> for DebugShell {
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         LoopStageFlag::HANDLE_EVENT
     }
-    fn get_event_filter(&self) -> EventFlag {
-        CONSOLE_COMMAND
+    fn get_event_filter(&self) -> EngineEventFlag {
+        EngineEventFlag::CONSOLE_COMMAND
     }
     fn handle_event(&mut self, _: &mut Assembly, event: &EngineEvent) -> Option<Vec<EngineEvent>> {
         match *event {
