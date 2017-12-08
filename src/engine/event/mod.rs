@@ -23,7 +23,7 @@ impl EventTrait for EngineEvent {
             Shutdown => Some(EcsEvent::Shutdown),
             ImmediateShutdown => Some(EcsEvent::ImmediateShutdown),
             Ready => Some(EcsEvent::Ready),
-            ConsoleCommand(ref c) => Some(EcsEvent::ConsoleCommand(c.clone())),
+            ConsoleCommand(_) => None,
         }
     }
 }
@@ -34,7 +34,6 @@ impl From<EcsEvent> for EngineEvent {
             EcsEvent::ImmediateShutdown => EngineEvent::ImmediateShutdown,
             EcsEvent::Shutdown => EngineEvent::Shutdown,
             EcsEvent::Ready => EngineEvent::Ready,
-            EcsEvent::ConsoleCommand(c) => EngineEvent::ConsoleCommand(c),
         }
     }
 }

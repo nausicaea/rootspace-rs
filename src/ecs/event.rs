@@ -8,7 +8,6 @@ pub enum EcsEvent {
     Shutdown,
     ImmediateShutdown,
     Ready,
-    ConsoleCommand(Vec<String>),
 }
 
 pub type EventFlag = u64;

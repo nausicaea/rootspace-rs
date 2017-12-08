@@ -3,7 +3,8 @@ use std::string::FromUtf8Error;
 use std::sync::mpsc::{channel, Receiver, TryRecvError};
 use std::time::Duration;
 use std::thread::spawn;
-use ecs::{LoopStageFlag, EcsEvent, EventTrait, SystemTrait, Assembly};
+use ecs::{LoopStageFlag, SystemTrait, Assembly};
+use super::super::event::EngineEvent;
 
 #[derive(Debug, Fail)]
 enum DebugConsoleError {
@@ -129,13 +130,13 @@ impl DebugConsole {
     }
 }
 
-impl<E: EventTrait> SystemTrait<E> for DebugConsole {
+impl SystemTrait<EngineEvent> for DebugConsole {
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         LoopStageFlag::UPDATE
     }
-    fn update(&mut self, _: &mut Assembly, _: &Duration, _: &Duration) -> Option<(Vec<E>, Vec<E>)> {
+    fn update(&mut self, _: &mut Assembly, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {
         self.try_read_line()
             .map(|s| self.split_arguments(s))
-            .map(|c| (Vec::new(), vec![EcsEvent::ConsoleCommand(c).into()]))
+            .map(|c| (Vec::new(), vec![EngineEvent::ConsoleCommand(c)]))
     }
 }
