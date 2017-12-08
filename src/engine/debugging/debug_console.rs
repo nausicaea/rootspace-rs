@@ -8,10 +8,10 @@ use super::super::event::EngineEvent;
 
 #[derive(Debug, Fail)]
 enum DebugConsoleError {
-    #[fail(display = "IoError: {}", _0)]
-    IoError(Error),
-    #[fail(display = "Utf8Error: {}", _0)]
-    Utf8Error(FromUtf8Error),
+    #[fail(display = "{}", _0)]
+    IoError(#[cause] Error),
+    #[fail(display = "{}", _0)]
+    Utf8Error(#[cause] FromUtf8Error),
 }
 
 /// Describes a system that captures user input from a stream in a non-blocking fashion (via
