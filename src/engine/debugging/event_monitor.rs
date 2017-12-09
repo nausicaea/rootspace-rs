@@ -18,7 +18,7 @@ impl SystemTrait<EngineEvent> for EventMonitor {
     fn get_event_filter(&self) -> EngineEventFlag {
         EngineEventFlag::ALL_EVENTS
     }
-    fn handle_event(&mut self, _: &mut Assembly, event: &EngineEvent) -> Option<Vec<EngineEvent>> {
+    fn handle_event(&mut self, _: &mut Assembly, event: &EngineEvent) -> Option<EngineEvent> {
         trace!("Received event '{:?}'", event);
         None
     }

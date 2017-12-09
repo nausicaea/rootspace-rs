@@ -80,8 +80,8 @@ impl<E: EventTrait> World<E> {
         for system in self.systems.iter_mut() {
             if LoopStage::Render.match_filter(system.get_loop_stage_filter()) {
                 match system.render(&mut self.assembly, time, delta_time) {
-                    Some(mut e) => {
-                        events.append(&mut e);
+                    Some(e) => {
+                        events.push(e);
                     },
                     None => (),
                 }
@@ -104,8 +104,8 @@ impl<E: EventTrait> World<E> {
             if LoopStage::HandleEvent.match_filter(system.get_loop_stage_filter()) {
                 if event.match_filter(system.get_event_filter()) {
                     match system.handle_event(&mut self.assembly, &event) {
-                        Some(mut e) => {
-                            events.append(&mut e);
+                        Some(e) => {
+                            events.push(e);
                         },
                         None => (),
                     }

@@ -8,7 +8,7 @@ pub enum DebugShellError {
     CommandNotFound(String),
 }
 
-type ShellResult = Result<Option<Vec<EngineEvent>>, DebugShellError>;
+type ShellResult = Result<Option<EngineEvent>, DebugShellError>;
 
 /// Represents a basic shell command.
 pub trait CustomCommand {
@@ -65,7 +65,7 @@ impl DebugShell {
     }
     /// Sends the shutdown event to the bus to exit the engine.
     fn exit(&self) -> ShellResult {
-        Ok(Some(vec![EcsEvent::Shutdown.into()]))
+        Ok(Some(EcsEvent::Shutdown.into()))
     }
 }
 
@@ -76,7 +76,7 @@ impl SystemTrait<EngineEvent> for DebugShell {
     fn get_event_filter(&self) -> EngineEventFlag {
         EngineEventFlag::CONSOLE_COMMAND
     }
-    fn handle_event(&mut self, _: &mut Assembly, event: &EngineEvent) -> Option<Vec<EngineEvent>> {
+    fn handle_event(&mut self, _: &mut Assembly, event: &EngineEvent) -> Option<EngineEvent> {
         match *event {
             EngineEvent::ConsoleCommand(ref c) => self.interpret(&c).unwrap_or_else(|e| {println!("{}", e); None}),
             _ => None,

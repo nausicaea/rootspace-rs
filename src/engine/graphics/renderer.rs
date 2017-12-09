@@ -56,9 +56,9 @@ impl SystemTrait<EngineEvent> for Renderer {
     fn get_event_filter(&self) -> EngineEventFlag {
         EngineEventFlag::READY
     }
-    fn handle_event(&mut self, _: &mut Assembly, event: &EngineEvent) -> Option<Vec<EngineEvent>> {
+    fn handle_event(&mut self, _: &mut Assembly, event: &EngineEvent) -> Option<EngineEvent> {
         match *event {
-            EngineEvent::Ready => Some(vec![EngineEvent::RendererReady]),
+            EngineEvent::Ready => Some(EngineEvent::RendererReady),
             _ => None,
         }
     }
@@ -82,7 +82,7 @@ impl SystemTrait<EngineEvent> for Renderer {
             None
         }
     }
-    fn render(&mut self, _: &mut Assembly, _: &Duration, _: &Duration) -> Option<Vec<EngineEvent>> {
+    fn render(&mut self, _: &mut Assembly, _: &Duration, _: &Duration) -> Option<EngineEvent> {
         let mut target = self.display.draw();
         target.clear_color_and_depth(self.clear_color, 1.0);
 

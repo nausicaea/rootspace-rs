@@ -16,8 +16,8 @@ pub trait SystemTrait<E: EventTrait> {
         unimplemented!("Did you forget to implement the get_event_filter method for your system?");
     }
     /// Processes events received by the `World`, and in turn, by the engine. May optionally return
-    /// a vector of events that will be handled in the next main loop iteration.
-    fn handle_event(&mut self, _entities: &mut Assembly, _event: &E) -> Option<Vec<E>> {
+    /// an event that will be handled in the next main loop iteration.
+    fn handle_event(&mut self, _entities: &mut Assembly, _event: &E) -> Option<E> {
         unimplemented!("Did you forget to implement the handle_event method for your system?");
     }
     /// Updates the game simulation. May optionally return two vectors of events; the first of
@@ -26,9 +26,9 @@ pub trait SystemTrait<E: EventTrait> {
     fn update(&mut self, _entities: &mut Assembly, _time: &Duration, _delta_time: &Duration) -> Option<(Vec<E>, Vec<E>)> {
         unimplemented!("Did you forget to implement the update method for your system?");
     }
-    /// Renders the `World` state. May optionally return a vector of events that will be handled in
+    /// Renders the `World` state. May optionally return an event that will be handled in
     /// the next main loop iteration.
-    fn render(&mut self, _entities: &mut Assembly, _time: &Duration, _delta_time: &Duration) -> Option<Vec<E>> {
+    fn render(&mut self, _entities: &mut Assembly, _time: &Duration, _delta_time: &Duration) -> Option<E> {
         unimplemented!("Did you forget to implement the render method for your system?");
     }
 }
