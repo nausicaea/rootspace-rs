@@ -9,6 +9,7 @@ extern crate clap;
 #[macro_use]
 extern crate log;
 extern crate fern;
+extern crate glium;
 
 mod ecs;
 mod engine;
@@ -18,7 +19,7 @@ use std::io;
 use clap::{Arg, App};
 use log::LogLevelFilter;
 use fern::Dispatch;
-use engine::{Orchestrator, EngineEvent, EventMonitor, DebugConsole, DebugShell};
+use engine::{Orchestrator, EngineEvent, EventMonitor, DebugConsole, DebugShell, Renderer};
 
 fn main() {
     // Define the command line interface.
@@ -73,13 +74,24 @@ fn main() {
         .apply()
         .unwrap();
 
+    // The following variables set up the state of the engine.
+    let title = String::from("Rootspace");
+    let dimensions = [1024, 768];
+    let vsync = true;
+    let msaa = 4;
+    let clear_color = [0.1, 0.15, 0.3, 1.0];
+
     // Create the engine instance and run it.
     let mut orchestrator: Orchestrator<EngineEvent> = Orchestrator::new(debugging);
     orchestrator.run(|o| {
+        let renderer = Renderer::new(&title, &dimensions, vsync, msaa, &clear_color)
+            .unwrap();
+
         if o.debug {
             o.world.add_system(EventMonitor::new());
             o.world.add_system(DebugConsole::new(io::stdin()));
             o.world.add_system(DebugShell::new());
         }
+        o.world.add_system(renderer);
     });
 }
