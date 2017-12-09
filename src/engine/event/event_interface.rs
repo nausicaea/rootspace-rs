@@ -29,6 +29,7 @@ impl SystemTrait<EngineEvent> for EventInterface {
                     WindowEvent::Closed => d.push(EngineEvent::Shutdown),
                     _ => (),
                 },
+                Event::Suspended(v) => d.push(EngineEvent::Suspend(v)),
                 _ => (),
             }
         });

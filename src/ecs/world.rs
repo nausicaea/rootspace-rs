@@ -13,6 +13,7 @@ pub struct World<E: EventTrait> {
     event_queue: VecDeque<E>,
     systems: Vec<Box<SystemTrait<E>>>,
     assembly: Assembly,
+    rendering_suspended: bool,
 }
 
 impl<E: EventTrait> World<E> {
@@ -22,6 +23,7 @@ impl<E: EventTrait> World<E> {
             event_queue: VecDeque::new(),
             systems: Vec::new(),
             assembly: Assembly::new(),
+            rendering_suspended: false,
         }
     }
     /// Adds a new system to the `World`.
@@ -43,6 +45,7 @@ impl<E: EventTrait> World<E> {
                     self.dispatch_immediate(e);
                     self.dispatch(EcsEvent::ImmediateShutdown.into())
                 },
+                Some(EcsEvent::Suspend(v)) => self.rendering_suspended = v,
                 _ => self.dispatch_immediate(e),
             }
         }
@@ -75,21 +78,23 @@ impl<E: EventTrait> World<E> {
     }
     /// Renders the current state of the `World`.
     pub fn render(&mut self, time: &Duration, delta_time: &Duration) {
-        let mut events = Vec::new();
+        if !self.rendering_suspended {
+            let mut events = Vec::new();
 
-        for system in self.systems.iter_mut() {
-            if LoopStage::Render.match_filter(system.get_loop_stage_filter()) {
-                match system.render(&mut self.assembly, time, delta_time) {
-                    Some(e) => {
-                        events.push(e);
-                    },
-                    None => (),
+            for system in self.systems.iter_mut() {
+                if LoopStage::Render.match_filter(system.get_loop_stage_filter()) {
+                    match system.render(&mut self.assembly, time, delta_time) {
+                        Some(e) => {
+                            events.push(e);
+                        },
+                        None => (),
+                    }
                 }
             }
-        }
 
-        for e in events.into_iter() {
-            self.dispatch(e);
+            for e in events.into_iter() {
+                self.dispatch(e);
+            }
         }
     }
     /// Sends an event to the queue.

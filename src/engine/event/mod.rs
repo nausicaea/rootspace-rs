@@ -5,11 +5,12 @@ use ecs::{EventTrait, EcsEvent};
 
 bitflags! {
     pub struct EngineEventFlag: u64 {
-        const SHUTDOWN = 0b1;
-        const IMMEDIATE_SHUTDOWN = 0b10;
-        const READY = 0b100;
-        const CONSOLE_COMMAND = 0b1000;
-        const RENDERER_READY = 0b10000;
+        const SHUTDOWN = 0x01;
+        const IMMEDIATE_SHUTDOWN = 0x02;
+        const READY = 0x04;
+        const CONSOLE_COMMAND = 0x08;
+        const RENDERER_READY = 0x10;
+        const SUSPEND = 0x20;
         const ALL_EVENTS = u64::MAX;
     }
 }
@@ -19,6 +20,7 @@ pub enum EngineEvent {
     Shutdown,
     ImmediateShutdown,
     Ready,
+    Suspend(bool),
     RendererReady,
     ConsoleCommand(Vec<String>),
 }
@@ -34,6 +36,7 @@ impl EventTrait for EngineEvent {
             Shutdown => Some(EcsEvent::Shutdown),
             ImmediateShutdown => Some(EcsEvent::ImmediateShutdown),
             Ready => Some(EcsEvent::Ready),
+            Suspend(v) => Some(EcsEvent::Suspend(v)),
             RendererReady => None,
             ConsoleCommand(_) => None,
         }
@@ -46,6 +49,7 @@ impl From<EcsEvent> for EngineEvent {
             EcsEvent::ImmediateShutdown => EngineEvent::ImmediateShutdown,
             EcsEvent::Shutdown => EngineEvent::Shutdown,
             EcsEvent::Ready => EngineEvent::Ready,
+            EcsEvent::Suspend(v) => EngineEvent::Suspend(v),
         }
     }
 }
@@ -57,6 +61,7 @@ impl From<EngineEvent> for EngineEventFlag {
             Shutdown => EngineEventFlag::SHUTDOWN,
             ImmediateShutdown => EngineEventFlag::IMMEDIATE_SHUTDOWN,
             Ready => EngineEventFlag::READY,
+            Suspend(_) => EngineEventFlag::SUSPEND,
             RendererReady => EngineEventFlag::RENDERER_READY,
             ConsoleCommand(_) => EngineEventFlag::CONSOLE_COMMAND,
         }
