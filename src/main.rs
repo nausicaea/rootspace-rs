@@ -19,7 +19,7 @@ use std::io;
 use clap::{Arg, App};
 use log::LogLevelFilter;
 use fern::Dispatch;
-use engine::{Orchestrator, EngineEvent, EventMonitor, DebugConsole, DebugShell, Renderer};
+use engine::{Orchestrator, EngineEvent, EventMonitor, DebugConsole, DebugShell, Renderer, EventInterface};
 
 fn main() {
     // Define the command line interface.
@@ -84,7 +84,8 @@ fn main() {
     // Create the engine instance and run it.
     let mut orchestrator: Orchestrator<EngineEvent> = Orchestrator::new(debugging);
     orchestrator.run(|o| {
-        let renderer = Renderer::new(&title, &dimensions, vsync, msaa, &clear_color)
+        let event_interface = EventInterface::new();
+        let renderer = Renderer::new(&event_interface.events_loop, &title, &dimensions, vsync, msaa, &clear_color)
             .unwrap();
 
         if o.debug {
@@ -93,5 +94,6 @@ fn main() {
             o.world.add_system(DebugShell::new());
         }
         o.world.add_system(renderer);
+        o.world.add_system(event_interface);
     });
 }

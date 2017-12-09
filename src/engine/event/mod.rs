@@ -1,3 +1,5 @@
+pub mod event_interface;
+
 use std::u64;
 use ecs::{EventTrait, EcsEvent};
 
