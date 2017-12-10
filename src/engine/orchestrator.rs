@@ -1,14 +1,17 @@
 use std::cmp;
-use std::time;
+use std::path::{PathBuf, Path};
+use std::time::{Instant, Duration};
 
 use ecs::{World, EcsEvent, EventTrait};
 
 /// The `Orchestrator` owns the `World` and manages time (and the game loop).
 pub struct Orchestrator<E: EventTrait> {
+    /// Specifies the path to the resource tree.
+    pub resource_path: PathBuf,
     /// Specifies the fixed time interval of the simulation.
-    pub delta_time: time::Duration,
+    pub delta_time: Duration,
     /// Specifies the maximum duration of a single frame.
-    pub max_frame_time: time::Duration,
+    pub max_frame_time: Duration,
     /// If `true`, activate debugging functionality.
     pub debug: bool,
     /// Holds an instance of the `World`.
@@ -17,10 +20,11 @@ pub struct Orchestrator<E: EventTrait> {
 
 impl<E: EventTrait> Orchestrator<E> {
     /// Creates a new instance of the `Orchestrator`.
-    pub fn new(debug: bool) -> Self {
+    pub fn new(rp: &Path, delta_time: Duration, max_frame_time: Duration, debug: bool) -> Self {
         Orchestrator {
-            delta_time: time::Duration::from_millis(100),
-            max_frame_time: time::Duration::from_millis(250),
+            resource_path: rp.to_owned(),
+            delta_time: Duration::from_millis(100),
+            max_frame_time: Duration::from_millis(250),
             debug: debug,
             world: World::new(),
         }
@@ -37,14 +41,14 @@ impl<E: EventTrait> Orchestrator<E> {
     /// the loop then issues calls to `World::render` and `World::handle_events`. The return value
     /// of `World::handle_events` is used to terminate the loop.
     fn main_loop(&mut self) {
-        let mut game_time = time::Duration::new(0, 0);
-        let mut accumulator = time::Duration::new(0, 0);
-        let mut loop_time = time::Instant::now();
+        let mut game_time = Duration::new(0, 0);
+        let mut accumulator = Duration::new(0, 0);
+        let mut loop_time = Instant::now();
 
         let mut running = true;
         while running {
             let frame_time = cmp::min(loop_time.elapsed(), self.max_frame_time);
-            loop_time = time::Instant::now();
+            loop_time = Instant::now();
             accumulator += frame_time;
 
             while accumulator >= self.delta_time {
