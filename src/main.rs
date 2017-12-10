@@ -19,6 +19,7 @@ mod engine;
 mod game;
 
 use std::io;
+use std::path::PathBuf;
 use clap::{Arg, App};
 use log::LogLevelFilter;
 use fern::Dispatch;
@@ -49,6 +50,9 @@ fn main() {
     let debugging = matches.is_present("debugging");
     let verbosity = matches.occurrences_of("verbosity");
     let quiet = matches.is_present("quiet");
+    let resource_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("resources")
+        .join("rootspace");
 
     // Configure the logging system.
     let log_level_filter = if quiet {
@@ -76,5 +80,5 @@ fn main() {
         .apply()
         .unwrap();
 
-    game::run(debugging);
+    game::run(&resource_path, debugging);
 }
