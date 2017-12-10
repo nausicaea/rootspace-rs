@@ -27,6 +27,7 @@ impl SystemTrait<EngineEvent> for EventInterface {
             match ge {
                 Event::WindowEvent {window_id: _, event: we} => match we {
                     WindowEvent::Closed => d.push(EngineEvent::Shutdown),
+                    WindowEvent::Resized(w, h) => d.push(EngineEvent::ResizeWindow(w, h)),
                     _ => (),
                 },
                 Event::Suspended(v) => d.push(EngineEvent::Suspend(v)),

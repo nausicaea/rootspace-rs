@@ -11,6 +11,7 @@ bitflags! {
         const CONSOLE_COMMAND = 0x08;
         const RENDERER_READY = 0x10;
         const SUSPEND = 0x20;
+        const RESIZE_WINDOW = 0x40;
         const ALL_EVENTS = u64::MAX;
     }
 }
@@ -23,6 +24,7 @@ pub enum EngineEvent {
     Suspend(bool),
     RendererReady,
     ConsoleCommand(Vec<String>),
+    ResizeWindow(u32, u32),
 }
 
 impl EventTrait for EngineEvent {
@@ -39,6 +41,7 @@ impl EventTrait for EngineEvent {
             Suspend(v) => Some(EcsEvent::Suspend(v)),
             RendererReady => None,
             ConsoleCommand(_) => None,
+            ResizeWindow(..) => None,
         }
     }
 }
@@ -64,6 +67,7 @@ impl From<EngineEvent> for EngineEventFlag {
             Suspend(_) => EngineEventFlag::SUSPEND,
             RendererReady => EngineEventFlag::RENDERER_READY,
             ConsoleCommand(_) => EngineEventFlag::CONSOLE_COMMAND,
+            ResizeWindow(..) => EngineEventFlag::RESIZE_WINDOW,
         }
     }
 }
