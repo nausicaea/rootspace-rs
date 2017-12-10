@@ -17,4 +17,6 @@ pub use self::geometry::projection::Projection;
 pub use self::geometry::view::View;
 pub use self::geometry::model::Model;
 pub use self::graphics::renderer::Renderer;
+pub use self::graphics::mesh::Mesh;
+pub use self::graphics::material::Material;
 pub use self::orchestrator::Orchestrator;

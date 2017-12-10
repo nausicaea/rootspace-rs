@@ -12,6 +12,7 @@ extern crate fern;
 #[macro_use]
 extern crate glium;
 extern crate nalgebra;
+extern crate image;
 
 mod ecs;
 mod engine;
