@@ -1,3 +1,5 @@
+pub type Float = f32;
+
 mod event;
 mod debugging;
 mod geometry;

@@ -1,11 +1,10 @@
 use std::io;
 use nalgebra::{Point3, Vector3};
-use engine::{Orchestrator, EngineEvent, EventMonitor, DebugConsole, DebugShell, Renderer,
+use engine::{Float, Orchestrator, EngineEvent, EventMonitor, DebugConsole, DebugShell, Renderer,
     EventInterface, Projection, View, Description};
 
 pub fn run(debugging: bool) {
     // The following variables set up the state of the engine.
-    type Float = f32;
     let title = String::from("Rootspace");
     let dimensions = [1024, 768];
     let vsync = true;
@@ -38,13 +37,10 @@ pub fn run(debugging: bool) {
         // Add entities to the world.
         {
             let camera = o.world.create_entity();
-            let d = Description::new("camera");
-            let p: Projection<Float> = Projection::new(aspect, fov_y, z_near, z_far);
-            let v: View<Float> = View::new(&eye, &target, &up);
 
-            o.world.add_component(&camera, d).unwrap();
-            o.world.add_component(&camera, p).unwrap();
-            o.world.add_component(&camera, v).unwrap();
+            o.world.add_component(&camera, Description::new("camera")).unwrap();
+            o.world.add_component(&camera, Projection::new(aspect, fov_y, z_near, z_far)).unwrap();
+            o.world.add_component(&camera, View::new(&eye, &target, &up)).unwrap();
         }
     });
 }

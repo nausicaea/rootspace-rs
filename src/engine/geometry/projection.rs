@@ -1,31 +1,32 @@
 use std::ops::{Deref, DerefMut};
-use nalgebra::{Scalar, Real, Perspective3};
+use nalgebra::Perspective3;
 use ecs::ComponentTrait;
+use super::super::Float;
 
-pub struct Projection<N: Scalar + Real> {
-    inner: Perspective3<N>,
+pub struct Projection {
+    inner: Perspective3<Float>,
 }
 
-impl<N: Scalar + Real> Projection<N> {
-    pub fn new(aspect: N, fov_y: N, z_near: N, z_far: N) -> Projection<N> {
+impl Projection {
+    pub fn new(aspect: Float, fov_y: Float, z_near: Float, z_far: Float) -> Self {
         Projection {
             inner: Perspective3::new(aspect, fov_y, z_near, z_far)
         }
     }
 }
 
-impl<N: Scalar + Real> Deref for Projection<N> {
-    type Target = Perspective3<N>;
+impl Deref for Projection {
+    type Target = Perspective3<Float>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner
     }
 }
 
-impl<N: Scalar + Real> DerefMut for Projection<N> {
+impl DerefMut for Projection {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.inner
     }
 }
 
-impl<N: Scalar + Real> ComponentTrait for Projection<N> {}
+impl ComponentTrait for Projection {}
