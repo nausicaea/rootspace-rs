@@ -14,5 +14,6 @@ pub use self::debugging::debug_shell::DebugShell;
 pub use self::debugging::description::Description;
 pub use self::geometry::projection::Projection;
 pub use self::geometry::view::View;
+pub use self::geometry::model::Model;
 pub use self::graphics::renderer::Renderer;
 pub use self::orchestrator::Orchestrator;

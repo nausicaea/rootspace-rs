@@ -3,11 +3,13 @@ use nalgebra::{Isometry3, Vector3, Point3};
 use ecs::ComponentTrait;
 use super::super::Float;
 
+/// Provides an abstraction for the view matrix (used to make a camera).
 pub struct View {
     inner: Isometry3<Float>,
 }
 
 impl View {
+    /// Given a position, a target and an up direction, create a new instance of `View`.
     pub fn new(eye: &Point3<Float>, target: &Point3<Float>, up: &Vector3<Float>) -> Self {
         View {
             inner: Isometry3::look_at_rh(eye, target, up),
