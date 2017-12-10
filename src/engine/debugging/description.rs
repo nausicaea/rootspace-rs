@@ -5,7 +5,7 @@ pub struct Description {
 }
 
 impl Description {
-    pub fn new(name: &str) -> Description {
+    pub fn new(name: &str) -> Self {
         Description {
             name: name.into(),
         }

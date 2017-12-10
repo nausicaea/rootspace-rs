@@ -18,7 +18,7 @@ pub struct World<E: EventTrait> {
 
 impl<E: EventTrait> World<E> {
     /// Creates a new, empty instance of `World`.
-    pub fn new() -> World<E> {
+    pub fn new() -> Self {
         World {
             event_queue: VecDeque::new(),
             systems: Vec::new(),

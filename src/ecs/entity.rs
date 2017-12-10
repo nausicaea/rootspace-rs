@@ -7,7 +7,7 @@ pub struct Entity(u64);
 
 impl Entity {
     /// Creates a new, initial `Entity`.
-    pub fn new() -> Entity {
+    pub fn new() -> Self {
         Entity(0)
     }
     /// Increments the internal ID.

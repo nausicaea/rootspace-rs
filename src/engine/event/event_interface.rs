@@ -3,12 +3,16 @@ use glium::glutin::{Event, WindowEvent, EventsLoop};
 use ecs::{SystemTrait, LoopStageFlag, Assembly};
 use super::EngineEvent;
 
+/// The task of the `EventInterface` is to regularly poll for events from the operating system and
+/// graphical backend. Any events of interest are then sent off to the event bus of `World`.
 pub struct EventInterface {
+    /// Provides access to the `EventsLoop`.
     pub events_loop: EventsLoop,
 }
 
 impl EventInterface {
-    pub fn new() -> EventInterface {
+    /// Creates a new `EventInterface` instance.
+    pub fn new() -> Self {
         EventInterface {
             events_loop: EventsLoop::new(),
         }

@@ -17,7 +17,7 @@ pub struct Orchestrator<E: EventTrait> {
 
 impl<E: EventTrait> Orchestrator<E> {
     /// Creates a new instance of the `Orchestrator`.
-    pub fn new(debug: bool) -> Orchestrator<E> {
+    pub fn new(debug: bool) -> Self {
         Orchestrator {
             delta_time: time::Duration::from_millis(100),
             max_frame_time: time::Duration::from_millis(250),

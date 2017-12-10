@@ -6,7 +6,7 @@ pub struct EventMonitor;
 
 impl EventMonitor {
     /// Creates a new `EventMonitor` instance.
-    pub fn new() -> EventMonitor {
+    pub fn new() -> Self {
         EventMonitor {}
     }
 }

@@ -112,7 +112,7 @@ pub struct Assembly {
 
 impl Assembly {
     /// Creates a new, empty `Assembly`.
-    pub fn new() -> Assembly {
+    pub fn new() -> Self {
         Assembly {
             base_entity: Entity::new(),
             entities: HashMap::new(),

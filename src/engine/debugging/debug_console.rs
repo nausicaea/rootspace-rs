@@ -23,7 +23,7 @@ pub struct DebugConsole {
 
 impl DebugConsole {
     /// Given an input stream (e.g. stdin), creates a new `DebugConsole`.
-    pub fn new<S>(mut stream: S) -> DebugConsole where S: Read + Send + 'static {
+    pub fn new<S>(mut stream: S) -> Self where S: Read + Send + 'static {
         //let mut stream = stdin();
         let (tx, rx) = channel();
 

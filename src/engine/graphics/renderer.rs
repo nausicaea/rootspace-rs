@@ -4,6 +4,8 @@ use glium::backend::glutin::DisplayCreationError;
 use glium::glutin::{Api, GlRequest, GlProfile, EventsLoop, WindowBuilder, ContextBuilder};
 use ecs::{LoopStageFlag, SystemTrait, Assembly};
 use super::super::event::{EngineEventFlag, EngineEvent};
+use super::super::geometry::projection::Projection;
+use super::super::geometry::view::View;
 
 #[derive(Debug)]
 pub enum RendererError {
@@ -16,14 +18,18 @@ impl From<DisplayCreationError> for RendererError {
     }
 }
 
+/// The `Renderer`'s task is to manage the graphical display and render entities as well as the
+/// user interface.
 pub struct Renderer {
+    /// Provides access to the `Display`.
     pub display: Display,
     ready: bool,
     clear_color: (f32, f32, f32, f32),
 }
 
 impl Renderer {
-    pub fn new(events_loop: &EventsLoop, title: &str, dimensions: &[u32; 2], vsync: bool, msaa: u16, clear_color: &[f32; 4]) -> Result<Renderer, RendererError> {
+    /// Creates a new instance of `Renderer`.
+    pub fn new(events_loop: &EventsLoop, title: &str, dimensions: &[u32; 2], vsync: bool, msaa: u16, clear_color: &[f32; 4]) -> Result<Self, RendererError> {
         let window = WindowBuilder::new()
             .with_title(title)
             .with_dimensions(dimensions[0], dimensions[1]);
@@ -62,11 +68,18 @@ impl SystemTrait<EngineEvent> for Renderer {
             _ => None,
         }
     }
-    fn render(&mut self, _: &mut Assembly, _: &Duration, _: &Duration) -> Option<EngineEvent> {
+    fn render(&mut self, entities: &mut Assembly, _: &Duration, _: &Duration) -> Option<EngineEvent> {
         let mut target = self.display.draw();
         target.clear_color_and_depth(self.clear_color, 1.0);
 
-        //target.draw();
+        // Render all entities.
+        entities.rs2::<Projection, View>()
+            .map(|(p, v)| {
+                let pv = p.as_matrix() * v.to_homogeneous();
+                // entities.r4::<Description, ..>().iter()
+                // target.draw();
+            })
+            .unwrap();
 
         target.finish().unwrap();
         None

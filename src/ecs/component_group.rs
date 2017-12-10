@@ -16,7 +16,7 @@ pub struct ComponentGroup {
 
 impl ComponentGroup {
     /// Creates a new, empty group.
-    pub fn new() -> ComponentGroup {
+    pub fn new() -> Self {
         ComponentGroup {
             components: HashMap::new(),
         }

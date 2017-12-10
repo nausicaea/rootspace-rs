@@ -26,7 +26,7 @@ pub struct DebugShell {
 
 impl DebugShell {
     /// Creates a new, default `DebugShell`.
-    pub fn new() -> DebugShell {
+    pub fn new() -> Self {
         DebugShell {
             registry: HashMap::new(),
         }
