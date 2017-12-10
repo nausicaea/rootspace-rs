@@ -9,6 +9,7 @@ extern crate clap;
 #[macro_use]
 extern crate log;
 extern crate fern;
+#[macro_use]
 extern crate glium;
 extern crate nalgebra;
 
