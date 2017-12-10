@@ -38,6 +38,6 @@ pub use self::event::{EcsEvent, EventTrait};
 pub use self::loop_stage::{LoopStageFlag, LoopStage};
 pub use self::entity::Entity;
 pub use self::system::SystemTrait;
-pub use self::component_group::ComponentGroup;
+pub use self::component_group::{ComponentTrait, ComponentGroup};
 pub use self::assembly::Assembly;
 pub use self::world::World;
