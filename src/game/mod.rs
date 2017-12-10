@@ -16,7 +16,7 @@ pub fn run(debugging: bool) {
 
     // Create the engine instance and run it.
     let mut orchestrator: Orchestrator<EngineEvent> = Orchestrator::new(debugging);
-    orchestrator.run(|o| {
+    orchestrator.run(move |o| {
         let event_interface = EventInterface::new();
         let renderer = Renderer::new(&event_interface.events_loop, &title, &dimensions, vsync, msaa, &clear_color)
             .unwrap();
