@@ -29,8 +29,8 @@ impl From<index::BufferCreationError> for MeshError {
 /// The `Mesh` encapsulates a vertex and an index buffer. In concert, they specify all vertices of
 /// a 3D object.
 pub struct Mesh {
-    vertices: VertexBuffer<Vertex>,
-    indices: IndexBuffer<Index>,
+    pub vertices: VertexBuffer<Vertex>,
+    pub indices: IndexBuffer<Index>,
 }
 
 impl Mesh {
