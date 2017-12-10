@@ -1,18 +1,23 @@
 use std::io;
-use engine::{Orchestrator, EngineEvent, EventMonitor, DebugConsole, DebugShell, Renderer, EventInterface, Projection};
+use nalgebra::{Point3, Vector3};
+use engine::{Orchestrator, EngineEvent, EventMonitor, DebugConsole, DebugShell, Renderer,
+    EventInterface, Projection, View, Description};
 
 pub fn run(debugging: bool) {
     // The following variables set up the state of the engine.
     type Float = f32;
     let title = String::from("Rootspace");
     let dimensions = [1024, 768];
+    let vsync = true;
+    let msaa = 4;
+    let clear_color = [0.1, 0.15, 0.3, 1.0];
     let aspect = dimensions[0] as Float / dimensions[1] as Float;
     let fov_y = 3.1415926 / 4.0;
     let z_near = 0.01;
     let z_far = 1000.0;
-    let vsync = true;
-    let msaa = 4;
-    let clear_color = [0.1, 0.15, 0.3, 1.0];
+    let eye = Point3::new(0.0, 0.0, 0.0);
+    let target = Point3::new(0.0, 0.0, -1.0);
+    let up = Vector3::y();
 
     // Create the engine instance and run it.
     let mut orchestrator: Orchestrator<EngineEvent> = Orchestrator::new(debugging);
@@ -33,8 +38,13 @@ pub fn run(debugging: bool) {
         // Add entities to the world.
         {
             let camera = o.world.create_entity();
+            let d = Description::new("camera");
             let p: Projection<Float> = Projection::new(aspect, fov_y, z_near, z_far);
+            let v: View<Float> = View::new(&eye, &target, &up);
+
+            o.world.add_component(&camera, d).unwrap();
             o.world.add_component(&camera, p).unwrap();
+            o.world.add_component(&camera, v).unwrap();
         }
     });
 }
