@@ -1,4 +1,4 @@
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 use nalgebra::{Scalar, Real, Perspective3};
 use ecs::ComponentTrait;
 
@@ -17,8 +17,14 @@ impl<N: Scalar + Real> Projection<N> {
 impl<N: Scalar + Real> Deref for Projection<N> {
     type Target = Perspective3<N>;
 
-    fn deref(&self) -> &Perspective3<N> {
+    fn deref(&self) -> &Self::Target {
         &self.inner
+    }
+}
+
+impl<N: Scalar + Real> DerefMut for Projection<N> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
     }
 }
 
