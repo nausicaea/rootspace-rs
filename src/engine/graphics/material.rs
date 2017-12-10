@@ -87,6 +87,18 @@ impl Material {
             norm_tex: nt,
         })
     }
+    pub fn reload_shader(&mut self, display: &Display) -> Result<(), MaterialError> {
+        let vss = load_text_file(&self.vs)?;
+        let fss = load_text_file(&self.fs)?;
+        let gss = match self.gs {
+            Some(ref gp) => Some(load_text_file(gp)?),
+            None => None,
+        };
+
+        self.shader = Program::from_source(display, &vss, &fss, gss.as_ref().map(|g| &**g))?;
+
+        Ok(())
+    }
 }
 
 impl ComponentTrait for Material {}
