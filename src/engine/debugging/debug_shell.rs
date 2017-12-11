@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use ecs::{EcsEvent, Assembly, LoopStageFlag, SystemTrait};
+use ecs::{Assembly, LoopStageFlag, SystemTrait};
 use super::super::event::{EngineEventFlag, EngineEvent};
 
 #[derive(Debug, Fail)]
@@ -45,6 +45,7 @@ impl DebugShell {
         if args.len() > 0 {
             match args[0].as_str() {
                 "help" => self.help(),
+                "reload-shaders" => self.reload_shaders(),
                 "exit" => self.exit(),
                 n => match self.registry.get(n) {
                     Some(c) => c.run(args),
@@ -60,12 +61,17 @@ impl DebugShell {
         println!("\
                  For more information on a specific command, type COMMAND-NAME --help.\
                  \nhelp\tPrints this message.\
+                 \nreload-shaders\tReloads all OpenGl shaders in use by the engine.\
                  \nexit\tShuts down the engine.");
         Ok(None)
     }
+    /// Sends the reload-shaders event to the bus.
+    fn reload_shaders(&self) -> ShellResult {
+        Ok(Some(EngineEvent::ReloadShaders))
+    }
     /// Sends the shutdown event to the bus to exit the engine.
     fn exit(&self) -> ShellResult {
-        Ok(Some(EcsEvent::Shutdown.into()))
+        Ok(Some(EngineEvent::Shutdown))
     }
 }
 

@@ -12,6 +12,7 @@ bitflags! {
         const RENDERER_READY = 0x10;
         const SUSPEND = 0x20;
         const RESIZE_WINDOW = 0x40;
+        const RELOAD_SHADERS = 0x80;
         const ALL_EVENTS = u64::MAX;
     }
 }
@@ -25,6 +26,7 @@ pub enum EngineEvent {
     RendererReady,
     ConsoleCommand(Vec<String>),
     ResizeWindow(u32, u32),
+    ReloadShaders,
 }
 
 impl EventTrait for EngineEvent {
@@ -42,6 +44,7 @@ impl EventTrait for EngineEvent {
             RendererReady => None,
             ConsoleCommand(_) => None,
             ResizeWindow(..) => None,
+            ReloadShaders => None,
         }
     }
 }
@@ -68,6 +71,7 @@ impl From<EngineEvent> for EngineEventFlag {
             RendererReady => EngineEventFlag::RENDERER_READY,
             ConsoleCommand(_) => EngineEventFlag::CONSOLE_COMMAND,
             ResizeWindow(..) => EngineEventFlag::RESIZE_WINDOW,
+            ReloadShaders => EngineEventFlag::RELOAD_SHADERS,
         }
     }
 }

@@ -6,6 +6,7 @@ use ecs::{LoopStageFlag, SystemTrait, Assembly};
 use super::super::event::{EngineEventFlag, EngineEvent};
 use super::super::geometry::projection::Projection;
 use super::super::geometry::view::View;
+use super::material::Material;
 
 #[derive(Debug)]
 pub enum RendererError {
@@ -57,13 +58,19 @@ impl SystemTrait<EngineEvent> for Renderer {
         }
     }
     fn get_event_filter(&self) -> EngineEventFlag {
-        EngineEventFlag::READY
+        EngineEventFlag::READY | EngineEventFlag::RELOAD_SHADERS
     }
-    fn handle_event(&mut self, _: &mut Assembly, event: &EngineEvent) -> Option<EngineEvent> {
+    fn handle_event(&mut self, entities: &mut Assembly, event: &EngineEvent) -> Option<EngineEvent> {
         match *event {
             EngineEvent::Ready => {
                 self.ready = true;
                 Some(EngineEvent::RendererReady)
+            },
+            EngineEvent::ReloadShaders => {
+                for m in entities.w1::<Material>() {
+                    m.reload_shader(&self.display).unwrap_or_else(|e| error!("{}", e));
+                }
+                None
             },
             _ => None,
         }
