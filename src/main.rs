@@ -14,6 +14,8 @@ extern crate glium;
 extern crate nalgebra;
 extern crate image;
 extern crate uuid;
+extern crate unicode_normalization;
+extern crate rusttype;
 
 mod ecs;
 mod engine;
