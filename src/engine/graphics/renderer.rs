@@ -1,12 +1,16 @@
 use std::time::Duration;
-use glium::{Surface, Display};
+use glium;
+use glium::{Surface, Display, DrawParameters};
 use glium::backend::glutin::DisplayCreationError;
 use glium::glutin::{Api, GlRequest, GlProfile, EventsLoop, WindowBuilder, ContextBuilder};
 use ecs::{LoopStageFlag, SystemTrait, Assembly};
 use super::super::event::{EngineEventFlag, EngineEvent};
 use super::super::geometry::projection::Projection;
 use super::super::geometry::view::View;
+use super::super::geometry::model::Model;
+use super::mesh::Mesh;
 use super::material::Material;
+use super::uniforms::Uniforms;
 
 #[derive(Debug)]
 pub enum RendererError {
@@ -83,8 +87,21 @@ impl SystemTrait<EngineEvent> for Renderer {
         entities.rs2::<Projection, View>()
             .map(|(p, v)| {
                 let pv = p.as_matrix() * v.to_homogeneous();
-                // entities.r4::<Description, ..>().iter()
-                // target.draw();
+                for (mo, me, ma) in entities.r3::<Model, Mesh, Material>() {
+                    let u = Uniforms {
+                        pvm_matrix: pv * mo.to_homogeneous(),
+                    };
+                    let dp = DrawParameters {
+                        depth: glium::Depth {
+                            test: glium::draw_parameters::DepthTest::IfLess,
+                            write: true,
+                            .. Default::default()
+                        },
+                        .. Default::default()
+                    };
+
+                    target.draw(&me.vertices, &me.indices, &ma.shader, &u, &dp).unwrap();
+                }
             })
             .unwrap();
 

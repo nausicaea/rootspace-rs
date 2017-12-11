@@ -3,7 +3,7 @@ use glium::uniforms;
 use super::super::Float;
 
 pub struct Uniforms {
-    pvm_matrix: Matrix4<Float>,
+    pub pvm_matrix: Matrix4<Float>,
 }
 
 impl uniforms::Uniforms for Uniforms {
