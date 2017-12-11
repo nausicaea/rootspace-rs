@@ -4,6 +4,7 @@ use glium::{Surface, Display, DrawParameters};
 use glium::backend::glutin::DisplayCreationError;
 use glium::glutin::{Api, GlRequest, GlProfile, EventsLoop, WindowBuilder, ContextBuilder};
 use ecs::{LoopStageFlag, SystemTrait, Assembly};
+use super::super::Float;
 use super::super::event::{EngineEventFlag, EngineEvent};
 use super::super::geometry::projection::Projection;
 use super::super::geometry::view::View;
@@ -62,7 +63,7 @@ impl SystemTrait<EngineEvent> for Renderer {
         }
     }
     fn get_event_filter(&self) -> EngineEventFlag {
-        EngineEventFlag::READY | EngineEventFlag::RELOAD_SHADERS
+        EngineEventFlag::READY | EngineEventFlag::RELOAD_SHADERS | EngineEventFlag::RESIZE_WINDOW
     }
     fn handle_event(&mut self, entities: &mut Assembly, event: &EngineEvent) -> Option<EngineEvent> {
         match *event {
@@ -74,6 +75,12 @@ impl SystemTrait<EngineEvent> for Renderer {
                 for m in entities.w1::<Material>() {
                     m.reload_shader(&self.display).unwrap_or_else(|e| error!("{}", e));
                 }
+                None
+            },
+            EngineEvent::ResizeWindow(w, h) => {
+                entities.ws1::<Projection>()
+                    .map(|p| p.set_aspect(w as Float / h as Float))
+                    .unwrap();
                 None
             },
             _ => None,
