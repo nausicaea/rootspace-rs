@@ -86,7 +86,7 @@ impl SystemTrait<EngineEvent> for Renderer {
             _ => None,
         }
     }
-    fn render(&mut self, entities: &mut Assembly, _: &Duration, _: &Duration) -> Option<EngineEvent> {
+    fn render(&mut self, entities: &Assembly, _: &Duration, _: &Duration) -> Option<EngineEvent> {
         let mut target = self.display.draw();
         target.clear_color_and_depth(self.clear_color, 1.0);
 

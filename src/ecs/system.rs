@@ -28,7 +28,7 @@ pub trait SystemTrait<E: EventTrait> {
     }
     /// Renders the `World` state. May optionally return an event that will be handled in
     /// the next main loop iteration.
-    fn render(&mut self, _entities: &mut Assembly, _time: &Duration, _delta_time: &Duration) -> Option<E> {
+    fn render(&mut self, _entities: &Assembly, _time: &Duration, _delta_time: &Duration) -> Option<E> {
         unimplemented!("Did you forget to implement the render method for your system?");
     }
 }
