@@ -1,9 +1,12 @@
+use std::borrow::Cow;
 use std::fs::File;
 use std::io::{Read, Error};
 use std::path::Path;
 use image;
-use glium::texture::RawImage2d;
+use glium::Rect;
+use glium::texture::{Texture2d, ClientFormat, RawImage2d};
 use rusttype::{PositionedGlyph, Font, Scale, point};
+use rusttype::gpu_cache::{Cache, CacheWriteErr};
 use unicode_normalization::UnicodeNormalization;
 
 /// Reads the specified file into a string.
@@ -69,7 +72,41 @@ pub fn layout_paragraph<'a>(font: &'a Font, scale: f32, width: u32, text: &str) 
         caret.x += glyph.unpositioned().h_metrics().advance_width;
         result.push(glyph);
     }
+
     let height = (caret.y - caret_origin.y + advance_height).ceil() as u32;
 
     (result, [width, height])
+}
+
+/// Layouts a paragraph of text using the GPU cache.
+pub fn layout_paragraph_cached<'a>(cache: &mut Cache<'a>, cache_tex: &Texture2d, font: &'a Font, scale: f32, width: u32, text: &str) -> Result<(Vec<PositionedGlyph<'a>>, [u32; 2]), CacheWriteErr> {
+    let (glyphs, text_dims) = layout_paragraph(font, scale, width, text);
+
+    enqueue_glyphs(cache, &glyphs);
+
+    update_cache(cache, cache_tex, &glyphs)?;
+
+    Ok((glyphs, text_dims))
+}
+
+fn enqueue_glyphs<'a>(cache: &mut Cache<'a>, glyphs: &[PositionedGlyph<'a>]) {
+    for glyph in glyphs {
+        cache.queue_glyph(0, glyph.clone());
+    }
+}
+
+fn update_cache(cache: &mut Cache, cache_tex: &Texture2d, glyphs: &[PositionedGlyph]) -> Result<(), CacheWriteErr> {
+    cache.cache_queued(|rect, data| {
+        cache_tex.main_level().write(Rect {
+            left: rect.min.x,
+            bottom: rect.min.y,
+            width: rect.width(),
+            height: rect.height()
+        }, RawImage2d {
+            data: Cow::Borrowed(data),
+            width: rect.width(),
+            height: rect.height(),
+            format: ClientFormat::U8
+        });
+    })
 }
