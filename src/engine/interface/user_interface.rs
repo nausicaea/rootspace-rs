@@ -29,16 +29,17 @@ impl UserInterface {
         entities.ws1::<UiState>()
             .map(|u| {
                 if u.lifetimes.len() > 0 {
-                    let mut to_delete = Vec::new();
-                    for (ref i, &(ref s, ref l)) in u.lifetimes.iter() {
-                        if s.elapsed() >= *l {
-                            to_delete.push(i.clone());
-                        }
-                    }
-                    for i in to_delete.into_iter() {
-                        u.elements.remove(&i);
-                        u.lifetimes.remove(&i);
-                    }
+                    let to_delete = u.lifetimes.iter()
+                        .filter(|&(i, l)| l.0.elapsed() >= l.1)
+                        .map(|(i, _)| i)
+                        .cloned()
+                        .collect::<Vec<_>>();
+
+                    to_delete.iter()
+                        .for_each(|i| {
+                            u.elements.remove(i);
+                            u.lifetimes.remove(i);
+                        });
                 }
             })
     }
