@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#![warn(missing_docs)]
 
 //! The `ecs` module provides functionality to represent an Entity-Component-System architecture.
 //! The `World` collects multiple boxed `SystemTrait`s which operate on the `ComponentTrait`s of
