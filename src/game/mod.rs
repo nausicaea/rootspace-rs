@@ -49,8 +49,8 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let d = Description::new("canvas");
             let u = UiState::new();
 
-            o.world.add_component(&canvas, d);
-            o.world.add_component(&canvas, u);
+            o.world.add_component(&canvas, d).unwrap();
+            o.world.add_component(&canvas, u).unwrap();
         }
 
         // Assemble the test entity.
