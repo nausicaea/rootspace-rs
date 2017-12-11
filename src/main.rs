@@ -1,5 +1,8 @@
 #![feature(core_intrinsics)]
 
+//! Rootspace is a 3D game written entirely in Rust. Currently, it is only executable with Cargo,
+//! but should run on all operating systems supported by the Rust compiler.
+
 extern crate failure;
 #[macro_use]
 extern crate failure_derive;

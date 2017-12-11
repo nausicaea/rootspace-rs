@@ -1,5 +1,3 @@
-#![warn(missing_docs)]
-
 pub type Float = f32;
 
 mod utilities;
