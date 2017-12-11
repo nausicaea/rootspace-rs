@@ -4,7 +4,7 @@ use std::time::Duration;
 use nalgebra;
 use nalgebra::{Point3, Vector3};
 use engine::{Float, Orchestrator, EngineEvent, EventMonitor, DebugConsole, DebugShell, Renderer,
-    EventInterface, Projection, View, Model, Description, Mesh, Material};
+    EventInterface, Projection, View, Model, Description, Mesh, Material, UserInterface};
 
 pub fn run(resource_path: &Path, debugging: bool) {
     // The following variables set up the state of the engine.
@@ -68,6 +68,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             o.world.add_system(DebugConsole::new(io::stdin()));
             o.world.add_system(DebugShell::new());
         }
+        o.world.add_system(UserInterface::new(&renderer.display));
         o.world.add_system(renderer);
         o.world.add_system(event_interface);
     });

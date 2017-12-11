@@ -20,4 +20,5 @@ pub use self::geometry::model::Model;
 pub use self::graphics::renderer::Renderer;
 pub use self::graphics::mesh::Mesh;
 pub use self::graphics::material::Material;
+pub use self::interface::user_interface::UserInterface;
 pub use self::orchestrator::Orchestrator;
