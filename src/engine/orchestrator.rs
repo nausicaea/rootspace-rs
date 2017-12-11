@@ -23,8 +23,8 @@ impl<E: EventTrait> Orchestrator<E> {
     pub fn new(rp: &Path, delta_time: Duration, max_frame_time: Duration, debug: bool) -> Self {
         Orchestrator {
             resource_path: rp.to_owned(),
-            delta_time: Duration::from_millis(100),
-            max_frame_time: Duration::from_millis(250),
+            delta_time: delta_time,
+            max_frame_time: max_frame_time,
             debug: debug,
             world: World::new(),
         }
