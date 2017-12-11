@@ -1,17 +1,15 @@
-use std::collections::HashMap;
-use uuid::Uuid;
+use glium::Display;
 use ecs::{LoopStageFlag, SystemTrait, Assembly};
 use super::super::event::{EngineEventFlag, EngineEvent};
-use super::ui_element::UiElement;
 
 pub struct UserInterface {
-    elements: HashMap<Uuid, UiElement>,
+    display: Display,
 }
 
 impl UserInterface {
-    pub fn new() -> Self {
+    pub fn new(display: &Display) -> Self {
         UserInterface {
-            elements: HashMap::new(),
+            display: display.clone(),
         }
     }
 }
