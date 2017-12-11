@@ -24,12 +24,12 @@ impl SystemTrait<EngineEvent> for EventInterface {
         LoopStageFlag::UPDATE
     }
     fn update(&mut self, _: &mut Assembly, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {
-        let mut pd = Vec::new();
+        let pd = Vec::new();
         let mut d = Vec::new();
 
         self.events_loop.poll_events(|ge| {
             match ge {
-                Event::WindowEvent {window_id: _, event: we} => match we {
+                Event::WindowEvent {event: we, ..} => match we {
                     WindowEvent::Closed => d.push(EngineEvent::Shutdown),
                     WindowEvent::Resized(w, h) => d.push(EngineEvent::ResizeWindow(w, h)),
                     _ => (),
@@ -39,7 +39,7 @@ impl SystemTrait<EngineEvent> for EventInterface {
             }
         });
 
-        if pd.len() > 0 || d.len() > 0 {
+        if !(pd.is_empty() && d.is_empty()) {
             Some((pd, d))
         } else {
             None

@@ -65,7 +65,7 @@ impl DebugConsole {
         None
     }
     /// Splits a command line (String) into a vector of arguments.
-    fn split_arguments(&self, arg_string: String) -> Vec<String> {
+    fn split_arguments(&self, arg_string: &str) -> Vec<String> {
         let mut args = Vec::new();
 
         let escape_char = '\\';
@@ -104,7 +104,7 @@ impl DebugConsole {
                     escape = false;
                 }
                 // Accept empty arguments only if they are quoted
-                if current_arg.len() > 0 || had_quote {
+                if !current_arg.is_empty() || had_quote {
                     args.push(current_arg.clone());
                 }
                 // Reset the current argument
@@ -119,10 +119,10 @@ impl DebugConsole {
                 // Copy the character from input without a special meaning
                 current_arg.push(c);
             }
-            prev_char = c.clone();
+            prev_char = c;
         }
         // Save the last argument
-        if current_arg.len() > 0 || had_quote {
+        if !current_arg.is_empty() || had_quote {
             args.push(current_arg.clone());
         }
 
@@ -136,7 +136,7 @@ impl SystemTrait<EngineEvent> for DebugConsole {
     }
     fn update(&mut self, _: &mut Assembly, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {
         self.try_read_line()
-            .map(|s| self.split_arguments(s))
+            .map(|s| self.split_arguments(&s))
             .map(|c| (Vec::new(), vec![EngineEvent::ConsoleCommand(c)]))
     }
 }

@@ -12,7 +12,7 @@ impl Model {
     /// Creates a new `Model` component from a translation and axis-angle vector.
     pub fn new(translation: &Vector3<Float>, axisangle: &Vector3<Float>) -> Self {
         Model {
-            inner: Isometry3::new(translation.clone(), axisangle.clone()),
+            inner: Isometry3::new(*translation, *axisangle),
         }
     }
 }

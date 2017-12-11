@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use std::collections::HashMap;
 use std::num::ParseIntError;
 use clap::{App, Arg, AppSettings};
@@ -29,7 +31,7 @@ pub trait CustomCommand {
     fn run(&self, args: &[String]) -> ShellResult;
 }
 
-/// The `DebugShell` listens for ConsoleCommand events and interprets them as commands. The shell
+/// The `DebugShell` listens for `ConsoleCommand` events and interprets them as commands. The shell
 /// provides both builtin commands and the ability to register custom commands through the
 /// `CustomCommand` trait.
 pub struct DebugShell {
@@ -54,7 +56,7 @@ impl DebugShell {
     /// Interprets a set of arguments as a command line (first argument specifies the command
     /// name).
     fn interpret(&self, args: &[String]) -> ShellResult {
-        if args.len() > 0 {
+        if !args.is_empty() {
             match args[0].as_str() {
                 "help" => self.help(),
                 "reload-shaders" => self.reload_shaders(),
@@ -105,12 +107,12 @@ impl DebugShell {
         match matches {
             Ok(m) => {
                 let lifetime: u64 = m.value_of("lifetime")
-                    .ok_or(DebugShellError::MissingArgument(args[0].clone(), "lifetime".into()))
-                    .and_then(|s| s.parse().map_err(|e| From::from(e)))?;
+                    .ok_or_else(|| DebugShellError::MissingArgument(args[0].clone(), "lifetime".into()))
+                    .and_then(|s| s.parse().map_err(From::from))?;
                 let target = m.value_of("target")
-                    .ok_or(DebugShellError::MissingArgument(args[0].clone(), "target".into()))?;
+                    .ok_or_else(|| DebugShellError::MissingArgument(args[0].clone(), "target".into()))?;
                 let text = m.value_of("text")
-                    .ok_or(DebugShellError::MissingArgument(args[0].clone(), "text".into()))?;
+                    .ok_or_else(|| DebugShellError::MissingArgument(args[0].clone(), "text".into()))?;
 
                 Ok(Some(EngineEvent::SpeechBubble(target.into(), text.into(), lifetime)))
             },
@@ -135,7 +137,7 @@ impl SystemTrait<EngineEvent> for DebugShell {
     }
     fn handle_event(&mut self, _: &mut Assembly, event: &EngineEvent) -> Option<EngineEvent> {
         match *event {
-            EngineEvent::ConsoleCommand(ref c) => self.interpret(&c).unwrap_or_else(|e| {println!("{}", e); None}),
+            EngineEvent::ConsoleCommand(ref c) => self.interpret(c).unwrap_or_else(|e| {println!("{}", e); None}),
             _ => None,
         }
     }

@@ -1,3 +1,4 @@
+use std::f32;
 use std::io;
 use std::path::Path;
 use std::time::Duration;
@@ -26,7 +27,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
         // Assemble the camera entity.
         {
             let aspect = dimensions[0] as Float / dimensions[1] as Float;
-            let fov_y = 3.1415926 / 4.0;
+            let fov_y = f32::consts::PI / 4.0;
             let z_near = 0.01;
             let z_far = 1000.0;
             let eye = Point3::new(0.0, 0.0, 0.0);

@@ -44,7 +44,7 @@ impl Renderer {
             .with_gl_profile(GlProfile::Core)
             .with_vsync(vsync)
             .with_multisampling(msaa);
-        let display = Display::new(window, context, &events_loop)?;
+        let display = Display::new(window, context, events_loop)?;
 
         Ok(Renderer {
             display: display,

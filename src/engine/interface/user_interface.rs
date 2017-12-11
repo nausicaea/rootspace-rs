@@ -4,12 +4,6 @@ use ecs::{LoopStageFlag, SystemTrait, Assembly, EcsError};
 use super::super::event::{EngineEventFlag, EngineEvent};
 use super::ui_state::UiState;
 
-#[derive(Debug, Fail)]
-pub enum UiError {
-    #[fail(display = "{}", _0)]
-    AssemblyError(#[cause] EcsError),
-}
-
 /// The `UserInterface` is responsible for managing the state associated with the user interface.
 /// It also processes events that relate to the UI.
 pub struct UserInterface {
@@ -28,9 +22,9 @@ impl UserInterface {
     fn update_lifetimes(&self, entities: &mut Assembly) -> Result<(), EcsError> {
         entities.ws1::<UiState>()
             .map(|u| {
-                if u.lifetimes.len() > 0 {
+                if !u.lifetimes.is_empty() {
                     let to_delete = u.lifetimes.iter()
-                        .filter(|&(i, l)| l.0.elapsed() >= l.1)
+                        .filter(|&(_, l)| l.0.elapsed() >= l.1)
                         .map(|(i, _)| i)
                         .cloned()
                         .collect::<Vec<_>>();
@@ -52,7 +46,7 @@ impl SystemTrait<EngineEvent> for UserInterface {
     fn get_event_filter(&self) -> EngineEventFlag {
         EngineEventFlag::empty()
     }
-    fn handle_event(&mut self, entities: &mut Assembly, event: &EngineEvent) -> Option<EngineEvent> {
+    fn handle_event(&mut self, _entities: &mut Assembly, _event: &EngineEvent) -> Option<EngineEvent> {
         None
     }
     fn update(&mut self, entities: &mut Assembly, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {

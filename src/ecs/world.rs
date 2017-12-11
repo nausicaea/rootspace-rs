@@ -35,18 +35,18 @@ impl<E: EventTrait> World<E> {
         let events = self.event_queue.iter().cloned().collect::<Vec<_>>();
         self.event_queue.clear();
 
-        for e in events.into_iter() {
+        for e in events {
             match e.as_ecs_event() {
                 Some(EcsEvent::ImmediateShutdown) => {
                     info!("Shutting down now! At this point, all unsaved state is lost.");
                     return false
                 },
                 Some(EcsEvent::Shutdown) => {
-                    self.dispatch_immediate(e);
+                    self.dispatch_immediate(&e);
                     self.dispatch(EcsEvent::ImmediateShutdown.into())
                 },
                 Some(EcsEvent::Suspend(v)) => self.rendering_suspended = v,
-                _ => self.dispatch_immediate(e),
+                _ => self.dispatch_immediate(&e),
             }
         }
 
@@ -57,22 +57,19 @@ impl<E: EventTrait> World<E> {
         let mut priority_events = Vec::new();
         let mut events = Vec::new();
 
-        for system in self.systems.iter_mut() {
+        for system in &mut self.systems {
             if LoopStage::Update.match_filter(system.get_loop_stage_filter()) {
-                match system.update(&mut self.assembly, time, delta_time) {
-                    Some((mut pe, mut e)) => {
-                        priority_events.append(&mut pe);
-                        events.append(&mut e);
-                    },
-                    None => (),
+                if let Some((mut pe, mut e)) = system.update(&mut self.assembly, time, delta_time) {
+                    priority_events.append(&mut pe);
+                    events.append(&mut e);
                 }
             }
         }
 
-        for pe in priority_events.into_iter() {
-            self.dispatch_immediate(pe);
+        for pe in priority_events {
+            self.dispatch_immediate(&pe);
         }
-        for e in events.into_iter() {
+        for e in events {
             self.dispatch(e);
         }
     }
@@ -81,18 +78,15 @@ impl<E: EventTrait> World<E> {
         if !self.rendering_suspended {
             let mut events = Vec::new();
 
-            for system in self.systems.iter_mut() {
+            for system in &mut self.systems {
                 if LoopStage::Render.match_filter(system.get_loop_stage_filter()) {
-                    match system.render(&mut self.assembly, time, delta_time) {
-                        Some(e) => {
-                            events.push(e);
-                        },
-                        None => (),
+                    if let Some(e) = system.render(&self.assembly, time, delta_time) {
+                        events.push(e);
                     }
                 }
             }
 
-            for e in events.into_iter() {
+            for e in events {
                 self.dispatch(e);
             }
         }
@@ -102,23 +96,18 @@ impl<E: EventTrait> World<E> {
         self.event_queue.push_back(event);
     }
     /// In its functioning analogous to `update` and `render`.
-    fn dispatch_immediate(&mut self, event: E) {
+    fn dispatch_immediate(&mut self, event: &E) {
         let mut events = Vec::new();
 
-        for system in self.systems.iter_mut() {
-            if LoopStage::HandleEvent.match_filter(system.get_loop_stage_filter()) {
-                if event.match_filter(system.get_event_filter()) {
-                    match system.handle_event(&mut self.assembly, &event) {
-                        Some(e) => {
-                            events.push(e);
-                        },
-                        None => (),
-                    }
+        for system in &mut self.systems {
+            if LoopStage::HandleEvent.match_filter(system.get_loop_stage_filter()) && event.match_filter(system.get_event_filter()) {
+                if let Some(e) = system.handle_event(&mut self.assembly, event) {
+                    events.push(e);
                 }
             }
         }
 
-        for e in events.into_iter() {
+        for e in events {
             self.dispatch(e);
         }
     }

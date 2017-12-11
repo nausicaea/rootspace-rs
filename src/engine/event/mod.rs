@@ -43,11 +43,7 @@ impl EventTrait for EngineEvent {
             ImmediateShutdown => Some(EcsEvent::ImmediateShutdown),
             Ready => Some(EcsEvent::Ready),
             Suspend(v) => Some(EcsEvent::Suspend(v)),
-            RendererReady => None,
-            ConsoleCommand(_) => None,
-            ResizeWindow(..) => None,
-            ReloadShaders => None,
-            SpeechBubble(..) => None,
+            _ => None,
         }
     }
 }

@@ -136,13 +136,13 @@ impl Assembly {
     pub fn add_component<C>(&mut self, entity: &Entity, component: C) -> Result<Option<C>, EcsError> where C: ComponentTrait {
         self.entities.get_mut(entity)
             .map(|g| g.insert(component))
-            .ok_or(EcsError::EntityNotFound(entity.clone()))
+            .ok_or_else(|| EcsError::EntityNotFound(entity.clone()))
     }
     /// Removes the component of the secified type from the group assigned to the specified `Entity`.
     pub fn remove_component<C>(&mut self, entity: &Entity) -> Result<Option<C>, EcsError> where C: ComponentTrait {
         self.entities.get_mut(entity)
             .map(|g| g.remove::<C>())
-            .ok_or(EcsError::EntityNotFound(entity.clone()))
+            .ok_or_else(|| EcsError::EntityNotFound(entity.clone()))
     }
     /// Collects all instances of the specified component type.
     impl_read!(r1, A);
