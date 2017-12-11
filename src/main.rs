@@ -13,6 +13,7 @@ extern crate fern;
 extern crate glium;
 extern crate nalgebra;
 extern crate image;
+extern crate uuid;
 
 mod ecs;
 mod engine;

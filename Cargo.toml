@@ -14,3 +14,4 @@ fern = "^0.4.3"
 glium = "^0.18.1"
 nalgebra = "^0.13.1"
 image = "^0.18.0"
+uuid = {version = "^0.5.1", features = ["v4"]}

@@ -5,6 +5,7 @@ mod event;
 mod debugging;
 mod geometry;
 mod graphics;
+mod interface;
 mod orchestrator;
 
 pub use self::event::EngineEvent;
