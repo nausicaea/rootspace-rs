@@ -13,6 +13,7 @@ bitflags! {
         const SUSPEND = 0x20;
         const RESIZE_WINDOW = 0x40;
         const RELOAD_SHADERS = 0x80;
+        const SPEECH_BUBBLE = 0x100;
         const ALL_EVENTS = u64::MAX;
     }
 }
@@ -27,6 +28,7 @@ pub enum EngineEvent {
     ConsoleCommand(Vec<String>),
     ResizeWindow(u32, u32),
     ReloadShaders,
+    SpeechBubble(String, String, u64),
 }
 
 impl EventTrait for EngineEvent {
@@ -45,6 +47,7 @@ impl EventTrait for EngineEvent {
             ConsoleCommand(_) => None,
             ResizeWindow(..) => None,
             ReloadShaders => None,
+            SpeechBubble(..) => None,
         }
     }
 }
@@ -72,6 +75,7 @@ impl From<EngineEvent> for EngineEventFlag {
             ConsoleCommand(_) => EngineEventFlag::CONSOLE_COMMAND,
             ResizeWindow(..) => EngineEventFlag::RESIZE_WINDOW,
             ReloadShaders => EngineEventFlag::RELOAD_SHADERS,
+            SpeechBubble(..) => EngineEventFlag::SPEECH_BUBBLE,
         }
     }
 }
