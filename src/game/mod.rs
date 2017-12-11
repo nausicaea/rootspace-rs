@@ -4,7 +4,7 @@ use std::time::Duration;
 use nalgebra;
 use nalgebra::{Point3, Vector3};
 use engine::{Float, Orchestrator, EngineEvent, EventMonitor, DebugConsole, DebugShell, Renderer,
-    EventInterface, Projection, View, Model, Description, Mesh, Material, UserInterface};
+    EventInterface, Projection, View, Model, Description, Mesh, Material, UserInterface, UiState};
 
 pub fn run(resource_path: &Path, debugging: bool) {
     // The following variables set up the state of the engine.
@@ -41,6 +41,16 @@ pub fn run(resource_path: &Path, debugging: bool) {
             o.world.add_component(&camera, d).unwrap();
             o.world.add_component(&camera, p).unwrap();
             o.world.add_component(&camera, v).unwrap();
+        }
+
+        // Assembly the UI canvas.
+        {
+            let canvas = o.world.create_entity();
+            let d = Description::new("canvas");
+            let u = UiState::new();
+
+            o.world.add_component(&canvas, d);
+            o.world.add_component(&canvas, u);
         }
 
         // Assemble the test entity.
