@@ -4,8 +4,6 @@ use glium::index;
 use ecs::ComponentTrait;
 use super::vertex::Vertex;
 
-pub type Index = u16;
-
 #[derive(Debug, Fail)]
 pub enum MeshError {
     #[fail(display = "{}", _0)]
@@ -30,12 +28,12 @@ impl From<index::BufferCreationError> for MeshError {
 /// a 3D object.
 pub struct Mesh {
     pub vertices: VertexBuffer<Vertex>,
-    pub indices: IndexBuffer<Index>,
+    pub indices: IndexBuffer<u16>,
 }
 
 impl Mesh {
     /// Creates a new `Mesh`.
-    pub fn new(display: &Display, vertices: &[Vertex], indices: &[Index], primitive: index::PrimitiveType) -> Result<Self, MeshError> {
+    pub fn new(display: &Display, vertices: &[Vertex], indices: &[u16], primitive: index::PrimitiveType) -> Result<Self, MeshError> {
         Ok(Mesh {
             vertices: VertexBuffer::new(display, vertices)?,
             indices: IndexBuffer::new(display, primitive, indices)?,

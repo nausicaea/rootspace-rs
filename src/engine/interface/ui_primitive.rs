@@ -4,7 +4,7 @@ use glium::index;
 use rusttype::{Rect, PositionedGlyph, point};
 use rusttype::gpu_cache::{Cache, CacheWriteErr};
 use super::super::graphics::vertex::Vertex;
-use super::super::graphics::mesh::{MeshError, Mesh, Index};
+use super::super::graphics::mesh::{MeshError, Mesh};
 use super::super::graphics::material::{MaterialError, Material};
 
 #[derive(Debug, Fail)]
@@ -70,12 +70,12 @@ impl UiPrimitive {
                 vertices.push(Vertex::new([gl_rect.max.x, gl_rect.min.y, z_value], [uv_rect.max.x, uv_rect.min.y], [0.0, 0.0, 1.0]));
                 vertices.push(Vertex::new([gl_rect.max.x, gl_rect.max.y, z_value], [uv_rect.max.x, uv_rect.max.y], [0.0, 0.0, 1.0]));
 
-                indices.push(i as Index);
-                indices.push(i as Index + 1);
-                indices.push(i as Index + 2);
-                indices.push(i as Index + 2);
-                indices.push(i as Index + 3);
-                indices.push(i as Index);
+                indices.push(i as u16);
+                indices.push(i as u16 + 1);
+                indices.push(i as u16 + 2);
+                indices.push(i as u16 + 2);
+                indices.push(i as u16 + 3);
+                indices.push(i as u16);
             }
         });
 
