@@ -1,17 +1,16 @@
 use std::ops::{Deref, DerefMut};
 use nalgebra::Perspective3;
 use ecs::ComponentTrait;
-use super::super::Float;
 
 /// Provides an abstration for the projection matrix (used to make a camera).
 pub struct Projection {
-    inner: Perspective3<Float>,
+    inner: Perspective3<f32>,
 }
 
 impl Projection {
     /// Create a new instance of `Projection` given display aspect ratio, vertical field of view,
     /// and near and far z values.
-    pub fn new(aspect: Float, fov_y: Float, z_near: Float, z_far: Float) -> Self {
+    pub fn new(aspect: f32, fov_y: f32, z_near: f32, z_far: f32) -> Self {
         Projection {
             inner: Perspective3::new(aspect, fov_y, z_near, z_far)
         }
@@ -19,7 +18,7 @@ impl Projection {
 }
 
 impl Deref for Projection {
-    type Target = Perspective3<Float>;
+    type Target = Perspective3<f32>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner

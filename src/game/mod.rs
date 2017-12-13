@@ -4,7 +4,7 @@ use std::path::Path;
 use std::time::Duration;
 use nalgebra;
 use nalgebra::{Point3, Vector3};
-use engine::{Float, Orchestrator, EngineEvent, EventMonitor, DebugConsole, DebugShell, Renderer,
+use engine::{Orchestrator, EngineEvent, EventMonitor, DebugConsole, DebugShell, Renderer,
     EventInterface, Projection, View, Model, Description, Mesh, Material, UserInterface, UiState};
 
 pub fn run(resource_path: &Path, debugging: bool) {
@@ -26,7 +26,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
 
         // Assemble the camera entity.
         {
-            let aspect = dimensions[0] as Float / dimensions[1] as Float;
+            let aspect = dimensions[0] as f32 / dimensions[1] as f32;
             let fov_y = f32::consts::PI / 4.0;
             let z_near = 0.01;
             let z_far = 1000.0;

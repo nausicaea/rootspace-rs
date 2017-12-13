@@ -1,9 +1,8 @@
 use nalgebra::Matrix4;
 use glium::uniforms;
-use super::super::Float;
 
 pub struct Uniforms {
-    pub pvm_matrix: Matrix4<Float>,
+    pub pvm_matrix: Matrix4<f32>,
 }
 
 impl uniforms::Uniforms for Uniforms {

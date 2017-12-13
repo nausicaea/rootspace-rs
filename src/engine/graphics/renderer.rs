@@ -4,7 +4,6 @@ use glium::{Surface, Display, DrawParameters};
 use glium::backend::glutin::DisplayCreationError;
 use glium::glutin::{Api, GlRequest, GlProfile, EventsLoop, WindowBuilder, ContextBuilder};
 use ecs::{LoopStageFlag, SystemTrait, Assembly};
-use super::super::Float;
 use super::super::event::{EngineEventFlag, EngineEvent};
 use super::super::geometry::projection::Projection;
 use super::super::geometry::view::View;
@@ -79,7 +78,7 @@ impl SystemTrait<EngineEvent> for Renderer {
             },
             EngineEvent::ResizeWindow(w, h) => {
                 entities.ws1::<Projection>()
-                    .map(|p| p.set_aspect(w as Float / h as Float))
+                    .map(|p| p.set_aspect(w as f32 / h as f32))
                     .unwrap();
                 None
             },
