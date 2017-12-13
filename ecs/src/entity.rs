@@ -21,3 +21,17 @@ impl Display for Entity {
         write!(f, "Entity({})", self.0)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_increment() {
+        let mut e = Entity::new();
+        let f = e.clone();
+        e.increment();
+
+        assert_eq!(e.0, f.0 + 1);
+    }
+}
