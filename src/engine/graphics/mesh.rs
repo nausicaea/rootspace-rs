@@ -42,14 +42,14 @@ impl Mesh {
         })
     }
     /// Creates a new unit square.
-    pub fn quad(display: &Display) -> Result<Self, MeshError> {
+    pub fn quad(display: &Display, min: &[f32; 2], max: &[f32; 2], z_value: f32) -> Result<Self, MeshError> {
         let vertices = vec![
-            Vertex::new([-0.5, 0.5, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0]),
-            Vertex::new([-0.5, -0.5, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0]),
-            Vertex::new([0.5, -0.5, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0]),
-            Vertex::new([0.5, 0.5, 0.0], [1.0, 1.0], [0.0, 0.0, 1.0]),
+            Vertex::new([min[0], max[1], z_value], [0.0, 1.0], [0.0, 0.0, 1.0]),
+            Vertex::new([min[0], min[1], z_value], [0.0, 0.0], [0.0, 0.0, 1.0]),
+            Vertex::new([max[0], min[1], z_value], [1.0, 0.0], [0.0, 0.0, 1.0]),
+            Vertex::new([max[0], max[1], z_value], [1.0, 1.0], [0.0, 0.0, 1.0]),
         ];
-        let indices = vec![0, 1, 2, 0, 2, 3];
+        let indices = vec![0, 1, 2, 2, 3, 0];
 
         Self::new(display, &vertices, &indices, index::PrimitiveType::TrianglesList)
     }
