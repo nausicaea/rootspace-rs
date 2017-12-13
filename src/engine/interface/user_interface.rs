@@ -2,7 +2,21 @@ use std::time::Duration;
 use glium::Display;
 use ecs::{LoopStageFlag, SystemTrait, Assembly, EcsError};
 use super::super::event::{EngineEventFlag, EngineEvent};
+use super::super::debugging::description::Description;
+use super::super::geometry::model::Model;
 use super::ui_state::UiState;
+
+#[derive(Debug, Fail)]
+pub enum UiError {
+    #[fail(display = "{}", _0)]
+    AssemblyError(#[cause] EcsError),
+}
+
+impl From<EcsError> for UiError {
+    fn from(value: EcsError) -> Self {
+        UiError::AssemblyError(value)
+    }
+}
 
 /// The `UserInterface` is responsible for managing the state associated with the user interface.
 /// It also processes events that relate to the UI.
@@ -16,6 +30,12 @@ impl UserInterface {
         UserInterface {
             display: display.clone(),
         }
+    }
+    fn create_speech_bubble(&self, entities: &mut Assembly, target: &str, content: &str, lifetime: u64) -> Result<(), UiError> {
+        let entity_position = entities.rsf2::<_, Description, Model>(|&(d, _)| d.name == target)
+            .map(|(_, m)| m.translation.vector)?;
+
+        Ok(())
     }
     /// Checks the lifetimes of the registered `UiElement`s and removes those with expired
     /// lifetimes.
@@ -44,9 +64,13 @@ impl SystemTrait<EngineEvent> for UserInterface {
         LoopStageFlag::HANDLE_EVENT | LoopStageFlag::UPDATE
     }
     fn get_event_filter(&self) -> EngineEventFlag {
-        EngineEventFlag::empty()
+        EngineEventFlag::SPEECH_BUBBLE
     }
-    fn handle_event(&mut self, _entities: &mut Assembly, _event: &EngineEvent) -> Option<EngineEvent> {
+    fn handle_event(&mut self, entities: &mut Assembly, event: &EngineEvent) -> Option<EngineEvent> {
+        match *event {
+            EngineEvent::SpeechBubble(ref t, ref c, l) => self.create_speech_bubble(entities, t, c, l).unwrap(),
+            _ => (),
+        }
         None
     }
     fn update(&mut self, entities: &mut Assembly, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {

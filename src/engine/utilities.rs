@@ -84,7 +84,7 @@ pub fn layout_paragraph_cached<'a>(cache: &mut Cache<'a>, cache_tex: &Texture2d,
 
     enqueue_glyphs(cache, &glyphs);
 
-    update_cache(cache, cache_tex, &glyphs)?;
+    update_cache(cache, cache_tex)?;
 
     Ok((glyphs, text_dims))
 }
@@ -95,7 +95,7 @@ fn enqueue_glyphs<'a>(cache: &mut Cache<'a>, glyphs: &[PositionedGlyph<'a>]) {
     }
 }
 
-fn update_cache(cache: &mut Cache, cache_tex: &Texture2d, glyphs: &[PositionedGlyph]) -> Result<(), CacheWriteErr> {
+fn update_cache(cache: &mut Cache, cache_tex: &Texture2d) -> Result<(), CacheWriteErr> {
     cache.cache_queued(|rect, data| {
         cache_tex.main_level().write(Rect {
             left: rect.min.x,
