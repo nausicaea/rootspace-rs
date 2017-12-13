@@ -3,9 +3,9 @@ use glium::Display;
 use glium::index;
 use rusttype::{Rect, PositionedGlyph, point};
 use rusttype::gpu_cache::{Cache, CacheWriteErr};
-use super::super::graphics::vertex::Vertex;
-use super::super::graphics::mesh::{MeshError, Mesh};
-use super::super::graphics::material::{MaterialError, Material};
+use graphics::vertex::Vertex;
+use graphics::mesh::{MeshError, Mesh};
+use graphics::material::{MaterialError, Material};
 
 #[derive(Debug, Fail)]
 pub enum UiPrimitiveError {

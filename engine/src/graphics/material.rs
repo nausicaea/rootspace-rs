@@ -5,7 +5,7 @@ use glium::program;
 use glium::texture;
 use image;
 use ecs::ComponentTrait;
-use super::super::utilities::{load_text_file, load_image_file};
+use utilities::{load_text_file, load_image_file};
 
 #[derive(Debug, Fail)]
 pub enum MaterialError {

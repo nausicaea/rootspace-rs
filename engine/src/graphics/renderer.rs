@@ -4,13 +4,13 @@ use glium::{Surface, Display, DrawParameters};
 use glium::backend::glutin::DisplayCreationError;
 use glium::glutin::{Api, GlRequest, GlProfile, EventsLoop, WindowBuilder, ContextBuilder};
 use ecs::{LoopStageFlag, SystemTrait, Assembly};
-use super::super::event::{EngineEventFlag, EngineEvent};
-use super::super::geometry::projection::Projection;
-use super::super::geometry::view::View;
-use super::super::geometry::model::Model;
-use super::mesh::Mesh;
-use super::material::Material;
-use super::uniforms::Uniforms;
+use event::{EngineEventFlag, EngineEvent};
+use geometry::projection::Projection;
+use geometry::view::View;
+use geometry::model::Model;
+use graphics::mesh::Mesh;
+use graphics::material::Material;
+use graphics::uniforms::Uniforms;
 
 #[derive(Debug)]
 pub enum RendererError {

@@ -1,4 +1,4 @@
-use super::entity::Entity;
+use entity::Entity;
 
 #[derive(Debug, Fail)]
 pub enum EcsError {

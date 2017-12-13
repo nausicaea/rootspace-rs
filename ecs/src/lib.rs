@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+#![feature(core_intrinsics)]
 
 //! The `ecs` module provides functionality to represent an Entity-Component-System architecture.
 //! The `World` collects multiple boxed `SystemTrait`s which operate on the `ComponentTrait`s of
@@ -7,6 +7,14 @@
 //! added dynamically to `World`, as well as components (types that implement `ComponentTrait`. The
 //! latter must be linked to an `Entity` however, which must first be created by the `Assembly` (or
 //! the `World` via Deref trait).
+
+extern crate failure;
+#[macro_use]
+extern crate failure_derive;
+#[macro_use]
+extern crate bitflags;
+#[macro_use]
+extern crate log;
 
 /// Returns the names of multiple types as String. Uses `std::intrinsics::type_name` and thus
 /// requires the unstable feature `core_intrinsics` only available on rust nightly. Without this,

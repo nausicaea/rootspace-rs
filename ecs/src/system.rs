@@ -1,8 +1,8 @@
 use std::time::Duration;
 
-use super::event::EventTrait;
-use super::loop_stage::LoopStageFlag;
-use super::assembly::Assembly;
+use event::EventTrait;
+use loop_stage::LoopStageFlag;
+use assembly::Assembly;
 
 /// Every system encodes behaviour and every system must supply at least one of the methods
 /// defined in the trait `SystemTrait`.

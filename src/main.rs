@@ -1,27 +1,14 @@
-#![feature(core_intrinsics)]
-
 //! Rootspace is a 3D game written entirely in Rust. Currently, it is only executable with Cargo,
 //! but should run on all operating systems supported by the Rust compiler.
 
-extern crate failure;
-#[macro_use]
-extern crate failure_derive;
-#[macro_use]
-extern crate bitflags;
 extern crate clap;
-#[macro_use]
 extern crate log;
 extern crate fern;
-#[macro_use]
-extern crate glium;
 extern crate nalgebra;
-extern crate image;
-extern crate uuid;
-extern crate unicode_normalization;
-extern crate rusttype;
 
-mod ecs;
-mod engine;
+extern crate ecs;
+extern crate engine;
+
 mod game;
 
 use std::io;

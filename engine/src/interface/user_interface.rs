@@ -1,10 +1,10 @@
 use std::time::Duration;
 use glium::Display;
 use ecs::{LoopStageFlag, SystemTrait, Assembly, EcsError};
-use super::super::event::{EngineEventFlag, EngineEvent};
-use super::super::debugging::description::Description;
-use super::super::geometry::model::Model;
-use super::ui_state::UiState;
+use event::{EngineEventFlag, EngineEvent};
+use debugging::description::Description;
+use geometry::model::Model;
+use interface::ui_state::UiState;
 
 #[derive(Debug, Fail)]
 pub enum UiError {

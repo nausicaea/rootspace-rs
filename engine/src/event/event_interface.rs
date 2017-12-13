@@ -1,7 +1,7 @@
 use std::time::Duration;
 use glium::glutin::{Event, WindowEvent, EventsLoop};
 use ecs::{SystemTrait, LoopStageFlag, Assembly};
-use super::EngineEvent;
+use event::EngineEvent;
 
 /// The task of the `EventInterface` is to regularly poll for events from the operating system and
 /// graphical backend. Any events of interest are then sent off to the event bus of `World`.

@@ -4,7 +4,7 @@ use std::sync::mpsc::{channel, Receiver, TryRecvError};
 use std::time::Duration;
 use std::thread::spawn;
 use ecs::{LoopStageFlag, SystemTrait, Assembly};
-use super::super::event::EngineEvent;
+use event::EngineEvent;
 
 #[derive(Debug, Fail)]
 enum DebugConsoleError {

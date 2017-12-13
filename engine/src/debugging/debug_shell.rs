@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::num::ParseIntError;
 use clap::{App, Arg, AppSettings};
 use ecs::{Assembly, LoopStageFlag, SystemTrait};
-use super::super::event::{EngineEventFlag, EngineEvent};
+use event::{EngineEventFlag, EngineEvent};
 
 #[derive(Debug, Fail)]
 pub enum DebugShellError {

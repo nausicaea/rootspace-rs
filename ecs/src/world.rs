@@ -2,10 +2,10 @@ use std::collections::VecDeque;
 use std::ops::{Deref, DerefMut};
 use std::time::Duration;
 
-use super::event::{EcsEvent, EventTrait};
-use super::loop_stage::LoopStage;
-use super::assembly::Assembly;
-use super::system::SystemTrait;
+use event::{EcsEvent, EventTrait};
+use loop_stage::LoopStage;
+use assembly::Assembly;
+use system::SystemTrait;
 
 /// Encapsulates a set of systems, entities and components that describe an abstract universe of
 /// data and behaviour.

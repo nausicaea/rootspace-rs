@@ -1,5 +1,5 @@
 use ecs::{LoopStageFlag, SystemTrait, Assembly};
-use super::super::event::{EngineEventFlag, EngineEvent};
+use event::{EngineEventFlag, EngineEvent};
 
 /// Defines a system that logs all events on the bus to the console (log level TRACE).
 pub struct EventMonitor;

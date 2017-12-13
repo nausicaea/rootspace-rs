@@ -1,3 +1,21 @@
+extern crate failure;
+#[macro_use]
+extern crate failure_derive;
+#[macro_use]
+extern crate bitflags;
+extern crate clap;
+#[macro_use]
+extern crate log;
+extern crate fern;
+#[macro_use]
+extern crate glium;
+extern crate nalgebra;
+extern crate image;
+extern crate uuid;
+extern crate unicode_normalization;
+extern crate rusttype;
+extern crate ecs;
+
 mod utilities;
 mod event;
 mod debugging;

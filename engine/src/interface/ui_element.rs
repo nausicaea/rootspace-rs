@@ -1,4 +1,4 @@
-use super::ui_primitive::UiPrimitive;
+use interface::ui_primitive::UiPrimitive;
 
 /// A `UiElement` stands for a single object in the user interface. It may be composed of one or
 /// more `UiPrimitive`s.

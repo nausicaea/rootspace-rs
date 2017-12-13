@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::time::{Instant, Duration};
 use uuid::Uuid;
 use ecs::ComponentTrait;
-use super::ui_element::UiElement;
+use interface::ui_element::UiElement;
 
 pub struct UiState {
     pub elements: HashMap<Uuid, UiElement>,

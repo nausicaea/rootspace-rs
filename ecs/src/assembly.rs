@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use super::error::EcsError;
-use super::entity::Entity;
-use super::component_group::{ComponentTrait, ComponentGroup};
+use error::EcsError;
+use entity::Entity;
+use component_group::{ComponentTrait, ComponentGroup};
 
 /// Implements methods that collect all entities' components under the condition that all specified
 /// types must be present in each entity.

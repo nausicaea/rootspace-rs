@@ -1,7 +1,7 @@
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
-use super::error::EcsError;
+use error::EcsError;
 
 const DOWNCAST_ERROR: &str = "Was unable to downcast the requested component from Any.";
 
