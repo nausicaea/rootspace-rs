@@ -2,12 +2,13 @@ use ecs::{LoopStageFlag, SystemTrait, Assembly};
 use event::{EngineEventFlag, EngineEvent};
 
 /// Defines a system that logs all events on the bus to the console (log level TRACE).
+#[derive(Default)]
 pub struct EventMonitor;
 
 impl EventMonitor {
     /// Creates a new `EventMonitor` instance.
     pub fn new() -> Self {
-        EventMonitor {}
+        Default::default()
     }
 }
 

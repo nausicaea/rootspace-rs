@@ -10,12 +10,19 @@ pub struct EventInterface {
     pub events_loop: EventsLoop,
 }
 
-impl EventInterface {
-    /// Creates a new `EventInterface` instance.
-    pub fn new() -> Self {
+impl Default for EventInterface {
+    fn default() -> Self {
         EventInterface {
             events_loop: EventsLoop::new(),
         }
+    }
+}
+
+
+impl EventInterface {
+    /// Creates a new `EventInterface` instance.
+    pub fn new() -> Self {
+        Default::default()
     }
 }
 

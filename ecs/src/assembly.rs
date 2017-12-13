@@ -104,7 +104,7 @@ macro_rules! impl_read_single_filtered {
 }
 
 /// Defines a collection of `Entity`s and their components.
-#[derive(Debug)]
+#[derive(Default, Debug)]
 pub struct Assembly {
     base_entity: Entity,
     entities: HashMap<Entity, ComponentGroup>,
@@ -113,10 +113,7 @@ pub struct Assembly {
 impl Assembly {
     /// Creates a new, empty `Assembly`.
     pub fn new() -> Self {
-        Assembly {
-            base_entity: Entity::new(),
-            entities: HashMap::new(),
-        }
+        Default::default()
     }
     /// Creates a new `Entity` and registers it with the `Assembly`.
     pub fn create_entity(&mut self) -> Entity {

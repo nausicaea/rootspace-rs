@@ -34,6 +34,7 @@ pub trait CustomCommand {
 /// The `DebugShell` listens for `ConsoleCommand` events and interprets them as commands. The shell
 /// provides both builtin commands and the ability to register custom commands through the
 /// `CustomCommand` trait.
+#[derive(Default)]
 pub struct DebugShell {
     registry: HashMap<String, Box<CustomCommand>>,
 }
@@ -41,9 +42,7 @@ pub struct DebugShell {
 impl DebugShell {
     /// Creates a new, default `DebugShell`.
     pub fn new() -> Self {
-        DebugShell {
-            registry: HashMap::new(),
-        }
+        Default::default()
     }
     /// Adds a custom command to the registry.
     pub fn add_command<C>(&mut self, name: &str, command: C) where C: CustomCommand + 'static {

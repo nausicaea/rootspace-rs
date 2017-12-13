@@ -16,15 +16,21 @@ pub struct World<E: EventTrait> {
     rendering_suspended: bool,
 }
 
+impl<E: EventTrait> Default for World<E> {
+    fn default() -> Self {
+        World {
+            event_queue: Default::default(),
+            systems: Default::default(),
+            assembly: Default::default(),
+            rendering_suspended: Default::default(),
+        }
+    }
+}
+
 impl<E: EventTrait> World<E> {
     /// Creates a new, empty instance of `World`.
     pub fn new() -> Self {
-        World {
-            event_queue: VecDeque::new(),
-            systems: Vec::new(),
-            assembly: Assembly::new(),
-            rendering_suspended: false,
-        }
+        Default::default()
     }
     /// Adds a new system to the `World`.
     pub fn add_system<S: SystemTrait<E> + 'static>(&mut self, system: S) {

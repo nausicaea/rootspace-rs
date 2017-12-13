@@ -81,8 +81,9 @@ impl DebugConsole {
             if c == escape_char && !escape {
                 // The start of an escaped sequence.
                 escape = true;
-            } else if c == escape_char && escape {
+            } else if (c == escape_char || c == quote_char) && escape {
                 // Keep the actual escape character if it appears twice.
+                // Keep escaped quotes.
                 current_arg.push(c);
                 escape = false;
             } else if c == quote_char && !escape {
@@ -93,10 +94,6 @@ impl DebugConsole {
                     // Double quotes behave like double escapes in a quoted range.
                     current_arg.push(c);
                 }
-            } else if c == quote_char && escape {
-                // Keep escaped quotes.
-                current_arg.push(c);
-                escape = false;
             } else if c.is_whitespace() && !in_quote {
                 // Add the pending escape character.
                 if escape {

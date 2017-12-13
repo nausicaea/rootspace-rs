@@ -9,7 +9,7 @@ const DOWNCAST_ERROR: &str = "Was unable to downcast the requested component fro
 pub trait ComponentTrait: Any {}
 
 /// Groups multiple components of different types together.
-#[derive(Debug)]
+#[derive(Default, Debug)]
 pub struct ComponentGroup {
     components: HashMap<TypeId, Box<Any>>
 }
@@ -17,9 +17,7 @@ pub struct ComponentGroup {
 impl ComponentGroup {
     /// Creates a new, empty group.
     pub fn new() -> Self {
-        ComponentGroup {
-            components: HashMap::new(),
-        }
+        Default::default()
     }
     /// Inserts a new component into the group. If available, returns the previous component of the
     /// same type.

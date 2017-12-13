@@ -4,6 +4,7 @@ use uuid::Uuid;
 use ecs::ComponentTrait;
 use interface::ui_element::UiElement;
 
+#[derive(Default)]
 pub struct UiState {
     pub elements: HashMap<Uuid, UiElement>,
     pub lifetimes: HashMap<Uuid, (Instant, Duration)>
@@ -11,10 +12,7 @@ pub struct UiState {
 
 impl UiState {
     pub fn new() -> Self {
-        UiState {
-            elements: HashMap::new(),
-            lifetimes: HashMap::new(),
-        }
+        Default::default()
     }
 }
 

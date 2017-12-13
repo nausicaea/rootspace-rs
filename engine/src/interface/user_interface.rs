@@ -67,9 +67,8 @@ impl SystemTrait<EngineEvent> for UserInterface {
         EngineEventFlag::SPEECH_BUBBLE
     }
     fn handle_event(&mut self, entities: &mut Assembly, event: &EngineEvent) -> Option<EngineEvent> {
-        match *event {
-            EngineEvent::SpeechBubble(ref t, ref c, l) => self.create_speech_bubble(entities, t, c, l).unwrap(),
-            _ => (),
+        if let EngineEvent::SpeechBubble(ref t, ref c, l) = *event {
+            self.create_speech_bubble(entities, t, c, l).unwrap();
         }
         None
     }
