@@ -36,3 +36,28 @@ impl From<LoopStage> for LoopStageFlag {
     }
 }
 
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_from() {
+        let lsf: LoopStageFlag = LoopStage::HandleEvent.into();
+        assert!(lsf == LoopStageFlag::HANDLE_EVENT);
+        let lsf: LoopStageFlag = LoopStage::Update.into();
+        assert!(lsf == LoopStageFlag::UPDATE);
+        let lsf: LoopStageFlag = LoopStage::Render.into();
+        assert!(lsf == LoopStageFlag::RENDER);
+    }
+
+    #[test]
+    fn test_match_filter() {
+        assert!(LoopStage::HandleEvent.match_filter(LoopStageFlag::HANDLE_EVENT));
+        assert!(LoopStage::Update.match_filter(LoopStageFlag::UPDATE));
+        assert!(LoopStage::Render.match_filter(LoopStageFlag::RENDER));
+
+        for ls in &[LoopStage::HandleEvent, LoopStage::Update, LoopStage::Render] {
+            assert!(ls.match_filter(LoopStageFlag::ALL_STAGES));
+        }
+    }
+}
