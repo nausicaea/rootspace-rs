@@ -27,6 +27,12 @@ mod test {
     use super::*;
 
     #[test]
+    fn test_instantiation() {
+        let _e = Entity::new();
+        let _e: Entity = Default::default();
+    }
+
+    #[test]
     fn test_increment() {
         let mut e = Entity::new();
         let f = e.clone();

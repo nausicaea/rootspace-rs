@@ -63,6 +63,12 @@ mod test {
     impl ComponentTrait for Component {}
 
     #[test]
+    fn test_instantiation() {
+        let _cg = ComponentGroup::new();
+        let _cg: ComponentGroup = Default::default();
+    }
+
+    #[test]
     fn test_insert() {
         let mut cg = ComponentGroup::new();
 
