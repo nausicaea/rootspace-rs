@@ -52,3 +52,64 @@ impl ComponentGroup {
             .ok_or_else(|| EcsError::ComponentNotFound(type_names!(C)))
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[derive(PartialEq, Eq)]
+    struct Component(u32);
+
+    impl ComponentTrait for Component {}
+
+    #[test]
+    fn test_insert() {
+        let mut cg = ComponentGroup::new();
+
+        assert!(cg.insert(Component(0)).is_none());
+        let c = cg.insert(Component(1));
+        assert!(c.is_some() && c.unwrap() == Component(0));
+    }
+
+    #[test]
+    fn test_remove() {
+        let mut cg = ComponentGroup::new();
+
+        assert!(cg.remove::<Component>().is_none());
+        assert!(cg.insert(Component(0)).is_none());
+        let c = cg.remove::<Component>();
+        assert!(c.is_some() && c.unwrap() == Component(0));
+        assert!(cg.remove::<Component>().is_none());
+    }
+
+    #[test]
+    fn test_has() {
+        let mut cg = ComponentGroup::new();
+
+        assert!(!cg.has::<Component>());
+        assert!(cg.insert(Component(0)).is_none());
+        assert!(cg.has::<Component>());
+        assert!(cg.remove::<Component>().is_some());
+        assert!(!cg.has::<Component>());
+    }
+
+    #[test]
+    fn test_borrow() {
+        let mut cg = ComponentGroup::new();
+
+        assert!(cg.borrow::<Component>().is_err());
+        assert!(cg.insert(Component(0)).is_none());
+        let c = cg.borrow::<Component>();
+        assert!(c.is_ok() && c.unwrap() == &Component(0));
+    }
+
+    #[test]
+    fn test_borrow_mut() {
+        let mut cg = ComponentGroup::new();
+
+        assert!(cg.borrow_mut::<Component>().is_err());
+        assert!(cg.insert(Component(0)).is_none());
+        let c = cg.borrow_mut::<Component>().map(|x| {x.0 += 1; x});
+        assert!(c.is_ok() && c.unwrap() == &mut Component(1));
+    }
+}
