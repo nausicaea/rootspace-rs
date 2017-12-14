@@ -37,7 +37,7 @@ pub fn load_image_file(file_path: &Path) -> Result<RawImage2d<u8>, image::ImageE
 }
 
 /// Given a string of text, font parameters and a text width, generates a set of positioned glyphs.
-pub fn layout_paragraph<'a>(font: &'a Font, scale: f32, width: u32, text: &str) -> (Vec<PositionedGlyph<'a>>, [u32; 2]) {
+pub fn layout_paragraph<'a>(font: &Font<'a>, scale: f32, width: u32, text: &str) -> (Vec<PositionedGlyph<'a>>, [u32; 2]) {
     let mut result = Vec::new();
     let scale = Scale::uniform(scale);
     let v_metrics = font.v_metrics(scale);
@@ -79,7 +79,7 @@ pub fn layout_paragraph<'a>(font: &'a Font, scale: f32, width: u32, text: &str) 
 }
 
 /// Layouts a paragraph of text using the GPU cache.
-pub fn layout_paragraph_cached<'a>(cache: &mut Cache<'a>, cache_tex: &Texture2d, font: &'a Font, scale: f32, width: u32, text: &str) -> Result<(Vec<PositionedGlyph<'a>>, [u32; 2]), CacheWriteErr> {
+pub fn layout_paragraph_cached<'a>(cache: &mut Cache<'a>, cache_tex: &Texture2d, font: &Font<'a>, scale: f32, width: u32, text: &str) -> Result<(Vec<PositionedGlyph<'a>>, [u32; 2]), CacheWriteErr> {
     let (glyphs, text_dims) = layout_paragraph(font, scale, width, text);
 
     enqueue_glyphs(cache, &glyphs);
