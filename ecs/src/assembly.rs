@@ -117,9 +117,10 @@ impl Assembly {
     }
     /// Creates a new `Entity` and registers it with the `Assembly`.
     pub fn create_entity(&mut self) -> Entity {
+        let e = self.base_entity.clone();
         self.base_entity.increment();
-        self.entities.insert(self.base_entity.clone(), ComponentGroup::new());
-        self.base_entity.clone()
+        self.entities.insert(e.clone(), ComponentGroup::new());
+        e
     }
     /// Deletes the specified `Entity` from the `Assembly` and may return a `ComponentGroup`.
     pub fn destroy_entity(&mut self, entity: &Entity) -> Option<ComponentGroup> {
@@ -149,8 +150,6 @@ impl Assembly {
     impl_read!(r3, A, B, C);
     /// Collects all instances of entities that have all specified component types.
     impl_read!(r4, A, B, C, D);
-    /// Collects all instances of entities that have all specified component types.
-    impl_read!(r5, A, B, C, D, E);
     /// Collects all instances of the specified component type, and filters their values.
     impl_read_filtered!(rf1, A);
     /// Collects all entities' components that have all specified component types and filters
@@ -162,9 +161,6 @@ impl Assembly {
     /// Collects all entities' components that have all specified component types and filters
     /// their values.
     impl_read_filtered!(rf4, A, B, C, D);
-    /// Collects all entities' components that have all specified component types and filters
-    /// their values.
-    impl_read_filtered!(rf5, A, B, C, D, E);
     /// Ensures that only a single entity matches the bounds given by the specified component
     /// types. Errors otherwise.
     impl_read_single!(rs1, r1, A);
@@ -178,9 +174,6 @@ impl Assembly {
     /// types. Errors otherwise.
     impl_read_single!(rs4, r4, A, B, C, D);
     /// Ensures that only a single entity matches the bounds given by the specified component
-    /// types. Errors otherwise.
-    impl_read_single!(rs5, r5, A, B, C, D, E);
-    /// Ensures that only a single entity matches the bounds given by the specified component
     /// types and filter. Errors otherwise.
     impl_read_single_filtered!(rsf1, rf1, A);
     /// Ensures that only a single entity matches the bounds given by the specified component
@@ -192,9 +185,6 @@ impl Assembly {
     /// Ensures that only a single entity matches the bounds given by the specified component
     /// types and filter. Errors otherwise.
     impl_read_single_filtered!(rsf4, rf4, A, B, C, D);
-    /// Ensures that only a single entity matches the bounds given by the specified component
-    /// types and filter. Errors otherwise.
-    impl_read_single_filtered!(rsf5, rf5, A, B, C, D, E);
     /// Provides mutable access to all instances of the specified component type.
     pub fn w1<C: ComponentTrait>(&mut self) -> Vec<&mut C> {
         self.entities.values_mut()
@@ -232,5 +222,52 @@ impl Assembly {
             1 => Ok(components.pop().unwrap_or_else(|| unreachable!())),
             _ => Err(EcsError::MultipleComponentsFound(type_names!(C))),
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_instatiation() {
+        let _a = Assembly::new();
+        let _a: Assembly = Default::default();
+    }
+
+    #[test]
+    fn test_create_entity() {
+        let mut a = Assembly::new();
+
+        let e = a.create_entity();
+        let f = a.create_entity();
+
+        assert!(e != f);
+    }
+
+    #[test]
+    fn test_destroy_entity() {
+        use entity::Entity;
+
+        let mut a = Assembly::new();
+
+        let e = Entity::new();
+        assert!(a.destroy_entity(&e).is_none());
+
+        let f = a.create_entity();
+        assert!(a.destroy_entity(&f).is_some());
+    }
+
+    #[test]
+    fn test_has_entity() {
+        use entity::Entity;
+
+        let mut a = Assembly::new();
+
+        let e = Entity::new();
+        assert!(!a.has_entity(&e));
+
+        let f = a.create_entity();
+        assert!(a.has_entity(&f));
     }
 }

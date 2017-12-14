@@ -9,6 +9,7 @@ extern crate log;
 extern crate fern;
 #[macro_use]
 extern crate glium;
+extern crate alga;
 extern crate nalgebra;
 extern crate image;
 extern crate uuid;
@@ -38,4 +39,5 @@ pub use self::graphics::mesh::Mesh;
 pub use self::graphics::material::Material;
 pub use self::interface::user_interface::UserInterface;
 pub use self::interface::ui_state::UiState;
+pub use self::interface::ui_styles::{Common, SpeechBubble};
 pub use self::orchestrator::Orchestrator;

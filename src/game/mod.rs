@@ -5,7 +5,8 @@ use std::time::Duration;
 use nalgebra;
 use nalgebra::{Point3, Vector3};
 use engine::{Orchestrator, EngineEvent, EventMonitor, DebugConsole, DebugShell, Renderer,
-    EventInterface, Projection, View, Model, Description, Mesh, Material, UserInterface, UiState};
+    EventInterface, Projection, View, Model, Description, Mesh, Material, UserInterface, UiState,
+    Common, SpeechBubble};
 
 pub fn run(resource_path: &Path, debugging: bool) {
     // The following variables set up the state of the engine.
@@ -13,6 +14,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
     let max_frame_time = Duration::from_millis(250);
     let title = String::from("Rootspace");
     let dimensions = [1024, 768];
+    let hi_dpi_factor = 1.0;
     let vsync = true;
     let msaa = 4;
     let clear_color = [0.1, 0.15, 0.3, 1.0];
@@ -46,9 +48,15 @@ pub fn run(resource_path: &Path, debugging: bool) {
 
         // Assembly the UI canvas.
         {
+            let font_path = o.resource_path.join("fonts").join("SourceCodePro-Regular.ttf");
+            let font_scale = 24.0;
+            let speech_bubble_width = 100;
+            let common = Common::new(&font_path, font_scale).unwrap();
+            let speech_bubble = SpeechBubble::new(speech_bubble_width);
+
             let canvas = o.world.create_entity();
             let d = Description::new("canvas");
-            let u = UiState::new();
+            let u = UiState::new(&renderer.display, &dimensions, hi_dpi_factor, common, speech_bubble).unwrap();
 
             o.world.add_component(&canvas, d).unwrap();
             o.world.add_component(&canvas, u).unwrap();

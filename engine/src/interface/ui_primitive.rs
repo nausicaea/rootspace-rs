@@ -2,7 +2,7 @@ use std::path::Path;
 use glium::Display;
 use glium::index;
 use rusttype::{Rect, PositionedGlyph, point};
-use rusttype::gpu_cache::{Cache, CacheWriteErr};
+use rusttype::gpu_cache::Cache;
 use graphics::vertex::Vertex;
 use graphics::mesh::{MeshError, Mesh};
 use graphics::material::{MaterialError, Material};
@@ -10,27 +10,9 @@ use graphics::material::{MaterialError, Material};
 #[derive(Debug, Fail)]
 pub enum UiPrimitiveError {
     #[fail(display = "{}", _0)]
-    CacheError(String),
-    #[fail(display = "{}", _0)]
     MeshCreationError(#[cause] MeshError),
     #[fail(display = "{}", _0)]
     MaterialCreationError(#[cause] MaterialError),
-}
-
-impl From<CacheWriteErr> for UiPrimitiveError {
-    fn from(value: CacheWriteErr) -> Self {
-        use self::UiPrimitiveError::*;
-
-        match value {
-            CacheWriteErr::GlyphTooLarge => CacheError("At least one of the queued glyphs is too
-                                                       big to fit into the cache, even if all other
-                                                       glyphs are removed".into()),
-            CacheWriteErr::NoRoomForWholeQueue => CacheError("Not all of the requested glyphs can
-                                                             fit into the cache, even if the cache
-                                                             is completely cleared before the
-                                                             attempt".into()),
-        }
-    }
 }
 
 impl From<MeshError> for UiPrimitiveError {

@@ -26,7 +26,7 @@ macro_rules! type_names {
     }};
     ($($t:tt),*) => {{
         use std::intrinsics::type_name;
-        let mut buf = String::from("(");
+        let mut buf = String::new();
         $(buf.push_str(unsafe {type_name::<$t>()}); buf.push_str(", ");)*
         buf
     }};

@@ -4,7 +4,7 @@ use interface::ui_primitive::UiPrimitive;
 /// more `UiPrimitive`s.
 #[derive(Default)]
 pub struct UiElement {
-    inner: Vec<UiPrimitive>,
+    pub primitives: Vec<UiPrimitive>,
 }
 
 impl UiElement {

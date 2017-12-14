@@ -262,6 +262,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "engine"
 version = "0.1.0"
 dependencies = [
+ "alga 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.28.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ecs 0.1.0",
