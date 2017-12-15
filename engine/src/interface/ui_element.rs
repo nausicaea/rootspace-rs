@@ -1,14 +1,18 @@
+use geometry::model::Model;
 use interface::ui_primitive::UiPrimitive;
 
 /// A `UiElement` stands for a single object in the user interface. It may be composed of one or
 /// more `UiPrimitive`s.
-#[derive(Default)]
 pub struct UiElement {
+    pub model: Model,
     pub primitives: Vec<UiPrimitive>,
 }
 
 impl UiElement {
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(model: Model, primitives: Vec<UiPrimitive>) -> Self {
+        UiElement {
+            model: model,
+            primitives: primitives,
+        }
     }
 }

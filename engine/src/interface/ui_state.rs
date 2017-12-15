@@ -16,6 +16,7 @@ pub struct UiState {
     pub font_cache_gpu: Texture2d,
     pub common: Common,
     pub speech_bubble: SpeechBubble,
+    pub dimensions: [u32; 2],
 }
 
 impl UiState {
@@ -40,6 +41,7 @@ impl UiState {
             font_cache_gpu: gpu_cache,
             common: common,
             speech_bubble: speech_bubble,
+            dimensions: dimensions.clone(),
         })
     }
 }

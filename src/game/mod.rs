@@ -50,9 +50,13 @@ pub fn run(resource_path: &Path, debugging: bool) {
         {
             let font_path = o.resource_path.join("fonts").join("SourceCodePro-Regular.ttf");
             let font_scale = 24.0;
-            let speech_bubble_width = 100;
             let common = Common::new(&font_path, font_scale).unwrap();
-            let speech_bubble = SpeechBubble::new(speech_bubble_width);
+            let tvs = o.resource_path.join("shaders").join("text-vertex.glsl");
+            let tfs = o.resource_path.join("shaders").join("text-fragment.glsl");
+            let rvs = o.resource_path.join("shaders").join("rect-vertex.glsl");
+            let rfs = o.resource_path.join("shaders").join("rect-fragment.glsl");
+            let rdt = o.resource_path.join("textures").join("rect-diff-tex.png");
+            let speech_bubble = SpeechBubble::new(&tvs, &tfs, &rvs, &rfs, &rdt);
 
             let canvas = o.world.create_entity();
             let d = Description::new("canvas");

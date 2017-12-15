@@ -50,7 +50,9 @@ pub struct Material {
     gs: Option<PathBuf>,
     /// Provides access to the shader program.
     pub shader: Program,
+    /// Provides access to the diffuse texture.
     pub diff_tex: Option<Texture2d>,
+    /// Provides access to the normal texture.
     pub norm_tex: Option<Texture2d>,
 }
 

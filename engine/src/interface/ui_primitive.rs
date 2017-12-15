@@ -1,18 +1,16 @@
-use std::path::Path;
 use glium::Display;
 use glium::index;
 use rusttype::{Rect, PositionedGlyph, point};
 use rusttype::gpu_cache::Cache;
+use geometry::model::Model;
 use graphics::vertex::Vertex;
 use graphics::mesh::{MeshError, Mesh};
-use graphics::material::{MaterialError, Material};
+use graphics::material::Material;
 
 #[derive(Debug, Fail)]
 pub enum UiPrimitiveError {
     #[fail(display = "{}", _0)]
     MeshCreationError(#[cause] MeshError),
-    #[fail(display = "{}", _0)]
-    MaterialCreationError(#[cause] MaterialError),
 }
 
 impl From<MeshError> for UiPrimitiveError {
@@ -21,22 +19,25 @@ impl From<MeshError> for UiPrimitiveError {
     }
 }
 
-impl From<MaterialError> for UiPrimitiveError {
-    fn from(value: MaterialError) -> Self {
-        UiPrimitiveError::MaterialCreationError(value)
-    }
-}
-
 /// A `UiPrimitive` encodes all data necessary to render the primitive to the display (vertices,
 /// indices, material, uniforms).
 pub struct UiPrimitive {
-    mesh: Mesh,
-    material: Material,
+    pub model: Model,
+    pub mesh: Mesh,
+    pub material: Material,
 }
 
 impl UiPrimitive {
+    /// Creates a new `UiPrimitive`.
+    pub fn new(model: Model, mesh: Mesh, material: Material) -> Self {
+        UiPrimitive {
+            model: model,
+            mesh: mesh,
+            material: material,
+        }
+    }
     /// Creates a new `UiPrimitive` that contains rendered text.
-    pub fn new_text(display: &Display, screen_dims: &[u32; 2], z_value: f32, vs: &Path, fs: &Path, cache: &Cache, glyphs: &[PositionedGlyph]) -> Result<Self, UiPrimitiveError> {
+    pub fn new_text(display: &Display, screen_dims: &[u32; 2], z_value: f32, model: Model, material: Material, cache: &Cache, glyphs: &[PositionedGlyph]) -> Result<Self, UiPrimitiveError> {
         let mut vertices = Vec::new();
         let mut indices = Vec::new();
 
@@ -61,17 +62,17 @@ impl UiPrimitive {
             }
         });
 
-        Ok(UiPrimitive {
-            mesh: Mesh::new(display, &vertices, &indices, index::PrimitiveType::TrianglesList)?,
-            material: Material::new(display, vs, fs, None, None, None)?,
-        })
+        let mesh = Mesh::new(display, &vertices, &indices, index::PrimitiveType::TrianglesList)?;
+
+        Ok(Self::new(model, mesh, material))
     }
-    ///// Creates a new `UiPrimitive` that contains a textured rectangle.
-    // pub fn new_rect(display: &Display, screen_dims: &[u32; 2], z_value: f32, rect_dims: &[f32; 2], vs: &Path, fs: &Path) -> Result<Self, UiPrimitiveError> {
-    //     Ok(UiPrimitive {
-    //         mesh: Mesh::quad(display, &min, &max, z_value),
-    //         material
-    //     })
-    // }
+    /// Creates a new `UiPrimitive` that contains a textured rectangle.
+    pub fn new_rect(display: &Display, rect_dims: &[f32; 2], z_value: f32, model: Model, material: Material) -> Result<Self, UiPrimitiveError> {
+        let min = [-rect_dims[0] / 2.0, -rect_dims[1] / 2.0];
+        let max = [rect_dims[0] / 2.0, rect_dims[1] / 2.0];
+        let mesh = Mesh::quad(display, &min, &max, z_value)?;
+
+        Ok(Self::new(model, mesh, material))
+    }
 }
 

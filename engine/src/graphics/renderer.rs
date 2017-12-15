@@ -11,6 +11,8 @@ use geometry::model::Model;
 use graphics::mesh::Mesh;
 use graphics::material::Material;
 use graphics::uniforms::Uniforms;
+use interface::ui_state::UiState;
+use interface::ui_uniforms::UiUniforms;
 
 #[derive(Debug)]
 pub enum RendererError {
@@ -107,6 +109,31 @@ impl SystemTrait<EngineEvent> for Renderer {
                     };
 
                     target.draw(&me.vertices, &me.indices, &ma.shader, &u, &dp).unwrap();
+                }
+            })
+            .unwrap();
+
+        // Redner the user interface.
+        entities.rs1::<UiState>()
+            .map(|u| {
+                for e in u.elements.values() {
+                    for p in &e.primitives {
+                        let uniforms = UiUniforms {
+                            pvm_matrix: e.model.to_homogeneous() * p.model.to_homogeneous(),
+                            font_cache: &u.font_cache_gpu,
+                            diff_tex: p.material.diff_tex.as_ref(),
+                            norm_tex: p.material.norm_tex.as_ref(),
+                        };
+                        let dp = DrawParameters {
+                            depth: glium::Depth {
+                                test: glium::draw_parameters::DepthTest::IfLess,
+                                write: true,
+                                .. Default::default()
+                            },
+                            .. Default::default()
+                        };
+                        target.draw(&p.mesh.vertices, &p.mesh.indices, &p.material.shader, &uniforms, &dp).unwrap();
+                    }
                 }
             })
             .unwrap();
