@@ -104,13 +104,12 @@ impl UserInterface {
         let text_dims_ndc = text_dims_px.component_div(&dimensions);
         let rect_dims_ndc = text_dims_ndc + Vector2::new(margin_left + margin_right, margin_top + margin_bottom);
 
-        let element_model = {
-            let entity_pos_ndc = Vector2::new(entity_pos_ndc.x, entity_pos_ndc.y);
-            let bubble_center = entity_pos_ndc + relative_offset.component_mul(&rect_dims_ndc);
-            let bubble_center = Vector3::new(bubble_center.x, bubble_center.y, -0.98);
-            Model::new(&bubble_center, &nalgebra::zero())
-        };
-        let text_model = Model::new(&Vector3::new(0.0, 0.0, -0.01), &nalgebra::zero());
+        let entity_pos_ndc = Vector2::new(entity_pos_ndc.x, entity_pos_ndc.y);
+        let bubble_center = entity_pos_ndc + relative_offset.component_mul(&rect_dims_ndc);
+        let text_center = Vector2::new(text_dims_ndc.x - rect_dims_ndc.x, rect_dims_ndc.y - text_dims_ndc.y) / 2.0 + Vector2::new(margin_left, -margin_top);
+
+        let element_model = Model::new(&Vector3::new(bubble_center.x, bubble_center.y, -0.98), &nalgebra::zero());
+        let text_model = Model::new(&Vector3::new(text_center.x, text_center.y, -0.01), &nalgebra::zero());
         let rect_model = Model::new(&nalgebra::zero(), &nalgebra::zero());
 
         let vs = &ui_state.speech_bubble.text_vertex_shader;

@@ -56,7 +56,7 @@ impl SpeechBubble {
             margin_left: 5,
             margin_right: 5,
             margin_top: 5,
-            margin_bottom: 5,
+            margin_bottom: 50,
             relative_position_offset: Vector2::new(-0.5, 0.5),
             text_vertex_shader: text_vs.to_owned(),
             text_fragment_shader: text_fs.to_owned(),
