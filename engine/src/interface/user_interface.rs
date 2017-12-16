@@ -112,17 +112,21 @@ impl UserInterface {
         let text_model = Model::new(&Vector3::new(text_center.x, text_center.y, -0.01), &nalgebra::zero());
         let rect_model = Model::new(&nalgebra::zero(), &nalgebra::zero());
 
-        let vs = &ui_state.speech_bubble.text_vertex_shader;
-        let fs = &ui_state.speech_bubble.text_fragment_shader;
-        let text_material = Material::new(&self.display, vs, fs, None, None, None)?;
+        let text_material = Material::new(&self.display,
+                                          &ui_state.speech_bubble.text_vertex_shader,
+                                          &ui_state.speech_bubble.text_fragment_shader, None, None,
+                                          None)?;
 
-        let vs = &ui_state.speech_bubble.rect_vertex_shader;
-        let fs = &ui_state.speech_bubble.rect_fragment_shader;
-        let dt = &ui_state.speech_bubble.rect_diffuse_texture;
-        let rect_material = Material::new(&self.display, vs, fs, None, Some(dt), None)?;
+        let rect_material = Material::new(&self.display,
+                                          &ui_state.speech_bubble.rect_vertex_shader,
+                                          &ui_state.speech_bubble.rect_fragment_shader, None,
+                                          Some(&ui_state.speech_bubble.rect_diffuse_texture),
+                                          None)?;
 
         let rect = UiPrimitive::new_rect(&self.display, &rect_dims_ndc.into(), 0.0, rect_model, rect_material)?;
-        let text = UiPrimitive::new_text(&self.display, &ui_state.dimensions, 0.0, &ui_state.font_cache_cpu, &glyphs, &text_dims_ndc.into(), text_model, text_material)?;
+        let text = UiPrimitive::new_text(&self.display, &ui_state.dimensions, 0.0,
+                                         &ui_state.font_cache_cpu, &glyphs, &text_dims_ndc.into(),
+                                         text_model, text_material)?;
 
         let id = Uuid::new_v4();
         ui_state.elements.insert(id, UiElement::new(element_model, vec![rect, text]));
