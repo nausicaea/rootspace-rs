@@ -55,7 +55,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let tfs = o.resource_path.join("shaders").join("text-fragment.glsl");
             let rvs = o.resource_path.join("shaders").join("rect-vertex.glsl");
             let rfs = o.resource_path.join("shaders").join("rect-fragment.glsl");
-            let rdt = o.resource_path.join("textures").join("rect-diff-tex.png");
+            let rdt = o.resource_path.join("textures").join("speech-bubble.png");
             let speech_bubble = SpeechBubble::new(&tvs, &tfs, &rvs, &rfs, &rdt);
 
             let canvas = o.world.create_entity();
