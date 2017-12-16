@@ -91,24 +91,36 @@ impl SystemTrait<EngineEvent> for Renderer {
         let mut target = self.display.draw();
         target.clear_color_and_depth(self.clear_color, 1.0);
 
+        let draw_params = DrawParameters {
+            depth: glium::Depth {
+                test: glium::draw_parameters::DepthTest::IfLess,
+                write: true,
+                .. Default::default()
+            },
+            blend: glium::Blend {
+                color: glium::BlendingFunction::Addition {
+                    source: glium::LinearBlendingFactor::One,
+                    destination: glium::LinearBlendingFactor::OneMinusSourceAlpha,
+                },
+                alpha: glium::BlendingFunction::Addition {
+                    source: glium::LinearBlendingFactor::One,
+                    destination: glium::LinearBlendingFactor::OneMinusSourceAlpha,
+                },
+                constant_value: (0.0, 0.0, 0.0, 0.0),
+            },
+            .. Default::default()
+        };
+
         // Render all entities.
         entities.rs2::<Projection, View>()
             .map(|(p, v)| {
                 let pv = p.as_matrix() * v.to_homogeneous();
                 for (mo, me, ma) in entities.r3::<Model, Mesh, Material>() {
-                    let u = Uniforms {
+                    let uniforms = Uniforms {
                         pvm_matrix: pv * mo.to_homogeneous(),
                     };
-                    let dp = DrawParameters {
-                        depth: glium::Depth {
-                            test: glium::draw_parameters::DepthTest::IfLess,
-                            write: true,
-                            .. Default::default()
-                        },
-                        .. Default::default()
-                    };
 
-                    target.draw(&me.vertices, &me.indices, &ma.shader, &u, &dp).unwrap();
+                    target.draw(&me.vertices, &me.indices, &ma.shader, &uniforms, &draw_params).unwrap();
                 }
             })
             .unwrap();
@@ -124,15 +136,8 @@ impl SystemTrait<EngineEvent> for Renderer {
                             diff_tex: p.material.diff_tex.as_ref(),
                             norm_tex: p.material.norm_tex.as_ref(),
                         };
-                        let dp = DrawParameters {
-                            depth: glium::Depth {
-                                test: glium::draw_parameters::DepthTest::IfLess,
-                                write: true,
-                                .. Default::default()
-                            },
-                            .. Default::default()
-                        };
-                        target.draw(&p.mesh.vertices, &p.mesh.indices, &p.material.shader, &uniforms, &dp).unwrap();
+
+                        target.draw(&p.mesh.vertices, &p.mesh.indices, &p.material.shader, &uniforms, &draw_params).unwrap();
                     }
                 }
             })
