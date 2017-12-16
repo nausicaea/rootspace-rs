@@ -43,7 +43,8 @@ impl UiPrimitive {
 
         let origin = point(-text_dims[0] / 2.0, text_dims[1] / 2.0);
 
-        glyphs.iter().enumerate().for_each(|(i, g)| {
+        let mut quad_counter = 0;
+        glyphs.iter().for_each(|g| {
             if let Ok(Some((uv_rect, screen_rect))) = cache.rect_for(0, g) {
                 let ndc_rect = Rect {
                     min: origin + vector(screen_rect.min.x as f32 / screen_dims[0] as f32, -screen_rect.min.y as f32 / screen_dims[1] as f32),
@@ -55,13 +56,14 @@ impl UiPrimitive {
                 vertices.push(Vertex::new([ndc_rect.max.x, ndc_rect.min.y, z_value], [uv_rect.max.x, uv_rect.min.y], [0.0, 0.0, 1.0]));
                 vertices.push(Vertex::new([ndc_rect.max.x, ndc_rect.max.y, z_value], [uv_rect.max.x, uv_rect.max.y], [0.0, 0.0, 1.0]));
 
-                let stride = i as u16 * 4;
+                let stride = quad_counter * 4;
                 indices.push(stride);
                 indices.push(stride + 1);
                 indices.push(stride + 2);
                 indices.push(stride + 2);
                 indices.push(stride + 3);
                 indices.push(stride);
+                quad_counter += 1;
             }
         });
 
