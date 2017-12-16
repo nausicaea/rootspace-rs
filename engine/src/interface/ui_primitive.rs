@@ -49,20 +49,19 @@ impl UiPrimitive {
                     min: origin + vector(screen_rect.min.x as f32 / screen_dims[0] as f32, -screen_rect.min.y as f32 / screen_dims[1] as f32),
                     max: origin + vector(screen_rect.max.x as f32 / screen_dims[0] as f32, -screen_rect.max.y as f32 / screen_dims[1] as f32),
                 };
-                println!("Screen rect: {:?}", screen_rect);
-                println!("Ndc rect: {:?}", ndc_rect);
 
                 vertices.push(Vertex::new([ndc_rect.min.x, ndc_rect.max.y, z_value], [uv_rect.min.x, uv_rect.max.y], [0.0, 0.0, 1.0]));
                 vertices.push(Vertex::new([ndc_rect.min.x, ndc_rect.min.y, z_value], [uv_rect.min.x, uv_rect.min.y], [0.0, 0.0, 1.0]));
                 vertices.push(Vertex::new([ndc_rect.max.x, ndc_rect.min.y, z_value], [uv_rect.max.x, uv_rect.min.y], [0.0, 0.0, 1.0]));
                 vertices.push(Vertex::new([ndc_rect.max.x, ndc_rect.max.y, z_value], [uv_rect.max.x, uv_rect.max.y], [0.0, 0.0, 1.0]));
 
-                indices.push(i as u16);
-                indices.push(i as u16 + 1);
-                indices.push(i as u16 + 2);
-                indices.push(i as u16 + 2);
-                indices.push(i as u16 + 3);
-                indices.push(i as u16);
+                let stride = i as u16 * 4;
+                indices.push(stride);
+                indices.push(stride + 1);
+                indices.push(stride + 2);
+                indices.push(stride + 2);
+                indices.push(stride + 3);
+                indices.push(stride);
             }
         });
 
