@@ -123,7 +123,7 @@ impl UserInterface {
         let rect_material = Material::new(&self.display, vs, fs, None, Some(dt), None)?;
 
         let rect = UiPrimitive::new_rect(&self.display, &rect_dims_ndc.into(), 0.0, rect_model, rect_material)?;
-        let text = UiPrimitive::new_text(&self.display, &ui_state.dimensions, 0.0, text_model, text_material, &ui_state.font_cache_cpu, &glyphs)?;
+        let text = UiPrimitive::new_text(&self.display, &ui_state.dimensions, 0.0, &ui_state.font_cache_cpu, &glyphs, &text_dims_ndc.into(), text_model, text_material)?;
 
         let id = Uuid::new_v4();
         ui_state.elements.insert(id, UiElement::new(element_model, vec![rect, text]));
