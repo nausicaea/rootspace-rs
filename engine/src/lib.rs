@@ -23,6 +23,7 @@ mod debugging;
 mod geometry;
 mod graphics;
 mod interface;
+mod factory;
 mod orchestrator;
 
 pub use self::event::EngineEvent;
@@ -40,4 +41,5 @@ pub use self::graphics::material::Material;
 pub use self::interface::user_interface::UserInterface;
 pub use self::interface::ui_state::UiState;
 pub use self::interface::ui_styles::{Common, SpeechBubble};
+pub use self::factory::ComponentFactory;
 pub use self::orchestrator::Orchestrator;
