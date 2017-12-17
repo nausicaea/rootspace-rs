@@ -2,7 +2,7 @@ use glium::{Display, VertexBuffer, IndexBuffer};
 use glium::vertex;
 use glium::index;
 use ecs::ComponentTrait;
-use graphics::vertex::Vertex;
+use common::vertex::Vertex;
 
 #[derive(Debug, Fail)]
 pub enum MeshError {

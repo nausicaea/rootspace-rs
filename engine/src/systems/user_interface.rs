@@ -8,14 +8,14 @@ use uuid::Uuid;
 use ecs::{LoopStageFlag, SystemTrait, Assembly, EcsError};
 use utilities::layout_paragraph_cached;
 use event::{EngineEventFlag, EngineEvent};
-use debugging::description::Description;
-use geometry::projection::Projection;
-use geometry::view::View;
-use geometry::model::Model;
-use graphics::material::{Material, MaterialError};
-use interface::ui_state::UiState;
-use interface::ui_element::UiElement;
-use interface::ui_primitive::{UiPrimitive, UiPrimitiveError};
+use components::description::Description;
+use components::projection::Projection;
+use components::view::View;
+use components::model::Model;
+use components::material::{Material, MaterialError};
+use components::ui_state::UiState;
+use common::ui_element::UiElement;
+use common::ui_primitive::{UiPrimitive, UiPrimitiveError};
 
 #[derive(Debug, Fail)]
 pub enum UiError {

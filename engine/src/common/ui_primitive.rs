@@ -2,10 +2,10 @@ use glium::Display;
 use glium::index;
 use rusttype::{Rect, PositionedGlyph, point, vector};
 use rusttype::gpu_cache::Cache;
-use geometry::model::Model;
-use graphics::vertex::Vertex;
-use graphics::mesh::{MeshError, Mesh};
-use graphics::material::Material;
+use components::model::Model;
+use common::vertex::Vertex;
+use components::mesh::{MeshError, Mesh};
+use components::material::Material;
 
 #[derive(Debug, Fail)]
 pub enum UiPrimitiveError {

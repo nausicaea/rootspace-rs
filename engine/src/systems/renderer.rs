@@ -6,14 +6,14 @@ use glium::backend::glutin::DisplayCreationError;
 use glium::glutin::{Api, GlRequest, GlProfile, EventsLoop, WindowBuilder, ContextBuilder};
 use ecs::{LoopStageFlag, SystemTrait, Assembly};
 use event::{EngineEventFlag, EngineEvent};
-use geometry::projection::Projection;
-use geometry::view::View;
-use geometry::model::Model;
-use graphics::mesh::Mesh;
-use graphics::material::Material;
-use graphics::uniforms::Uniforms;
-use interface::ui_state::UiState;
-use interface::ui_uniforms::UiUniforms;
+use components::projection::Projection;
+use components::view::View;
+use components::model::Model;
+use components::mesh::Mesh;
+use components::material::Material;
+use common::uniforms::Uniforms;
+use components::ui_state::UiState;
+use common::ui_uniforms::UiUniforms;
 
 #[derive(Debug)]
 pub enum RendererError {

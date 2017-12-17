@@ -1,5 +1,5 @@
-use geometry::model::Model;
-use interface::ui_primitive::UiPrimitive;
+use components::model::Model;
+use common::ui_primitive::UiPrimitive;
 
 /// A `UiElement` stands for a single object in the user interface. It may be composed of one or
 /// more `UiPrimitive`s.

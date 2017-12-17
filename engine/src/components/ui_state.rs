@@ -6,8 +6,8 @@ use rusttype::gpu_cache::Cache;
 use glium::Display;
 use glium::texture::{Texture2d, RawImage2d, UncompressedFloatFormat, MipmapsOption, ClientFormat, TextureCreationError};
 use ecs::ComponentTrait;
-use interface::ui_element::UiElement;
-use interface::ui_styles::{Common, SpeechBubble};
+use common::ui_element::UiElement;
+use common::ui_styles::{Common, SpeechBubble};
 
 pub struct UiState {
     pub elements: HashMap<Uuid, UiElement>,
