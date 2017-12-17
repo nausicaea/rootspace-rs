@@ -56,7 +56,7 @@ impl Renderer {
     }
 }
 
-impl SystemTrait<EngineEvent> for Renderer {
+impl<F> SystemTrait<EngineEvent, F> for Renderer {
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         if self.ready {
             LoopStageFlag::HANDLE_EVENT | LoopStageFlag::RENDER
@@ -67,7 +67,7 @@ impl SystemTrait<EngineEvent> for Renderer {
     fn get_event_filter(&self) -> EngineEventFlag {
         EngineEventFlag::READY | EngineEventFlag::RESIZE_WINDOW
     }
-    fn handle_event(&mut self, entities: &mut Assembly, event: &EngineEvent) -> Option<EngineEvent> {
+    fn handle_event(&mut self, entities: &mut Assembly, _: &mut F, event: &EngineEvent) -> Option<EngineEvent> {
         match *event {
             EngineEvent::Ready => {
                 self.ready = true;

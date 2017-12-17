@@ -5,7 +5,7 @@ use std::time::{Instant, Duration};
 use ecs::{World, EcsEvent, EventTrait};
 
 /// The `Orchestrator` owns the `World` and manages time (and the game loop).
-pub struct Orchestrator<E: EventTrait> {
+pub struct Orchestrator<E: EventTrait, F> {
     /// Specifies the path to the resource tree.
     pub resource_path: PathBuf,
     /// Specifies the fixed time interval of the simulation.
@@ -15,23 +15,23 @@ pub struct Orchestrator<E: EventTrait> {
     /// If `true`, activate debugging functionality.
     pub debug: bool,
     /// Holds an instance of the `World`.
-    pub world: World<E>,
+    pub world: World<E, F>,
 }
 
-impl<E: EventTrait> Orchestrator<E> {
+impl<E: EventTrait, F> Orchestrator<E, F> {
     /// Creates a new instance of the `Orchestrator`.
-    pub fn new(rp: &Path, delta_time: Duration, max_frame_time: Duration, debug: bool) -> Self {
+    pub fn new(factory: F, rp: &Path, delta_time: Duration, max_frame_time: Duration, debug: bool) -> Self {
         Orchestrator {
             resource_path: rp.to_owned(),
             delta_time: delta_time,
             max_frame_time: max_frame_time,
             debug: debug,
-            world: World::new(),
+            world: World::new(factory),
         }
     }
     /// Initializes state and starts the game loop. Using the supplied closure, the state of the
     /// `Orchestrator` and subsequently the `World` may be initialized.
-    pub fn run<F>(&mut self, init: F) where F: FnOnce(&mut Orchestrator<E>) {
+    pub fn run<I>(&mut self, init: I) where I: FnOnce(&mut Orchestrator<E, F>) {
         init(self);
         self.world.dispatch(EcsEvent::Ready.into());
         self.main_loop();

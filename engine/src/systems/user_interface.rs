@@ -8,11 +8,11 @@ use uuid::Uuid;
 use ecs::{LoopStageFlag, SystemTrait, Assembly, EcsError};
 use utilities::layout_paragraph_cached;
 use event::{EngineEventFlag, EngineEvent};
+use factory::{FactoryError, ComponentFactory};
 use components::description::Description;
 use components::projection::Projection;
 use components::view::View;
 use components::model::Model;
-use components::material::{Material, MaterialError};
 use components::ui_state::UiState;
 use common::ui_element::UiElement;
 use common::ui_primitive::{UiPrimitive, UiPrimitiveError};
@@ -26,7 +26,7 @@ pub enum UiError {
     #[fail(display = "{}", _0)]
     PrimitiveError(#[cause] UiPrimitiveError),
     #[fail(display = "{}", _0)]
-    MaterialCreationError(#[cause] MaterialError),
+    FactError(#[cause] FactoryError),
 }
 
 impl From<EcsError> for UiError {
@@ -56,9 +56,9 @@ impl From<UiPrimitiveError> for UiError {
     }
 }
 
-impl From<MaterialError> for UiError {
-    fn from(value: MaterialError) -> Self {
-        UiError::MaterialCreationError(value)
+impl From<FactoryError> for UiError {
+    fn from(value: FactoryError) -> Self {
+        UiError::FactError(value)
     }
 }
 
@@ -75,7 +75,7 @@ impl UserInterface {
             display: display.clone(),
         }
     }
-    fn create_speech_bubble(&self, entities: &mut Assembly, target: &str, content: &str, lifetime: u64) -> Result<(), UiError> {
+    fn create_speech_bubble(&self, entities: &mut Assembly, factory: &mut ComponentFactory, target: &str, content: &str, lifetime: u64) -> Result<(), UiError> {
         // Attempt to find the entity named in `target` and retreive its world position.
         let entity_pos_world = entities.rsf2::<_, Description, Model>(|&(d, _)| d.name == target)
             .map(|(_, m)| Point3::from_coordinates(m.translation.vector))?;
@@ -117,12 +117,12 @@ impl UserInterface {
         let rect_model = Model::new(&nalgebra::zero(), &nalgebra::zero());
 
         // Create the primitive materials.
-        let text_material = Material::new(&self.display,
+        let text_material = factory.new_material(&self.display,
                                           &ui_state.speech_bubble.text_vertex_shader,
                                           &ui_state.speech_bubble.text_fragment_shader, None, None,
                                           None)?;
 
-        let rect_material = Material::new(&self.display,
+        let rect_material = factory.new_material(&self.display,
                                           &ui_state.speech_bubble.rect_vertex_shader,
                                           &ui_state.speech_bubble.rect_fragment_shader, None,
                                           Some(&ui_state.speech_bubble.rect_diffuse_texture),
@@ -163,20 +163,20 @@ impl UserInterface {
     }
 }
 
-impl SystemTrait<EngineEvent> for UserInterface {
+impl SystemTrait<EngineEvent, ComponentFactory> for UserInterface {
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         LoopStageFlag::HANDLE_EVENT | LoopStageFlag::UPDATE
     }
     fn get_event_filter(&self) -> EngineEventFlag {
         EngineEventFlag::SPEECH_BUBBLE
     }
-    fn handle_event(&mut self, entities: &mut Assembly, event: &EngineEvent) -> Option<EngineEvent> {
+    fn handle_event(&mut self, entities: &mut Assembly, factory: &mut ComponentFactory, event: &EngineEvent) -> Option<EngineEvent> {
         if let EngineEvent::SpeechBubble(ref t, ref c, l) = *event {
-            self.create_speech_bubble(entities, t, c, l).unwrap_or_else(|e| warn!("{}", e));
+            self.create_speech_bubble(entities, factory, t, c, l).unwrap_or_else(|e| warn!("{}", e));
         }
         None
     }
-    fn update(&mut self, entities: &mut Assembly, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {
+    fn update(&mut self, entities: &mut Assembly, _: &mut ComponentFactory, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {
         self.update_lifetimes(entities).unwrap();
         None
     }

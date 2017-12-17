@@ -12,14 +12,14 @@ impl EventMonitor {
     }
 }
 
-impl SystemTrait<EngineEvent> for EventMonitor {
+impl<F> SystemTrait<EngineEvent, F> for EventMonitor {
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         LoopStageFlag::HANDLE_EVENT
     }
     fn get_event_filter(&self) -> EngineEventFlag {
         EngineEventFlag::ALL_EVENTS
     }
-    fn handle_event(&mut self, _: &mut Assembly, event: &EngineEvent) -> Option<EngineEvent> {
+    fn handle_event(&mut self, _: &mut Assembly, _: &mut F, event: &EngineEvent) -> Option<EngineEvent> {
         trace!("Received event '{:?}'", event);
         None
     }

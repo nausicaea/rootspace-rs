@@ -26,11 +26,11 @@ impl EventInterface {
     }
 }
 
-impl SystemTrait<EngineEvent> for EventInterface {
+impl<F> SystemTrait<EngineEvent, F> for EventInterface {
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         LoopStageFlag::UPDATE
     }
-    fn update(&mut self, _: &mut Assembly, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {
+    fn update(&mut self, _: &mut Assembly, _: &mut F, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {
         let pd = Vec::new();
         let mut d = Vec::new();
 

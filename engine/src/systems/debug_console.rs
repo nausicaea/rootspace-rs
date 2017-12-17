@@ -127,11 +127,11 @@ impl DebugConsole {
     }
 }
 
-impl SystemTrait<EngineEvent> for DebugConsole {
+impl<F> SystemTrait<EngineEvent, F> for DebugConsole {
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         LoopStageFlag::UPDATE
     }
-    fn update(&mut self, _: &mut Assembly, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {
+    fn update(&mut self, _: &mut Assembly, _: &mut F, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {
         self.try_read_line()
             .map(|s| self.split_arguments(&s))
             .map(|c| (Vec::new(), vec![EngineEvent::ConsoleCommand(c)]))

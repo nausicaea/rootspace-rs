@@ -127,14 +127,14 @@ impl DebugShell {
     }
 }
 
-impl SystemTrait<EngineEvent> for DebugShell {
+impl<F> SystemTrait<EngineEvent, F> for DebugShell {
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         LoopStageFlag::HANDLE_EVENT
     }
     fn get_event_filter(&self) -> EngineEventFlag {
         EngineEventFlag::CONSOLE_COMMAND
     }
-    fn handle_event(&mut self, _: &mut Assembly, event: &EngineEvent) -> Option<EngineEvent> {
+    fn handle_event(&mut self, _: &mut Assembly, _: &mut F, event: &EngineEvent) -> Option<EngineEvent> {
         match *event {
             EngineEvent::ConsoleCommand(ref c) => self.interpret(c).unwrap_or_else(|e| {println!("{}", e); None}),
             _ => None,
