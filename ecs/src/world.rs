@@ -9,31 +9,27 @@ use system::SystemTrait;
 
 /// Encapsulates a set of systems, entities and components that describe an abstract universe of
 /// data and behaviour.
-pub struct World<E: EventTrait> {
+pub struct World<E: EventTrait, F> {
     event_queue: VecDeque<E>,
-    systems: Vec<Box<SystemTrait<E>>>,
+    systems: Vec<Box<SystemTrait<E, F>>>,
+    factory: F,
     assembly: Assembly,
     rendering_suspended: bool,
 }
 
-impl<E: EventTrait> Default for World<E> {
-    fn default() -> Self {
+impl<E: EventTrait, F> World<E, F> {
+    /// Creates a new, empty instance of `World`.
+    pub fn new(factory: F) -> Self {
         World {
             event_queue: Default::default(),
             systems: Default::default(),
+            factory: factory,
             assembly: Default::default(),
             rendering_suspended: Default::default(),
         }
     }
-}
-
-impl<E: EventTrait> World<E> {
-    /// Creates a new, empty instance of `World`.
-    pub fn new() -> Self {
-        Default::default()
-    }
     /// Adds a new system to the `World`.
-    pub fn add_system<S: SystemTrait<E> + 'static>(&mut self, system: S) {
+    pub fn add_system<S: SystemTrait<E, F> + 'static>(&mut self, system: S) {
         self.systems.push(Box::new(system));
     }
     /// Iterates over all queued events and dispatches them to the relevant systems.
@@ -65,7 +61,7 @@ impl<E: EventTrait> World<E> {
 
         for system in &mut self.systems {
             if LoopStage::Update.match_filter(system.get_loop_stage_filter()) {
-                if let Some((mut pe, mut e)) = system.update(&mut self.assembly, time, delta_time) {
+                if let Some((mut pe, mut e)) = system.update(&mut self.assembly, &mut self.factory, time, delta_time) {
                     priority_events.append(&mut pe);
                     events.append(&mut e);
                 }
@@ -107,7 +103,7 @@ impl<E: EventTrait> World<E> {
 
         for system in &mut self.systems {
             if LoopStage::HandleEvent.match_filter(system.get_loop_stage_filter()) && event.match_filter(system.get_event_filter()) {
-                if let Some(e) = system.handle_event(&mut self.assembly, event) {
+                if let Some(e) = system.handle_event(&mut self.assembly, &mut self.factory, event) {
                     events.push(e);
                 }
             }
@@ -119,7 +115,7 @@ impl<E: EventTrait> World<E> {
     }
 }
 
-impl<E: EventTrait> Deref for World<E> {
+impl<E: EventTrait, F> Deref for World<E, F> {
     type Target = Assembly;
 
     fn deref(&self) -> &Self::Target {
@@ -127,7 +123,7 @@ impl<E: EventTrait> Deref for World<E> {
     }
 }
 
-impl<E: EventTrait> DerefMut for World<E> {
+impl<E: EventTrait, F> DerefMut for World<E, F> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.assembly
     }
