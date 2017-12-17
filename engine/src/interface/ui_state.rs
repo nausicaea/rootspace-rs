@@ -41,7 +41,7 @@ impl UiState {
             font_cache_gpu: gpu_cache,
             common: common,
             speech_bubble: speech_bubble,
-            dimensions: dimensions.clone(),
+            dimensions: *dimensions,
         })
     }
 }

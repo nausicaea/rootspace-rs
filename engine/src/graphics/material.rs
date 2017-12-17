@@ -1,5 +1,6 @@
 use std::io;
-use std::path::{Path, PathBuf};
+use std::rc::Rc;
+use std::path::Path;
 use glium::{Display, Program, Texture2d};
 use glium::program;
 use glium::texture;
@@ -44,16 +45,14 @@ impl From<texture::TextureCreationError> for MaterialError {
 }
 
 /// The `Material` represents an abstraction of a real-world material of an object.
+#[derive(Clone)]
 pub struct Material {
-    vs: PathBuf,
-    fs: PathBuf,
-    gs: Option<PathBuf>,
     /// Provides access to the shader program.
-    pub shader: Program,
+    pub shader: Rc<Program>,
     /// Provides access to the diffuse texture.
-    pub diff_tex: Option<Texture2d>,
+    pub diff_tex: Option<Rc<Texture2d>>,
     /// Provides access to the normal texture.
-    pub norm_tex: Option<Texture2d>,
+    pub norm_tex: Option<Rc<Texture2d>>,
 }
 
 impl Material {
@@ -68,38 +67,23 @@ impl Material {
         let dt = match dt {
             Some(dp) => {
                 let di = load_image_file(dp)?;
-                Some(Texture2d::new(display, di)?)
+                Some(Rc::new(Texture2d::new(display, di)?))
             },
             None => None,
         };
         let nt = match nt {
             Some(np) => {
                 let ni = load_image_file(np)?;
-                Some(Texture2d::new(display, ni)?)
+                Some(Rc::new(Texture2d::new(display, ni)?))
             },
             None => None,
         };
 
         Ok(Material {
-            vs: vs.to_owned(),
-            fs: fs.to_owned(),
-            gs: gs.map(|gp| gp.to_owned()),
-            shader: Program::from_source(display, &vss, &fss, gss.as_ref().map(|g| &**g))?,
+            shader: Rc::new(Program::from_source(display, &vss, &fss, gss.as_ref().map(|g| &**g))?),
             diff_tex: dt,
             norm_tex: nt,
         })
-    }
-    pub fn reload_shader(&mut self, display: &Display) -> Result<(), MaterialError> {
-        let vss = load_text_file(&self.vs)?;
-        let fss = load_text_file(&self.fs)?;
-        let gss = match self.gs {
-            Some(ref gp) => Some(load_text_file(gp)?),
-            None => None,
-        };
-
-        self.shader = Program::from_source(display, &vss, &fss, gss.as_ref().map(|g| &**g))?;
-
-        Ok(())
     }
 }
 

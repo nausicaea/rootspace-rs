@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::time::Duration;
 use glium;
 use glium::{Surface, Display, DrawParameters};
@@ -64,19 +65,13 @@ impl SystemTrait<EngineEvent> for Renderer {
         }
     }
     fn get_event_filter(&self) -> EngineEventFlag {
-        EngineEventFlag::READY | EngineEventFlag::RELOAD_SHADERS | EngineEventFlag::RESIZE_WINDOW
+        EngineEventFlag::READY | EngineEventFlag::RESIZE_WINDOW
     }
     fn handle_event(&mut self, entities: &mut Assembly, event: &EngineEvent) -> Option<EngineEvent> {
         match *event {
             EngineEvent::Ready => {
                 self.ready = true;
                 Some(EngineEvent::RendererReady)
-            },
-            EngineEvent::ReloadShaders => {
-                for m in entities.w1::<Material>() {
-                    m.reload_shader(&self.display).unwrap_or_else(|e| error!("{}", e));
-                }
-                None
             },
             EngineEvent::ResizeWindow(w, h) => {
                 entities.ws1::<Projection>()
@@ -133,8 +128,8 @@ impl SystemTrait<EngineEvent> for Renderer {
                         let uniforms = UiUniforms {
                             pvm_matrix: e.model.to_homogeneous() * p.model.to_homogeneous(),
                             font_cache: &u.font_cache_gpu,
-                            diff_tex: p.material.diff_tex.as_ref(),
-                            norm_tex: p.material.norm_tex.as_ref(),
+                            diff_tex: p.material.diff_tex.as_ref().map(|dt| dt.borrow()),
+                            norm_tex: p.material.norm_tex.as_ref().map(|nt| nt.borrow()),
                         };
 
                         target.draw(&p.mesh.vertices, &p.mesh.indices, &p.material.shader, &uniforms, &draw_params).unwrap();
