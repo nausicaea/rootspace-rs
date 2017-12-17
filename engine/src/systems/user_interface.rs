@@ -13,9 +13,10 @@ use components::description::Description;
 use components::projection::Projection;
 use components::view::View;
 use components::model::Model;
+use components::mesh::{Mesh, MeshError};
 use components::ui_state::UiState;
 use common::ui_element::UiElement;
-use common::ui_primitive::{UiPrimitive, UiPrimitiveError};
+use common::ui_primitive::UiPrimitive;
 
 #[derive(Debug, Fail)]
 pub enum UiError {
@@ -24,9 +25,9 @@ pub enum UiError {
     #[fail(display = "{}", _0)]
     CacheError(String),
     #[fail(display = "{}", _0)]
-    PrimitiveError(#[cause] UiPrimitiveError),
-    #[fail(display = "{}", _0)]
     FactError(#[cause] FactoryError),
+    #[fail(display = "{}", _0)]
+    MeshCreationError(#[cause] MeshError),
 }
 
 impl From<EcsError> for UiError {
@@ -50,15 +51,15 @@ impl From<CacheWriteErr> for UiError {
     }
 }
 
-impl From<UiPrimitiveError> for UiError {
-    fn from(value: UiPrimitiveError) -> Self {
-        UiError::PrimitiveError(value)
-    }
-}
-
 impl From<FactoryError> for UiError {
     fn from(value: FactoryError) -> Self {
         UiError::FactError(value)
+    }
+}
+
+impl From<MeshError> for UiError {
+    fn from(value: MeshError) -> Self {
+        UiError::MeshCreationError(value)
     }
 }
 
@@ -116,6 +117,14 @@ impl UserInterface {
         let text_model = Model::new(&Vector3::new(text_center.x, text_center.y, -0.01), &nalgebra::zero());
         let rect_model = Model::new(&nalgebra::zero(), &nalgebra::zero());
 
+        // Create the text mesh.
+        let text_mesh = Mesh::new_text(&self.display, &ui_state.dimensions, 0.0, &ui_state.font_cache_cpu, &glyphs, &text_dims_ndc.into())?;
+
+        // Create the speech-bubble rectangle mesh.
+        let min = [-rect_dims_ndc.x / 2.0, -rect_dims_ndc.y / 2.0];
+        let max = [rect_dims_ndc.x / 2.0, rect_dims_ndc.y / 2.0];
+        let rect_mesh = Mesh::new_quad(&self.display, &min, &max, 0.0)?;
+
         // Create the primitive materials.
         let text_material = factory.new_material(&self.display,
                                           &ui_state.speech_bubble.text_vertex_shader,
@@ -129,10 +138,8 @@ impl UserInterface {
                                           None)?;
 
         // Create the primitives.
-        let rect = UiPrimitive::new_rect(&self.display, &rect_dims_ndc.into(), 0.0, rect_model, rect_material)?;
-        let text = UiPrimitive::new_text(&self.display, &ui_state.dimensions, 0.0,
-                                         &ui_state.font_cache_cpu, &glyphs, &text_dims_ndc.into(),
-                                         text_model, text_material)?;
+        let rect = UiPrimitive::new(rect_model, rect_mesh, rect_material);
+        let text = UiPrimitive::new(text_model, text_mesh, text_material);
 
         // Create and register the element.
         let id = Uuid::new_v4();

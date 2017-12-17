@@ -42,7 +42,7 @@ impl Mesh {
         })
     }
     /// Creates a new rectangle.
-    pub fn quad(display: &Display, min: &[f32; 2], max: &[f32; 2], z_value: f32) -> Result<Self, MeshError> {
+    pub fn new_quad(display: &Display, min: &[f32; 2], max: &[f32; 2], z_value: f32) -> Result<Self, MeshError> {
         let vertices = vec![
             Vertex::new([min[0], max[1], z_value], [0.0, 1.0], [0.0, 0.0, 1.0]),
             Vertex::new([min[0], min[1], z_value], [0.0, 0.0], [0.0, 0.0, 1.0]),
@@ -54,7 +54,7 @@ impl Mesh {
         Self::new(display, &vertices, &indices, index::PrimitiveType::TrianglesList)
     }
     /// Creates a series of textured rectangles each with a glyph as texture.
-    pub fn text(display: &Display, screen_dims: &[u32; 2], z_value: f32, cache: &Cache, glyphs: &[PositionedGlyph], text_dims: &[f32; 2]) -> Result<Self, MeshError> {
+    pub fn new_text(display: &Display, screen_dims: &[u32; 2], z_value: f32, cache: &Cache, glyphs: &[PositionedGlyph], text_dims: &[f32; 2]) -> Result<Self, MeshError> {
         let mut vertices = Vec::new();
         let mut indices = Vec::new();
 
