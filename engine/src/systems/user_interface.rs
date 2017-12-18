@@ -113,9 +113,9 @@ impl UserInterface {
         let text_center = Vector2::new(text_dims_ndc.x - rect_dims_ndc.x, rect_dims_ndc.y - text_dims_ndc.y) / 2.0 + Vector2::new(margin_left, -margin_top);
 
         // Create the model matrices from the above values.
-        let element_model = Model::new(&Vector3::new(element_center.x, element_center.y, -0.98), &nalgebra::zero());
-        let text_model = Model::new(&Vector3::new(text_center.x, text_center.y, -0.01), &nalgebra::zero());
-        let rect_model = Model::new(&nalgebra::zero(), &nalgebra::zero());
+        let element_model = Model::new(Vector3::new(element_center.x, element_center.y, -0.98), nalgebra::zero());
+        let text_model = Model::new(Vector3::new(text_center.x, text_center.y, -0.01), nalgebra::zero());
+        let rect_model = Model::new(nalgebra::zero(), nalgebra::zero());
 
         // Create the text mesh.
         let text_mesh = Mesh::new_text(&self.display, &ui_state.dimensions, 0.0, &ui_state.font_cache_cpu, &glyphs, &text_dims_ndc.into())?;

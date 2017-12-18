@@ -9,9 +9,9 @@ pub struct Model {
 
 impl Model {
     /// Creates a new `Model` component from a translation and axis-angle vector.
-    pub fn new(translation: &Vector3<f32>, axisangle: &Vector3<f32>) -> Self {
+    pub fn new(translation: Vector3<f32>, axisangle: Vector3<f32>) -> Self {
         Model {
-            inner: Isometry3::new(*translation, *axisangle),
+            inner: Isometry3::new(translation, axisangle),
         }
     }
 }
