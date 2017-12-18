@@ -76,7 +76,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let test_entity = o.world.create_entity();
             let d = Description::new("test-entity");
             let model = Model::new(position, axisangle, Vector3::new(1.0, 1.0, 1.0));
-            let mesh = Mesh::new_quad(&renderer.display, &[-0.5, -0.5], &[0.5, 0.5], 0.0).unwrap();
+            let mesh = Mesh::new_quad(&renderer.display, 0.0).unwrap();
             let material = Material::new(&renderer.display, &vs, &fs, None, None, None).unwrap();
 
             o.world.add_component(&test_entity, d).unwrap();

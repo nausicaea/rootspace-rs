@@ -115,15 +115,13 @@ impl UserInterface {
         // Create the model matrices from the above values.
         let element_model = Model::new(Vector3::new(element_center.x, element_center.y, -0.98), nalgebra::zero(), Vector3::new(1.0, 1.0, 1.0));
         let text_model = Model::new(Vector3::new(text_center.x, text_center.y, -0.01), nalgebra::zero(), Vector3::new(1.0, 1.0, 1.0));
-        let rect_model = Model::new(nalgebra::zero(), nalgebra::zero(), Vector3::new(1.0, 1.0, 1.0));
+        let rect_model = Model::new(nalgebra::zero(), nalgebra::zero(), Vector3::new(rect_dims_ndc.x, rect_dims_ndc.y, 1.0));
 
         // Create the text mesh.
         let text_mesh = Mesh::new_text(&self.display, &ui_state.dimensions, 0.0, &ui_state.font_cache_cpu, &glyphs, &text_dims_ndc.into())?;
 
         // Create the speech-bubble rectangle mesh.
-        let min = [-rect_dims_ndc.x / 2.0, -rect_dims_ndc.y / 2.0];
-        let max = [rect_dims_ndc.x / 2.0, rect_dims_ndc.y / 2.0];
-        let rect_mesh = Mesh::new_quad(&self.display, &min, &max, 0.0)?;
+        let rect_mesh = Mesh::new_quad(&self.display, 0.0)?;
 
         // Create the primitive materials.
         let text_material = factory.new_material(&self.display,

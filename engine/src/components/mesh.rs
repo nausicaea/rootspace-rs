@@ -41,8 +41,10 @@ impl Mesh {
             indices: IndexBuffer::new(display, primitive, indices)?,
         })
     }
-    /// Creates a new rectangle.
-    pub fn new_quad(display: &Display, min: &[f32; 2], max: &[f32; 2], z_value: f32) -> Result<Self, MeshError> {
+    /// Creates a new unit square.
+    pub fn new_quad(display: &Display, z_value: f32) -> Result<Self, MeshError> {
+        let min = [-0.5, -0.5];
+        let max = [0.5, 0.5];
         let vertices = vec![
             Vertex::new([min[0], max[1], z_value], [0.0, 1.0], [0.0, 0.0, 1.0]),
             Vertex::new([min[0], min[1], z_value], [0.0, 0.0], [0.0, 0.0, 1.0]),
