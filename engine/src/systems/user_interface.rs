@@ -79,7 +79,7 @@ impl UserInterface {
     fn create_speech_bubble(&self, entities: &mut Assembly, factory: &mut ComponentFactory, target: &str, content: &str, lifetime: u64) -> Result<(), UiError> {
         // Attempt to find the entity named in `target` and retreive its world position.
         let entity_pos_world = entities.rsf2::<_, Description, Model>(|&(d, _)| d.name == target)
-            .map(|(_, m)| Point3::from_coordinates(m.translation.vector))?;
+            .map(|(_, m)| Point3::from_coordinates(m.isometry.translation.vector))?;
 
         // Project the entity position to normalized device coordinates (this requires the camera
         // entity).
@@ -113,9 +113,9 @@ impl UserInterface {
         let text_center = Vector2::new(text_dims_ndc.x - rect_dims_ndc.x, rect_dims_ndc.y - text_dims_ndc.y) / 2.0 + Vector2::new(margin_left, -margin_top);
 
         // Create the model matrices from the above values.
-        let element_model = Model::new(Vector3::new(element_center.x, element_center.y, -0.98), nalgebra::zero());
-        let text_model = Model::new(Vector3::new(text_center.x, text_center.y, -0.01), nalgebra::zero());
-        let rect_model = Model::new(nalgebra::zero(), nalgebra::zero());
+        let element_model = Model::new(Vector3::new(element_center.x, element_center.y, -0.98), nalgebra::zero(), Vector3::new(1.0, 1.0, 1.0));
+        let text_model = Model::new(Vector3::new(text_center.x, text_center.y, -0.01), nalgebra::zero(), Vector3::new(1.0, 1.0, 1.0));
+        let rect_model = Model::new(nalgebra::zero(), nalgebra::zero(), Vector3::new(1.0, 1.0, 1.0));
 
         // Create the text mesh.
         let text_mesh = Mesh::new_text(&self.display, &ui_state.dimensions, 0.0, &ui_state.font_cache_cpu, &glyphs, &text_dims_ndc.into())?;
