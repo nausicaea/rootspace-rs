@@ -3,6 +3,7 @@ use nalgebra::Perspective3;
 use ecs::ComponentTrait;
 
 /// Provides an abstration for the projection matrix (used to make a camera).
+#[derive(Clone)]
 pub struct Projection {
     inner: Perspective3<f32>,
 }

@@ -1,5 +1,6 @@
 use ecs::ComponentTrait;
 
+#[derive(Clone)]
 pub struct Description {
     pub name: String,
 }

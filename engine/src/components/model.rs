@@ -2,6 +2,7 @@ use nalgebra::{Vector3, Isometry3, Affine3, Matrix4};
 use ecs::ComponentTrait;
 
 /// Provides an abstraction for the model matrix for each 3D object.
+#[derive(Clone)]
 pub struct Model {
     pub isometry: Isometry3<f32>,
     pub scale: Affine3<f32>,

@@ -3,6 +3,7 @@ use nalgebra::{Isometry3, Vector3, Point3};
 use ecs::ComponentTrait;
 
 /// Provides an abstraction for the view matrix (used to make a camera).
+#[derive(Clone)]
 pub struct View {
     inner: Isometry3<f32>,
 }
