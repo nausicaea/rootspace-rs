@@ -9,7 +9,7 @@ use system::SystemTrait;
 
 /// Encapsulates a set of systems, entities and components that describe an abstract universe of
 /// data and behaviour.
-pub struct World<E: EventTrait, F> {
+pub struct World<E: EventTrait, F: Default> {
     event_queue: VecDeque<E>,
     systems: Vec<Box<SystemTrait<E, F>>>,
     factory: F,
@@ -17,16 +17,22 @@ pub struct World<E: EventTrait, F> {
     rendering_suspended: bool,
 }
 
-impl<E: EventTrait, F> World<E, F> {
-    /// Creates a new, empty instance of `World`.
-    pub fn new(factory: F) -> Self {
+impl<E: EventTrait, F: Default> Default for World<E, F> {
+    fn default() -> Self {
         World {
             event_queue: Default::default(),
             systems: Default::default(),
-            factory: factory,
+            factory: Default::default(),
             assembly: Default::default(),
             rendering_suspended: Default::default(),
         }
+    }
+}
+
+impl<E: EventTrait, F: Default> World<E, F> {
+    /// Creates a new, empty instance of `World`.
+    pub fn new() -> Self {
+        Default::default()
     }
     /// Adds a new system to the `World`.
     pub fn add_system<S: SystemTrait<E, F> + 'static>(&mut self, system: S) {
@@ -115,7 +121,7 @@ impl<E: EventTrait, F> World<E, F> {
     }
 }
 
-impl<E: EventTrait, F> Deref for World<E, F> {
+impl<E: EventTrait, F: Default> Deref for World<E, F> {
     type Target = Assembly;
 
     fn deref(&self) -> &Self::Target {
@@ -123,7 +129,7 @@ impl<E: EventTrait, F> Deref for World<E, F> {
     }
 }
 
-impl<E: EventTrait, F> DerefMut for World<E, F> {
+impl<E: EventTrait, F: Default> DerefMut for World<E, F> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.assembly
     }

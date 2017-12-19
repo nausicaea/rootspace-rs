@@ -4,7 +4,7 @@ use std::path::Path;
 use std::time::Duration;
 use nalgebra;
 use nalgebra::{Point3, Vector3};
-use engine::{ComponentFactory, Orchestrator, EngineEvent, EventMonitor, DebugConsole, DebugShell,
+use engine::{Orchestrator, EventMonitor, DebugConsole, DebugShell,
     Renderer, EventInterface, Projection, View, Model, Description, Mesh, Material, UserInterface,
     UiState, Common, SpeechBubble};
 
@@ -20,7 +20,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
     let clear_color = [0.1, 0.15, 0.3, 1.0];
 
     // Create the engine instance and run it.
-    let mut orchestrator: Orchestrator<EngineEvent, _> = Orchestrator::new(ComponentFactory::new(), resource_path, delta_time, max_frame_time, debugging);
+    let mut orchestrator = Orchestrator::new(resource_path, delta_time, max_frame_time, debugging);
     orchestrator.run(move |o| {
         let event_interface = EventInterface::new();
         let renderer = Renderer::new(&event_interface.events_loop, &title, &dimensions, vsync, msaa, &clear_color)
