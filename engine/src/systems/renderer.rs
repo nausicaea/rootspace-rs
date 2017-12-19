@@ -1,7 +1,7 @@
 use std::borrow::Borrow;
 use std::time::Duration;
 use glium;
-use glium::{Surface, Display, DrawParameters};
+use glium::{Frame, Surface, Display, DrawParameters};
 use glium::backend::glutin::DisplayCreationError;
 use glium::glutin::{Api, GlRequest, GlProfile, EventsLoop, WindowBuilder, ContextBuilder};
 use ecs::{LoopStageFlag, SystemTrait, Assembly};
@@ -33,6 +33,7 @@ pub struct Renderer {
     pub display: Display,
     ready: bool,
     clear_color: (f32, f32, f32, f32),
+    draw_params: DrawParameters<'static>,
 }
 
 impl Renderer {
@@ -47,12 +48,64 @@ impl Renderer {
             .with_vsync(vsync)
             .with_multisampling(msaa);
         let display = Display::new(window, context, events_loop)?;
+        let draw_params = DrawParameters {
+            depth: glium::Depth {
+                test: glium::draw_parameters::DepthTest::IfLess,
+                write: true,
+                .. Default::default()
+            },
+            blend: glium::Blend {
+                color: glium::BlendingFunction::Addition {
+                    source: glium::LinearBlendingFactor::One,
+                    destination: glium::LinearBlendingFactor::OneMinusSourceAlpha,
+                },
+                alpha: glium::BlendingFunction::Addition {
+                    source: glium::LinearBlendingFactor::One,
+                    destination: glium::LinearBlendingFactor::OneMinusSourceAlpha,
+                },
+                constant_value: (0.0, 0.0, 0.0, 0.0),
+            },
+            .. Default::default()
+        };
 
         Ok(Renderer {
             display: display,
             ready: false,
             clear_color: (clear_color[0], clear_color[1], clear_color[2], clear_color[3]),
+            draw_params: draw_params,
         })
+    }
+    fn render_entities(&self, entities: &Assembly, target: &mut Frame, params: &DrawParameters) {
+        entities.rs2::<Projection, View>()
+            .map(|(p, v)| {
+                let pv = p.as_matrix() * v.to_homogeneous();
+                for (mo, me, ma) in entities.r3::<Model, Mesh, Material>() {
+                    let uniforms = Uniforms {
+                        pvm_matrix: pv * mo.matrix().to_homogeneous(),
+                    };
+
+                    target.draw(&me.vertices, &me.indices, &ma.shader, &uniforms, &params).unwrap();
+                }
+            })
+            .unwrap();
+    }
+    fn render_user_interface(&self, entities: &Assembly, target: &mut Frame, params: &DrawParameters) {
+        entities.rs1::<UiState>()
+            .map(|u| {
+                for e in u.elements.values() {
+                    for p in &e.primitives {
+                        let uniforms = UiUniforms {
+                            pvm_matrix: e.model.matrix().to_homogeneous() * p.model.matrix().to_homogeneous(),
+                            font_cache: &u.font_cache_gpu,
+                            diff_tex: p.material.diff_tex.as_ref().map(|dt| dt.borrow()),
+                            norm_tex: p.material.norm_tex.as_ref().map(|nt| nt.borrow()),
+                        };
+
+                        target.draw(&p.mesh.vertices, &p.mesh.indices, &p.material.shader, &uniforms, &params).unwrap();
+                    }
+                }
+            })
+            .unwrap();
     }
 }
 
@@ -86,57 +139,11 @@ impl<F> SystemTrait<EngineEvent, F> for Renderer {
         let mut target = self.display.draw();
         target.clear_color_and_depth(self.clear_color, 1.0);
 
-        let draw_params = DrawParameters {
-            depth: glium::Depth {
-                test: glium::draw_parameters::DepthTest::IfLess,
-                write: true,
-                .. Default::default()
-            },
-            blend: glium::Blend {
-                color: glium::BlendingFunction::Addition {
-                    source: glium::LinearBlendingFactor::One,
-                    destination: glium::LinearBlendingFactor::OneMinusSourceAlpha,
-                },
-                alpha: glium::BlendingFunction::Addition {
-                    source: glium::LinearBlendingFactor::One,
-                    destination: glium::LinearBlendingFactor::OneMinusSourceAlpha,
-                },
-                constant_value: (0.0, 0.0, 0.0, 0.0),
-            },
-            .. Default::default()
-        };
-
         // Render all entities.
-        entities.rs2::<Projection, View>()
-            .map(|(p, v)| {
-                let pv = p.as_matrix() * v.to_homogeneous();
-                for (mo, me, ma) in entities.r3::<Model, Mesh, Material>() {
-                    let uniforms = Uniforms {
-                        pvm_matrix: pv * mo.matrix().to_homogeneous(),
-                    };
+        self.render_entities(entities, &mut target, &self.draw_params);
 
-                    target.draw(&me.vertices, &me.indices, &ma.shader, &uniforms, &draw_params).unwrap();
-                }
-            })
-            .unwrap();
-
-        // Redner the user interface.
-        entities.rs1::<UiState>()
-            .map(|u| {
-                for e in u.elements.values() {
-                    for p in &e.primitives {
-                        let uniforms = UiUniforms {
-                            pvm_matrix: e.model.matrix().to_homogeneous() * p.model.matrix().to_homogeneous(),
-                            font_cache: &u.font_cache_gpu,
-                            diff_tex: p.material.diff_tex.as_ref().map(|dt| dt.borrow()),
-                            norm_tex: p.material.norm_tex.as_ref().map(|nt| nt.borrow()),
-                        };
-
-                        target.draw(&p.mesh.vertices, &p.mesh.indices, &p.material.shader, &uniforms, &draw_params).unwrap();
-                    }
-                }
-            })
-            .unwrap();
+        // Render the user interface.
+        self.render_user_interface(entities, &mut target, &self.draw_params);
 
         target.finish().unwrap();
         None
