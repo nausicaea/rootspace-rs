@@ -21,6 +21,9 @@ impl Model {
             scale: scale,
         }
     }
+    pub fn matrix(&self) -> Affine3<f32> {
+        self.isometry * self.scale
+    }
 }
 
 impl ComponentTrait for Model {}

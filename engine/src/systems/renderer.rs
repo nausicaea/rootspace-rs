@@ -112,7 +112,7 @@ impl<F> SystemTrait<EngineEvent, F> for Renderer {
                 let pv = p.as_matrix() * v.to_homogeneous();
                 for (mo, me, ma) in entities.r3::<Model, Mesh, Material>() {
                     let uniforms = Uniforms {
-                        pvm_matrix: pv * (mo.isometry * mo.scale).to_homogeneous(),
+                        pvm_matrix: pv * mo.matrix().to_homogeneous(),
                     };
 
                     target.draw(&me.vertices, &me.indices, &ma.shader, &uniforms, &draw_params).unwrap();
@@ -126,7 +126,7 @@ impl<F> SystemTrait<EngineEvent, F> for Renderer {
                 for e in u.elements.values() {
                     for p in &e.primitives {
                         let uniforms = UiUniforms {
-                            pvm_matrix: (e.model.isometry * e.model.scale).to_homogeneous() * (p.model.isometry * p.model.scale).to_homogeneous(),
+                            pvm_matrix: e.model.matrix().to_homogeneous() * p.model.matrix().to_homogeneous(),
                             font_cache: &u.font_cache_gpu,
                             diff_tex: p.material.diff_tex.as_ref().map(|dt| dt.borrow()),
                             norm_tex: p.material.norm_tex.as_ref().map(|nt| nt.borrow()),
