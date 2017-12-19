@@ -15,6 +15,7 @@ extern crate image;
 extern crate uuid;
 extern crate unicode_normalization;
 extern crate rusttype;
+extern crate petgraph;
 extern crate ecs;
 
 mod utilities;

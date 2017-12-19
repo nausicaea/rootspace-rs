@@ -17,4 +17,5 @@ image = "^0.18.0"
 uuid = {version = "^0.5.1", features = ["v4"]}
 unicode-normalization = "^0.1.5"
 rusttype = "^0.3.0"
+petgraph = "^0.4.10"
 ecs = {path = "../ecs"}
