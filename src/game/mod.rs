@@ -30,8 +30,10 @@ pub fn run(resource_path: &Path, debugging: bool) {
         {
             let scene = o.world.create_entity();
             let d = Description::new("scene");
+            let m = Model::identity();
 
             o.world.add_component(&scene, d).unwrap();
+            o.world.add_component(&scene, m).unwrap();
         }
 
         // Assemble the camera entity.

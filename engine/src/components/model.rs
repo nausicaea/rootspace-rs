@@ -21,6 +21,12 @@ impl Model {
             scale: scale,
         }
     }
+    pub fn identity() -> Self {
+        Model {
+            isometry: Isometry3::identity(),
+            scale: Affine3::identity(),
+        }
+    }
     pub fn matrix(&self) -> Affine3<f32> {
         self.isometry * self.scale
     }
