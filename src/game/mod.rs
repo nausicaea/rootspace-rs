@@ -26,6 +26,14 @@ pub fn run(resource_path: &Path, debugging: bool) {
         let renderer = Renderer::new(&event_interface.events_loop, &title, &dimensions, vsync, msaa, &clear_color)
             .unwrap();
 
+        // Create the scene entity.
+        {
+            let scene = o.world.create_entity();
+            let d = Description::new("scene");
+
+            o.world.add_component(&scene, d).unwrap();
+        }
+
         // Assemble the camera entity.
         {
             let aspect = dimensions[0] as f32 / dimensions[1] as f32;
