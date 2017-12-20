@@ -21,6 +21,7 @@ extern crate ecs;
 mod utilities;
 mod event;
 mod factory;
+mod scene_graph;
 mod orchestrator;
 mod common;
 mod components;
