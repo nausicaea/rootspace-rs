@@ -5,6 +5,8 @@ use std::path::Path;
 use image;
 use glium::Rect;
 use glium::texture::{Texture2d, ClientFormat, RawImage2d};
+use nalgebra::{Translation3, Vector3, UnitQuaternion, Rotation3, Isometry3, Affine3, Matrix4, U3,
+               U1, norm, Real, zero, one};
 use rusttype::{PositionedGlyph, Font, Scale, point};
 use rusttype::gpu_cache::{Cache, CacheWriteErr};
 use unicode_normalization::UnicodeNormalization;
@@ -110,3 +112,33 @@ fn update_cache(cache: &mut Cache, cache_tex: &Texture2d) -> Result<(), CacheWri
         });
     })
 }
+
+/// Decomposes an affine T*R*S matrix into their constituents, where T corresponds to the
+/// translational component, R refers to a rotation, and S refers to non-uniform scaling (without
+/// shear).
+pub fn decompose_trs_matrix<N>(value: &Affine3<N>) -> (Isometry3<N>, Affine3<N>) where N: Real {
+    // Obtain the translational component.
+    let t = Translation3::from_vector(value.matrix().fixed_slice::<U3, U1>(0, 3).into_owned());
+
+    // Obtain the non-uniform scaling component.
+    let s = Vector3::new(norm(&value.matrix().column(0).into_owned()),
+                             norm(&value.matrix().column(1).into_owned()),
+                             norm(&value.matrix().column(2).into_owned()));
+
+    // Obtain the rotational component.
+    let mut r = value.matrix().fixed_slice::<U3, U3>(0, 0).into_owned();
+    for i in 0..3 {
+        let mut temp = r.column_mut(i);
+        temp /= s[i];
+    }
+
+    let r = UnitQuaternion::from_rotation_matrix(&Rotation3::from_matrix_unchecked(r));
+    let i = Isometry3::from_parts(t, r);
+
+    let s = Affine3::from_matrix_unchecked(Matrix4::new(s.x, zero(), zero(), zero(),
+                                                        zero(), s.y, zero(), zero(),
+                                                        zero(), zero(), s.z, zero(),
+                                                        zero(), zero(), zero(), one()));
+    (i, s)
+}
+
