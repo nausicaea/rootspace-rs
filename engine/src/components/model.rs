@@ -1,11 +1,11 @@
+use std::ops::{Deref, DerefMut, Mul};
 use nalgebra::{Vector3, Isometry3, Affine3, Matrix4};
 use ecs::ComponentTrait;
 
 /// Provides an abstraction for the model matrix for each 3D object.
 #[derive(Clone)]
 pub struct Model {
-    pub isometry: Isometry3<f32>,
-    pub scale: Affine3<f32>,
+    pub inner: Affine3<f32>,
 }
 
 impl Model {
@@ -17,18 +17,37 @@ impl Model {
                                                                 0.0, 0.0, scale.z, 0.0,
                                                                 0.0, 0.0, 0.0, 1.0));
         Model {
-            isometry: isometry,
-            scale: scale,
+            inner: isometry * scale,
         }
     }
     pub fn identity() -> Self {
         Model {
-            isometry: Isometry3::identity(),
-            scale: Affine3::identity(),
+            inner: Affine3::identity(),
         }
     }
-    pub fn matrix(&self) -> Affine3<f32> {
-        self.isometry * self.scale
+}
+
+impl Deref for Model {
+    type Target = Affine3<f32>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl DerefMut for Model {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
+    }
+}
+
+impl<'a> Mul<Self> for &'a Model {
+    type Output = Model;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        Model {
+            inner: self.inner * rhs.inner,
+        }
     }
 }
 
