@@ -43,4 +43,5 @@ pub use self::systems::debug_shell::DebugShell;
 pub use self::systems::renderer::Renderer;
 pub use self::systems::user_interface::UserInterface;
 pub use self::factory::ComponentFactory;
+pub use self::scene_graph::{SceneGraph, SceneNode};
 pub use self::orchestrator::Orchestrator;

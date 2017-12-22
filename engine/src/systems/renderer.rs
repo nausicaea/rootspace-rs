@@ -6,6 +6,7 @@ use glium::backend::glutin::DisplayCreationError;
 use glium::glutin::{Api, GlRequest, GlProfile, EventsLoop, WindowBuilder, ContextBuilder};
 use ecs::{LoopStageFlag, SystemTrait, Assembly};
 use event::{EngineEventFlag, EngineEvent};
+use scene_graph::SceneGraph;
 use components::projection::Projection;
 use components::view::View;
 use components::model::Model;
@@ -31,6 +32,9 @@ impl From<DisplayCreationError> for RendererError {
 pub struct Renderer {
     /// Provides access to the `Display`.
     pub display: Display,
+    /// Provides access to the `SceneGraph` for `Entities` with a `Model` component (i.e. a
+    /// location in 3-space).
+    pub scene_graph: SceneGraph<Model>,
     ready: bool,
     clear_color: (f32, f32, f32, f32),
     draw_params: DrawParameters<'static>,
@@ -38,7 +42,7 @@ pub struct Renderer {
 
 impl Renderer {
     /// Creates a new instance of `Renderer`.
-    pub fn new(events_loop: &EventsLoop, title: &str, dimensions: &[u32; 2], vsync: bool, msaa: u16, clear_color: &[f32; 4]) -> Result<Self, RendererError> {
+    pub fn new(events_loop: &EventsLoop, scene_graph: SceneGraph<Model>, title: &str, dimensions: &[u32; 2], vsync: bool, msaa: u16, clear_color: &[f32; 4]) -> Result<Self, RendererError> {
         let window = WindowBuilder::new()
             .with_title(title)
             .with_dimensions(dimensions[0], dimensions[1]);
@@ -73,6 +77,7 @@ impl Renderer {
             ready: false,
             clear_color: (clear_color[0], clear_color[1], clear_color[2], clear_color[3]),
             draw_params: draw_params,
+            scene_graph: scene_graph,
         })
     }
     fn render_entities(&self, entities: &Assembly, target: &mut Frame, params: &DrawParameters) {
@@ -81,7 +86,7 @@ impl Renderer {
                 let pv = p.as_matrix() * v.to_homogeneous();
                 for (mo, me, ma) in entities.r3::<Model, Mesh, Material>() {
                     let uniforms = Uniforms {
-                        pvm_matrix: pv * mo.matrix().to_homogeneous(),
+                        pvm_matrix: pv * mo.to_homogeneous(),
                     };
 
                     target.draw(&me.vertices, &me.indices, &ma.shader, &uniforms, &params).unwrap();
@@ -95,7 +100,7 @@ impl Renderer {
                 for e in u.elements.values() {
                     for p in &e.primitives {
                         let uniforms = UiUniforms {
-                            pvm_matrix: e.model.matrix().to_homogeneous() * p.model.matrix().to_homogeneous(),
+                            pvm_matrix: e.model.to_homogeneous() * p.model.to_homogeneous(),
                             font_cache: &u.font_cache_gpu,
                             diff_tex: p.material.diff_tex.as_ref().map(|dt| dt.borrow()),
                             norm_tex: p.material.norm_tex.as_ref().map(|nt| nt.borrow()),
@@ -136,6 +141,11 @@ impl<F> SystemTrait<EngineEvent, F> for Renderer {
         }
     }
     fn render(&mut self, entities: &Assembly, _: &Duration, _: &Duration) -> Option<EngineEvent> {
+        // Update the scene graph.
+        self.scene_graph.update(entities, &|pc, cc| pc * cc)
+            .unwrap();
+
+        // Create the current frame.
         let mut target = self.display.draw();
         target.clear_color_and_depth(self.clear_color, 1.0);
 

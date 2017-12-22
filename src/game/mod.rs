@@ -6,7 +6,7 @@ use nalgebra;
 use nalgebra::{Point3, Vector3};
 use engine::{Orchestrator, EventMonitor, DebugConsole, DebugShell,
     Renderer, EventInterface, Projection, View, Model, Description, Mesh, Material, UserInterface,
-    UiState, Common, SpeechBubble};
+    UiState, Common, SpeechBubble, SceneGraph, SceneNode};
 
 pub fn run(resource_path: &Path, debugging: bool) {
     // The following variables set up the state of the engine.
@@ -22,19 +22,20 @@ pub fn run(resource_path: &Path, debugging: bool) {
     // Create the engine instance and run it.
     let mut orchestrator = Orchestrator::new(resource_path, delta_time, max_frame_time, debugging);
     orchestrator.run(move |o| {
+        // Create the root entity.
+        let scene = o.world.create_entity();
+        let scene_description = Description::new("scene");
+        let scene_model = Model::identity();
+
+        // Create the renderer (and dependencies).
+        let scene_graph = SceneGraph::new(SceneNode::new(scene.clone(), scene_model.clone()));
         let event_interface = EventInterface::new();
-        let renderer = Renderer::new(&event_interface.events_loop, &title, &dimensions, vsync, msaa, &clear_color)
+        let mut renderer = Renderer::new(&event_interface.events_loop, scene_graph, &title, &dimensions, vsync, msaa, &clear_color)
             .unwrap();
 
-        // Create the scene entity.
-        {
-            let scene = o.world.create_entity();
-            let d = Description::new("scene");
-            let m = Model::identity();
-
-            o.world.add_component(&scene, d).unwrap();
-            o.world.add_component(&scene, m).unwrap();
-        }
+        // Register the scene entity.
+        o.world.add_component(&scene, scene_description).unwrap();
+        o.world.add_component(&scene, scene_model).unwrap();
 
         // Assemble the camera entity.
         {
@@ -88,6 +89,8 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let model = Model::new(position, axisangle, Vector3::new(1.0, 1.0, 1.0));
             let mesh = Mesh::new_quad(&renderer.display, 0.0).unwrap();
             let material = Material::new(&renderer.display, &vs, &fs, None, None, None).unwrap();
+
+            renderer.scene_graph.insert(SceneNode::new(test_entity.clone(), model.clone())).unwrap();
 
             o.world.add_component(&test_entity, d).unwrap();
             o.world.add_component(&test_entity, model).unwrap();
