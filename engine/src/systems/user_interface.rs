@@ -6,7 +6,7 @@ use nalgebra::{Point3, Vector2, Vector3};
 use rusttype::gpu_cache::CacheWriteErr;
 use uuid::Uuid;
 use ecs::{LoopStageFlag, SystemTrait, Assembly, EcsError};
-use utilities::layout_paragraph_cached;
+use utilities::{layout_paragraph_cached, decompose_trs_matrix};
 use event::{EngineEventFlag, EngineEvent};
 use factory::{FactoryError, ComponentFactory};
 use components::description::Description;
@@ -79,7 +79,10 @@ impl UserInterface {
     fn create_speech_bubble(&self, entities: &mut Assembly, factory: &mut ComponentFactory, target: &str, content: &str, lifetime: u64) -> Result<(), UiError> {
         // Attempt to find the entity named in `target` and retreive its world position.
         let entity_pos_world = entities.rsf2::<_, Description, Model>(|&(d, _)| d.name == target)
-            .map(|(_, m)| Point3::from_coordinates(m.isometry.translation.vector))?;
+            .map(|(_, m)| {
+                let (t, _, _) = decompose_trs_matrix(&m);
+                Point3::from_coordinates(t.vector)
+            })?;
 
         // Project the entity position to normalized device coordinates (this requires the camera
         // entity).
