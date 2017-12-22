@@ -74,10 +74,10 @@ impl Renderer {
 
         Ok(Renderer {
             display: display,
+            scene_graph: scene_graph,
             ready: false,
             clear_color: (clear_color[0], clear_color[1], clear_color[2], clear_color[3]),
             draw_params: draw_params,
-            scene_graph: scene_graph,
         })
     }
     fn render_entities(&self, entities: &Assembly, target: &mut Frame, params: &DrawParameters) {
@@ -86,7 +86,7 @@ impl Renderer {
                 let pv = p.as_matrix() * v.to_homogeneous();
                 for (mo, me, ma) in entities.r3::<Model, Mesh, Material>() {
                     let uniforms = Uniforms {
-                        pvm_matrix: pv * mo.to_homogeneous(),
+                        pvm_matrix: pv * mo.matrix(),
                     };
 
                     target.draw(&me.vertices, &me.indices, &ma.shader, &uniforms, &params).unwrap();
@@ -100,7 +100,7 @@ impl Renderer {
                 for e in u.elements.values() {
                     for p in &e.primitives {
                         let uniforms = UiUniforms {
-                            pvm_matrix: e.model.to_homogeneous() * p.model.to_homogeneous(),
+                            pvm_matrix: e.model.matrix() * p.model.matrix(),
                             font_cache: &u.font_cache_gpu,
                             diff_tex: p.material.diff_tex.as_ref().map(|dt| dt.borrow()),
                             norm_tex: p.material.norm_tex.as_ref().map(|nt| nt.borrow()),
