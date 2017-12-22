@@ -41,7 +41,7 @@ impl DerefMut for Model {
     }
 }
 
-impl<'a> Mul<Self> for &'a Model {
+impl<'a> Mul for &'a Model {
     type Output = Model;
 
     fn mul(self, rhs: Self) -> Self::Output {
