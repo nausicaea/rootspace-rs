@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use daggy::{Dag, NodeIndex, Walker};
+use daggy::petgraph::graph::{Node, DefaultIx};
 use ecs::{Entity, Assembly, ComponentTrait, EcsError};
 
 #[derive(Debug, Fail)]
@@ -52,6 +53,36 @@ impl<C: ComponentTrait + Clone> SceneNode<C> {
             None => cc.clone(),
         };
         Ok(())
+    }
+}
+
+/// Provides the ability to iterate over all `SceneNode`s stored within a `SceneGraph`.
+pub struct GraphIter<'a, C: ComponentTrait + Clone> {
+    index: usize,
+    data: &'a [Node<SceneNode<C>, DefaultIx>],
+}
+
+impl<'a, C: ComponentTrait + Clone> GraphIter<'a, C> {
+    /// Creates a new `SceneGraph`.
+    pub fn new(data: &'a [Node<SceneNode<C>, DefaultIx>]) -> Self {
+        GraphIter {
+            index: 0,
+            data: data,
+        }
+    }
+}
+
+impl<'a, C: ComponentTrait + Clone> Iterator for GraphIter<'a, C> {
+    type Item = &'a SceneNode<C>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.data.len() {
+            let idx = self.index;
+            self.index += 1;
+            Some(&self.data[idx].weight)
+        } else {
+            None
+        }
     }
 }
 
@@ -131,6 +162,10 @@ impl<C: ComponentTrait + Clone> SceneGraph<C> {
         self.graph.node_weight_mut(node_idx)
             .map(|n| &mut n.component)
             .ok_or_else(|| GraphError::EntityNotFound(entity.clone()))
+    }
+    /// Returns an iterator over all `SceneNode`s in the `SceneGraph`.
+    pub fn iter(&self) -> GraphIter<C> {
+        GraphIter::new(self.graph.raw_nodes())
     }
     /// Returns the `NodeIndex` for a particular `Entity`.
     fn get_index(&self, entity: &Entity) -> Result<NodeIndex, GraphError> {
