@@ -84,12 +84,15 @@ impl Renderer {
         entities.rs2::<Projection, View>()
             .map(|(p, v)| {
                 let pv = p.as_matrix() * v.to_homogeneous();
-                for (mo, me, ma) in entities.r3::<Model, Mesh, Material>() {
-                    let uniforms = Uniforms {
-                        pvm_matrix: pv * mo.matrix(),
-                    };
-
-                    target.draw(&me.vertices, &me.indices, &ma.shader, &uniforms, &params).unwrap();
+                for node in self.scene_graph.iter() {
+                    if let Ok(mesh) = entities.borrow_component::<Mesh>(&node.entity) {
+                        if let Ok(material) = entities.borrow_component::<Material>(&node.entity) {
+                            let uniforms = Uniforms {
+                                pvm_matrix: pv * node.component.matrix(),
+                            };
+                            target.draw(&mesh.vertices, &mesh.indices, &material.shader, &uniforms, &params).unwrap();
+                        }
+                    }
                 }
             })
             .unwrap();
