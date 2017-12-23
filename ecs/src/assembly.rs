@@ -8,6 +8,7 @@ use component_group::{ComponentTrait, ComponentGroup};
 /// types must be present in each entity.
 macro_rules! impl_read {
     ($name:ident, $t:tt) => {
+        /// Borrows all instances of the specified component.
         pub fn $name<$t: ComponentTrait>(&self) -> Vec<&$t> {
             self.entities.values()
                 .filter(|g| g.has::<$t>())
@@ -16,6 +17,7 @@ macro_rules! impl_read {
         }
     };
     ($name:ident, $($t:tt),*) => {
+        /// Borrows from all entities that have all specified components.
         pub fn $name<$($t: ComponentTrait),*>(&self) -> Vec<($(&$t),*)> {
             self.entities.values()
                 .filter(|g| $(g.has::<$t>())&&*)
@@ -30,6 +32,8 @@ macro_rules! impl_read {
 /// filter components by their contents.
 macro_rules! impl_read_filtered {
     ($name:ident, $t:tt) => {
+        /// Borrows all instances of the specified component, if their values pass the specified
+        /// filter.
         pub fn $name<F, $t: ComponentTrait>(&self, filter: F) -> Vec<&$t> where for<'r> F: FnMut(&'r &$t) -> bool {
             self.entities.values()
                 .filter(|g| g.has::<$t>())
@@ -39,6 +43,8 @@ macro_rules! impl_read_filtered {
         }
     };
     ($name:ident, $($t:tt),*) => {
+        /// Borrows from all entities that have all specified components and whose values pass the
+        /// specified filter.
         pub fn $name<F, $($t: ComponentTrait),*>(&self, filter: F) -> Vec<($(&$t),*)> where for<'r> F: FnMut(&'r ($(&$t),*)) -> bool {
             self.entities.values()
                 .filter(|g| $(g.has::<$t>())&&*)
@@ -53,6 +59,8 @@ macro_rules! impl_read_filtered {
 /// Errors otherwise.
 macro_rules! impl_read_single {
     ($name:ident, $base:ident, $t:tt) => {
+        /// Borrows the specified component, ensuring that only a single entity matches the given
+        /// conditions.
         pub fn $name<$t: ComponentTrait>(&self) -> Result<&$t, EcsError> {
             let mut components = self.$base::<$t>();
 
@@ -64,6 +72,8 @@ macro_rules! impl_read_single {
         }
     };
     ($name:ident, $base:ident, $($t:tt),*) => {
+        /// Borrows the specified components, ensuring that only a single entity matches the given
+        /// conditions.
         pub fn $name<$($t: ComponentTrait),*>(&self) -> Result<($(&$t),*), EcsError> {
             let mut components = self.$base::<$($t),*>();
 
@@ -80,6 +90,8 @@ macro_rules! impl_read_single {
 /// and the specified filter. Errors otherwise.
 macro_rules! impl_read_single_filtered {
     ($name:ident, $base:ident, $t:tt) => {
+        /// Borrows the specified component, ensuring that only a single entity matches the given
+        /// conditions (defined by the component and filter).
         pub fn $name<F, $t: ComponentTrait>(&self, filter: F) -> Result<&$t, EcsError> where for<'r> F: FnMut(&'r &$t) -> bool {
             let mut components = self.$base::<F, $t>(filter);
 
@@ -91,6 +103,8 @@ macro_rules! impl_read_single_filtered {
         }
     };
     ($name:ident, $base:ident, $($t:tt),*) => {
+        /// Borrows the specified components, ensuring that only a single entity matches the given
+        /// conditions (defined by the components and filter).
         pub fn $name<F, $($t: ComponentTrait),*>(&self, filter: F) -> Result<($(&$t),*), EcsError> where for<'r> F: FnMut(&'r ($(&$t),*)) -> bool{
             let mut components = self.$base::<F, $($t),*>(filter);
 
@@ -160,48 +174,21 @@ impl Assembly {
             .ok_or_else(|| EcsError::EntityNotFound(entity.clone()))
             .and_then(|g| g.borrow_mut::<C>())
     }
-    /// Collects all instances of the specified component type.
     impl_read!(r1, A);
-    /// Collects all instances of entities that have all specified component types.
     impl_read!(r2, A, B);
-    /// Collects all instances of entities that have all specified component types.
     impl_read!(r3, A, B, C);
-    /// Collects all instances of entities that have all specified component types.
     impl_read!(r4, A, B, C, D);
-    /// Collects all instances of the specified component type, and filters their values.
     impl_read_filtered!(rf1, A);
-    /// Collects all entities' components that have all specified component types and filters
-    /// their values.
     impl_read_filtered!(rf2, A, B);
-    /// Collects all entities' components that have all specified component types and filters
-    /// their values.
     impl_read_filtered!(rf3, A, B, C);
-    /// Collects all entities' components that have all specified component types and filters
-    /// their values.
     impl_read_filtered!(rf4, A, B, C, D);
-    /// Ensures that only a single entity matches the bounds given by the specified component
-    /// types. Errors otherwise.
     impl_read_single!(rs1, r1, A);
-    /// Ensures that only a single entity matches the bounds given by the specified component
-    /// types. Errors otherwise.
     impl_read_single!(rs2, r2, A, B);
-    /// Ensures that only a single entity matches the bounds given by the specified component
-    /// types. Errors otherwise.
     impl_read_single!(rs3, r3, A, B, C);
-    /// Ensures that only a single entity matches the bounds given by the specified component
-    /// types. Errors otherwise.
     impl_read_single!(rs4, r4, A, B, C, D);
-    /// Ensures that only a single entity matches the bounds given by the specified component
-    /// types and filter. Errors otherwise.
     impl_read_single_filtered!(rsf1, rf1, A);
-    /// Ensures that only a single entity matches the bounds given by the specified component
-    /// types and filter. Errors otherwise.
     impl_read_single_filtered!(rsf2, rf2, A, B);
-    /// Ensures that only a single entity matches the bounds given by the specified component
-    /// types and filter. Errors otherwise.
     impl_read_single_filtered!(rsf3, rf3, A, B, C);
-    /// Ensures that only a single entity matches the bounds given by the specified component
-    /// types and filter. Errors otherwise.
     impl_read_single_filtered!(rsf4, rf4, A, B, C, D);
     /// Provides mutable access to all instances of the specified component type.
     pub fn w1<C: ComponentTrait>(&mut self) -> Vec<&mut C> {
