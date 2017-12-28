@@ -39,6 +39,7 @@ pub fn load_image_file(file_path: &Path) -> Result<RawImage2d<u8>, image::ImageE
 }
 
 /// Given a string of text, font parameters and a text width, generates a set of positioned glyphs.
+/// TODO: Write a better word-wrapping algorithm: https://stackoverflow.com/a/857770
 pub fn layout_paragraph<'a>(font: &Font<'a>, scale: f32, width: u32, text: &str) -> (Vec<PositionedGlyph<'a>>, [u32; 2]) {
     let mut result = Vec::new();
     let scale = Scale::uniform(scale);
