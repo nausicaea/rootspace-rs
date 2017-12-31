@@ -80,7 +80,7 @@ impl UserInterface {
         // Attempt to find the entity named in `target` and retreive its world position.
         let entity_pos_world = entities.rsf2::<_, Description, Model>(|&(d, _)| d.name == target)
             .map(|(_, m)| {
-                let (t, _, _) = decompose_trs_matrix(&m);
+                let (t, _, _) = decompose_trs_matrix(m);
                 Point3::from_coordinates(t.vector)
             })?;
 
@@ -185,7 +185,8 @@ impl SystemTrait<EngineEvent, ComponentFactory> for UserInterface {
         None
     }
     fn update(&mut self, entities: &mut Assembly, _: &mut ComponentFactory, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {
-        self.update_lifetimes(entities).unwrap();
+        self.update_lifetimes(entities)
+            .expect("Unable to update the UI element lifetimes");
         None
     }
 }

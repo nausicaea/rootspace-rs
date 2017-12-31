@@ -39,7 +39,7 @@ pub fn load_image_file(file_path: &Path) -> Result<RawImage2d<u8>, image::ImageE
 }
 
 /// Given a string of text, font parameters and a text width, generates a set of positioned glyphs.
-/// TODO: Write a better word-wrapping algorithm: https://stackoverflow.com/a/857770
+/// TODO: Write a better word-wrapping algorithm based on [StackOverflow](https://stackoverflow.com/a/857770)
 pub fn layout_paragraph<'a>(font: &Font<'a>, scale: f32, width: u32, text: &str) -> (Vec<PositionedGlyph<'a>>, [u32; 2]) {
     let mut result = Vec::new();
     let scale = Scale::uniform(scale);
@@ -128,10 +128,12 @@ pub fn decompose_trs_matrix<N>(value: &Affine3<N>) -> (Translation3<N>, UnitQuat
 
     // Obtain the rotational component.
     let mut r = value.matrix().fixed_slice::<U3, U3>(0, 0).into_owned();
-    for i in 0..3 {
-        let mut temp = r.column_mut(i);
-        temp /= s[i];
-    }
+    s.iter()
+        .enumerate()
+        .for_each(|(i, scale_component)| {
+            let mut temp = r.column_mut(i);
+            temp /= *scale_component;
+        });
 
     let r = UnitQuaternion::from_rotation_matrix(&Rotation3::from_matrix_unchecked(r));
 

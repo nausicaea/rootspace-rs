@@ -49,7 +49,7 @@ impl<C: ComponentTrait + Clone> SceneNode<C> {
     pub fn update<F>(&mut self, entities: &Assembly, parent_component: Option<&C>, merge_fn: &F) -> Result<(), GraphError> where for<'r> F: Fn(&'r C, &'r C) -> C {
         let cc = entities.borrow_component::<C>(&self.entity)?;
         self.component = match parent_component {
-            Some(ref pc) => merge_fn(pc, cc),
+            Some(pc) => merge_fn(pc, cc),
             None => cc.clone(),
         };
         Ok(())
@@ -170,14 +170,14 @@ impl<C: ComponentTrait + Clone> SceneGraph<C> {
     /// Returns the `NodeIndex` for a particular `Entity`.
     fn get_index(&self, entity: &Entity) -> Result<NodeIndex, GraphError> {
         self.index.get(entity)
-            .map(|n| *n)
+            .cloned()
             .ok_or_else(|| GraphError::EntityNotFound(entity.clone()))
     }
     /// Rebuilds the `Entity`-`SceneNode` index from the underlying `Graph`.
     fn rebuild_index(&mut self) {
         self.index.clear();
         for idx in self.graph.graph().node_indices() {
-            let node = self.graph.node_weight(idx).unwrap();
+            let node = self.graph.node_weight(idx).unwrap_or_else(|| unreachable!());
             self.index.insert(node.entity.clone(), idx);
         }
     }

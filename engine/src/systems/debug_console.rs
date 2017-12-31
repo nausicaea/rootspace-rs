@@ -39,13 +39,13 @@ impl DebugConsole {
                             tx.send(match String::from_utf8(buf.clone()) {
                                 Ok(l) => Ok(l),
                                 Err(e) => Err(DebugConsoleError::Utf8Error(e)),
-                            }).unwrap();
+                            }).expect("Unable to send input from stdin via mpsc channel");
                             buf.clear()
                         } else {
                             buf.push(byte[0])
                         }
                     },
-                    Err(e) => tx.send(Err(DebugConsoleError::IoError(e))).unwrap(),
+                    Err(e) => tx.send(Err(DebugConsoleError::IoError(e))).expect("Unable to send error information via mpsc channel"),
                 }
             }
         });

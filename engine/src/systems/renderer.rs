@@ -90,12 +90,13 @@ impl Renderer {
                             let uniforms = Uniforms {
                                 pvm_matrix: pv * node.component.matrix(),
                             };
-                            target.draw(&mesh.vertices, &mesh.indices, &material.shader, &uniforms, &params).unwrap();
+                            target.draw(&mesh.vertices, &mesh.indices, &material.shader, &uniforms, params)
+                                .expect("Unable to execute the draw call");
                         }
                     }
                 }
             })
-            .unwrap();
+            .expect("Failed to render entities");
     }
     fn render_user_interface(&self, entities: &Assembly, target: &mut Frame, params: &DrawParameters) {
         entities.rs1::<UiState>()
@@ -109,11 +110,12 @@ impl Renderer {
                             norm_tex: p.material.norm_tex.as_ref().map(|nt| nt.borrow()),
                         };
 
-                        target.draw(&p.mesh.vertices, &p.mesh.indices, &p.material.shader, &uniforms, &params).unwrap();
+                        target.draw(&p.mesh.vertices, &p.mesh.indices, &p.material.shader, &uniforms, params)
+                            .expect("Unable to execute the draw call");
                     }
                 }
             })
-            .unwrap();
+            .expect("Failed to render the user interface");
     }
 }
 
@@ -137,7 +139,7 @@ impl<F> SystemTrait<EngineEvent, F> for Renderer {
             EngineEvent::ResizeWindow(w, h) => {
                 entities.ws1::<Projection>()
                     .map(|p| p.set_aspect(w as f32 / h as f32))
-                    .unwrap();
+                    .expect("Unable to update the projection matrices.");
                 None
             },
             _ => None,
@@ -146,7 +148,7 @@ impl<F> SystemTrait<EngineEvent, F> for Renderer {
     fn render(&mut self, entities: &Assembly, _: &Duration, _: &Duration) -> Option<EngineEvent> {
         // Update the scene graph.
         self.scene_graph.update(entities, &|pc, cc| pc * cc)
-            .unwrap();
+            .expect("Unable to update the scene graph");
 
         // Create the current frame.
         let mut target = self.display.draw();
@@ -158,7 +160,8 @@ impl<F> SystemTrait<EngineEvent, F> for Renderer {
         // Render the user interface.
         self.render_user_interface(entities, &mut target, &self.draw_params);
 
-        target.finish().unwrap();
+        target.finish()
+            .expect("Unable to finalize the current frame");
         None
     }
 }

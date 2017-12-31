@@ -71,7 +71,7 @@ fn main() {
         .level(log_level_filter)
         .chain(io::stdout())
         .apply()
-        .unwrap();
+        .expect("Unable to configure the logger");
 
     game::run(&resource_path, debugging);
 }
