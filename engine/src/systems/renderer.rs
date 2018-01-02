@@ -7,8 +7,7 @@ use glium::glutin::{Api, GlRequest, GlProfile, EventsLoop, WindowBuilder, Contex
 use ecs::{LoopStageFlag, SystemTrait, Assembly};
 use event::{EngineEventFlag, EngineEvent};
 use scene_graph::SceneGraph;
-use components::projection::Projection;
-use components::view::View;
+use components::camera::Camera;
 use components::model::Model;
 use components::mesh::Mesh;
 use components::material::Material;
@@ -81,9 +80,9 @@ impl Renderer {
         })
     }
     fn render_entities(&self, entities: &Assembly, target: &mut Frame, params: &DrawParameters) {
-        entities.rs2::<Projection, View>()
-            .map(|(p, v)| {
-                let pv = p.as_matrix() * v.to_homogeneous();
+        entities.rs1::<Camera>()
+            .map(|c| {
+                let pv = c.pv_matrix();
                 for node in self.scene_graph.iter() {
                     if let Ok(mesh) = entities.borrow_component::<Mesh>(&node.entity) {
                         if let Ok(material) = entities.borrow_component::<Material>(&node.entity) {
@@ -137,8 +136,8 @@ impl<F> SystemTrait<EngineEvent, F> for Renderer {
                 Some(EngineEvent::RendererReady)
             },
             EngineEvent::ResizeWindow(w, h) => {
-                entities.ws1::<Projection>()
-                    .map(|p| p.set_aspect(w as f32 / h as f32))
+                entities.ws1::<Camera>()
+                    .map(|c| c.set_aspect(w as f32 / h as f32))
                     .expect("Unable to update the projection matrices.");
                 None
             },

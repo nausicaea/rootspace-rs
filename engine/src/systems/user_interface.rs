@@ -1,6 +1,5 @@
 use std::time::{Instant, Duration};
 use glium::Display;
-use alga::linear::Transformation;
 use nalgebra;
 use nalgebra::{Point3, Vector2, Vector3};
 use rusttype::gpu_cache::CacheWriteErr;
@@ -10,8 +9,7 @@ use utilities::{layout_paragraph_cached, decompose_trs_matrix};
 use event::{EngineEventFlag, EngineEvent};
 use factory::{FactoryError, ComponentFactory};
 use components::description::Description;
-use components::projection::Projection;
-use components::view::View;
+use components::camera::Camera;
 use components::model::Model;
 use components::mesh::{Mesh, MeshError};
 use components::ui_state::UiState;
@@ -86,8 +84,8 @@ impl UserInterface {
 
         // Project the entity position to normalized device coordinates (this requires the camera
         // entity).
-        let entity_pos_ndc = entities.rs2::<Projection, View>()
-            .map(|(p, v)| p.project_point(&v.transform_point(&entity_pos_world)))?;
+        let entity_pos_ndc = entities.rs1::<Camera>()
+            .map(|c| c.world_point_to_ndc(&entity_pos_world))?;
 
         // Obtain a mutable reference to the `UiState`.
         let ui_state = entities.ws1::<UiState>()?;

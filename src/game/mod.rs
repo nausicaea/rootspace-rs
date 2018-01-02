@@ -5,8 +5,8 @@ use std::time::Duration;
 use nalgebra;
 use nalgebra::{Point3, Vector3};
 use engine::{Orchestrator, EventMonitor, DebugConsole, DebugShell,
-    Renderer, EventInterface, Projection, View, Model, Description, Mesh, Material, UserInterface,
-    UiState, Common, SpeechBubble, SceneGraph, SceneNode};
+    Renderer, EventInterface, Model, Description, Mesh, Material, UserInterface,
+    UiState, Common, SpeechBubble, SceneGraph, SceneNode, Camera};
 
 pub fn run(resource_path: &Path, debugging: bool) {
     // The following variables set up the state of the engine.
@@ -49,12 +49,10 @@ pub fn run(resource_path: &Path, debugging: bool) {
 
             let camera = o.world.create_entity();
             let d = Description::new("camera");
-            let p = Projection::new(aspect, fov_y, z_near, z_far);
-            let v = View::new(&eye, &target, &up);
+            let c = Camera::new(aspect, fov_y, z_near, z_far, &eye, &target, &up);
 
             o.world.add_component(&camera, d).unwrap();
-            o.world.add_component(&camera, p).unwrap();
-            o.world.add_component(&camera, v).unwrap();
+            o.world.add_component(&camera, c).unwrap();
         }
 
         // Assembly the UI canvas.

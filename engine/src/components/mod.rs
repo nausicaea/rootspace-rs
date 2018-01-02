@@ -1,6 +1,5 @@
 pub mod description;
-pub mod projection;
-pub mod view;
+pub mod camera;
 pub mod model;
 pub mod material;
 pub mod mesh;
