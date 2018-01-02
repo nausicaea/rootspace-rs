@@ -7,6 +7,7 @@ use ecs::ComponentTrait;
 /// `Model` provides an abstraction for the model matrix for each 3D object.
 #[derive(Clone)]
 pub struct Model {
+    /// Provides access to the model matrix (an affine TRS matrix).
     inner: Affine3<f32>,
 }
 
@@ -22,6 +23,7 @@ impl Model {
             inner: isometry * scale,
         }
     }
+    /// Creates a new `Model` component equivalent to an identity matrix.
     pub fn identity() -> Self {
         Model {
             inner: Affine3::identity(),

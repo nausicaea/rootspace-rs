@@ -1,3 +1,5 @@
+//! The `material` module provides access to the `Material` component.
+
 use std::io;
 use std::rc::Rc;
 use std::path::Path;
@@ -7,42 +9,6 @@ use glium::texture;
 use image;
 use ecs::ComponentTrait;
 use utilities::{load_text_file, load_image_file};
-
-#[derive(Debug, Fail)]
-pub enum MaterialError {
-    #[fail(display = "{}", _0)]
-    ShaderError(#[cause] program::ProgramCreationError),
-    #[fail(display = "{}", _0)]
-    IoError(#[cause] io::Error),
-    #[fail(display = "{}", _0)]
-    ImageError(#[cause] image::ImageError),
-    #[fail(display = "{}", _0)]
-    TextureError(#[cause] texture::TextureCreationError),
-}
-
-impl From<program::ProgramCreationError> for MaterialError {
-    fn from(value: program::ProgramCreationError) -> Self {
-        MaterialError::ShaderError(value)
-    }
-}
-
-impl From<io::Error> for MaterialError {
-    fn from(value: io::Error) -> Self {
-        MaterialError::IoError(value)
-    }
-}
-
-impl From<image::ImageError> for MaterialError {
-    fn from(value: image::ImageError) -> Self {
-        MaterialError::ImageError(value)
-    }
-}
-
-impl From<texture::TextureCreationError> for MaterialError {
-    fn from(value: texture::TextureCreationError) -> Self {
-        MaterialError::TextureError(value)
-    }
-}
 
 /// The `Material` represents an abstraction of a real-world material of an object.
 #[derive(Clone)]
@@ -88,3 +54,40 @@ impl Material {
 }
 
 impl ComponentTrait for Material {}
+
+/// Operations with `Material` may fail. `MaterialError` describes those errors.
+#[derive(Debug, Fail)]
+pub enum MaterialError {
+    #[fail(display = "{}", _0)]
+    ShaderError(#[cause] program::ProgramCreationError),
+    #[fail(display = "{}", _0)]
+    IoError(#[cause] io::Error),
+    #[fail(display = "{}", _0)]
+    ImageError(#[cause] image::ImageError),
+    #[fail(display = "{}", _0)]
+    TextureError(#[cause] texture::TextureCreationError),
+}
+
+impl From<program::ProgramCreationError> for MaterialError {
+    fn from(value: program::ProgramCreationError) -> Self {
+        MaterialError::ShaderError(value)
+    }
+}
+
+impl From<io::Error> for MaterialError {
+    fn from(value: io::Error) -> Self {
+        MaterialError::IoError(value)
+    }
+}
+
+impl From<image::ImageError> for MaterialError {
+    fn from(value: image::ImageError) -> Self {
+        MaterialError::ImageError(value)
+    }
+}
+
+impl From<texture::TextureCreationError> for MaterialError {
+    fn from(value: texture::TextureCreationError) -> Self {
+        MaterialError::TextureError(value)
+    }
+}
