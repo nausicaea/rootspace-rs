@@ -39,7 +39,6 @@ pub fn run(resource_path: &Path, debugging: bool) {
 
         // Assemble the camera entity.
         {
-            let aspect = dimensions[0] as f32 / dimensions[1] as f32;
             let fov_y = f32::consts::PI / 4.0;
             let z_near = 0.01;
             let z_far = 1000.0;
@@ -49,7 +48,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
 
             let camera = o.world.create_entity();
             let d = Description::new("camera");
-            let c = Camera::new(aspect, fov_y, z_near, z_far, &eye, &target, &up);
+            let c = Camera::new(dimensions, fov_y, z_near, z_far, &eye, &target, &up);
 
             o.world.add_component(&camera, d).unwrap();
             o.world.add_component(&camera, c).unwrap();

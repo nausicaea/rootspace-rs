@@ -136,7 +136,7 @@ impl<F> SystemTrait<EngineEvent, F> for Renderer {
             },
             EngineEvent::ResizeWindow(w, h) => {
                 entities.ws1::<Camera>()
-                    .map(|c| c.set_aspect(w as f32 / h as f32))
+                    .map(|c| c.set_dimensions([w, h]))
                     .expect("Unable to update the projection matrices.");
                 None
             },
