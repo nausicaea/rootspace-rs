@@ -1,3 +1,5 @@
+//! The `camera` module provides the `Camera` component.
+
 use ecs::ComponentTrait;
 use nalgebra::{Perspective3, Isometry3, Matrix4, Vector3, Point3};
 use alga::linear::Transformation;
