@@ -1,11 +1,13 @@
+//! The `model` module provides access to the `Model` component.
+
 use std::ops::{Deref, DerefMut, Mul};
 use nalgebra::{Vector3, Isometry3, Affine3, Matrix4};
 use ecs::ComponentTrait;
 
-/// Provides an abstraction for the model matrix for each 3D object.
+/// `Model` provides an abstraction for the model matrix for each 3D object.
 #[derive(Clone)]
 pub struct Model {
-    pub inner: Affine3<f32>,
+    inner: Affine3<f32>,
 }
 
 impl Model {
