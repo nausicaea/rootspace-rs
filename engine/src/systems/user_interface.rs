@@ -174,11 +174,17 @@ impl SystemTrait<EngineEvent, ComponentFactory> for UserInterface {
         LoopStageFlag::HANDLE_EVENT | LoopStageFlag::UPDATE
     }
     fn get_event_filter(&self) -> EngineEventFlag {
-        EngineEventFlag::SPEECH_BUBBLE
+        EngineEventFlag::SPEECH_BUBBLE | EngineEventFlag::RESIZE_WINDOW
     }
     fn handle_event(&mut self, entities: &mut Assembly, factory: &mut ComponentFactory, event: &EngineEvent) -> Option<EngineEvent> {
-        if let EngineEvent::SpeechBubble(ref t, ref c, l) = *event {
-            self.create_speech_bubble(entities, factory, t, c, l).unwrap_or_else(|e| warn!("{}", e));
+        match *event {
+            EngineEvent::SpeechBubble(ref t, ref c, l) => self.create_speech_bubble(entities, factory, t, c, l).unwrap(),
+            EngineEvent::ResizeWindow(w, h) => {
+                entities.ws1::<UiState>()
+                    .map(|u| u.dimensions = [w, h])
+                    .unwrap()
+            },
+            _ => (),
         }
         None
     }
