@@ -82,12 +82,11 @@ impl Renderer {
     fn render_entities(&self, entities: &Assembly, target: &mut Frame, params: &DrawParameters) {
         entities.rs1::<Camera>()
             .map(|c| {
-                let pv = c.pv_matrix();
                 for node in self.scene_graph.iter() {
                     if let Ok(mesh) = entities.borrow_component::<Mesh>(&node.entity) {
                         if let Ok(material) = entities.borrow_component::<Material>(&node.entity) {
                             let uniforms = Uniforms {
-                                pvm_matrix: pv * node.component.matrix(),
+                                pvm_matrix: c.matrix * node.component.matrix(),
                             };
                             target.draw(&mesh.vertices, &mesh.indices, &material.shader, &uniforms, params)
                                 .expect("Unable to execute the draw call");
