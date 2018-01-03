@@ -35,6 +35,7 @@ pub use self::components::model::Model;
 pub use self::components::mesh::Mesh;
 pub use self::components::material::Material;
 pub use self::components::ui_state::UiState;
+pub use self::components::bounding_volume::BoundingVolume;
 pub use self::systems::event_interface::EventInterface;
 pub use self::systems::event_monitor::EventMonitor;
 pub use self::systems::debug_console::DebugConsole;
