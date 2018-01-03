@@ -1,3 +1,4 @@
+pub mod ray;
 pub mod vertex;
 pub mod uniforms;
 pub mod ui_uniforms;

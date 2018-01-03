@@ -4,17 +4,18 @@ use glium::buffer::ReadError;
 use ecs::ComponentTrait;
 use components::mesh::Mesh;
 use common::vertex::Vertex;
+use common::ray::Ray;
 
 /// The `BoundingVolume` component describes simplified volumes of entities or objects to use for
 /// collision detection.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum BoundingVolume {
     /// Defines an axis-aligned bounding-box (AABB).
-    Aabb {center: Point3<f32>, radius: Vector3<f32>},
+    Aabb {center: Point3<f32>, extents: Vector3<f32>},
     /// Defines a discrete oriented polytope (k-DOP).
     Dop(Vec<(Vector3<f32>, f32, f32)>),
     /// Defines a sphere.
-    Sphere {center: Point3<f32>, radius: f32},
+    Sphere {center: Point3<f32>, square_radius: f32},
 }
 
 impl BoundingVolume {
@@ -53,7 +54,7 @@ impl BoundingVolume {
 
         BoundingVolume::Aabb {
             center: Point3::from_coordinates(center),
-            radius: max - center,
+            extents: max - center,
         }
     }
     /// Creates an optimal discrete oriented polytope with `k = 8` in a similar fashion as with
@@ -125,7 +126,7 @@ impl BoundingVolume {
 
         // Calculate the radius of the sphere in a second pass as the largest center-vertex
         // distance.
-        let radius = vertices.iter()
+        let square_radius = vertices.iter()
             .fold(0.0, |s, v| {
                 let p = Vector3::new(v.position[0], v.position[1], v.position[2]);
                 let d = p - center;
@@ -136,12 +137,11 @@ impl BoundingVolume {
                 } else {
                     s
                 }
-            })
-            .sqrt();
+            });
 
         BoundingVolume::Sphere {
             center: Point3::from_coordinates(center),
-            radius: radius,
+            square_radius: square_radius,
         }
     }
     /// Creates an optimal axis-aligned bounding-box from the supplied mesh.
@@ -158,6 +158,78 @@ impl BoundingVolume {
     pub fn from_mesh_sphere(mesh: &Mesh) -> Result<Self, ReadError> {
         let vertex_data = mesh.vertices.read()?;
         Ok(Self::new_sphere(&vertex_data))
+    }
+    /// Performs an intersection test of the `BoundingVolume` against the supplied `Ray`.
+    /// Optionally returns a tuple of `Ray` position and intersection point.
+    pub fn intersect_ray(&self, ray: &Ray) -> Option<(f32, Point3<f32>)> {
+        match *self {
+            BoundingVolume::Sphere {ref center, ref square_radius} => {
+                let l = center.coords - ray.origin.coords;
+                let s = l.dot(&ray.direction);
+                let l_square = l.dot(&l);
+
+                if s < 0.0 && l_square > *square_radius {
+                    return None;
+                }
+
+                let m_square = l_square - s.powi(2);
+
+                if m_square > *square_radius {
+                    return None;
+                }
+
+                let q = (square_radius - m_square).sqrt();
+
+                let t = if l_square > *square_radius {
+                    s - q
+                } else {
+                    s + q
+                };
+
+                Some((t, ray.origin + ray.direction * t))
+            },
+            BoundingVolume::Aabb {ref center, ref extents} => {
+                let epsilon = 0.001;
+                let mut t_min = -f32::INFINITY;
+                let mut t_max = f32::INFINITY;
+                let p = center.coords - ray.origin.coords;
+                for i in 0..3 {
+                    let e = p[i];
+                    let f = ray.direction[i];
+                    if f.abs() > epsilon {
+                        let mut t_1 = (e + extents[i]) / f;
+                        let mut t_2 = (e - extents[i]) / f;
+
+                        if t_1 > t_2 {
+                            let tmp = t_1;
+                            t_1 = t_2;
+                            t_2 = tmp;
+                        }
+
+                        if t_1 > t_min {
+                            t_min = t_1;
+                        }
+
+                        if t_2 < t_max {
+                            t_max = t_2;
+                        }
+
+                        if t_min > t_max || t_max < 0.0 {
+                            return None;
+                        }
+                    } else if (-e - extents[i]) > 0.0 || (-e + extents[i]) < 0.0 {
+                        return None;
+                    }
+                }
+
+                if t_min > 0.0 {
+                    Some((t_min, ray.origin + ray.direction * t_min))
+                } else {
+                    Some((t_max, ray.origin + ray.direction * t_max))
+                }
+            },
+            _ => unimplemented!(),
+        }
     }
 }
 
@@ -179,7 +251,7 @@ mod test {
         ];
 
         match BoundingVolume::new_aabb(&vertices) {
-            BoundingVolume::Aabb {center: c, radius: r} => {
+            BoundingVolume::Aabb {center: c, extents: r} => {
                 assert!(c == Point3::origin(), "Got {:?} instead", c);
                 assert!(r == Vector3::new(0.5, 0.5, 0.0), "Got {:?} instead", r);
             },
@@ -211,7 +283,7 @@ mod test {
                 assert!(d[2].2 == 0.57735026, "Got {:?} instead", d[2].2);
                 assert!(d[3].0 == Vector3::new(-1.0, 1.0, 1.0).normalize());
                 assert!(d[3].1 == -0.57735026, "Got {:?} instead", d[3].1);
-                assert!(d[3].2 == 0.57735026, "Got {:?} instead", d[3].2);
+                assert!(d[3].2 == 0.0, "Got {:?} instead", d[3].2);
             },
             bv => panic!("Expected a DOP enum variant, got {:?} instead", bv),
         }
@@ -228,9 +300,9 @@ mod test {
         ];
 
         match BoundingVolume::new_sphere(&vertices) {
-            BoundingVolume::Sphere {center: c, radius: r} => {
+            BoundingVolume::Sphere {center: c, square_radius: r} => {
                 assert!(c == Point3::origin(), "Got {:?} instead", c);
-                assert!(r == 0.70710677, "Got {:?} instead", r);
+                assert!(r == 0.5, "Got {:?} instead", r);
             },
             bv => panic!("Expected a sphere enum variant, got {:?} instead", bv),
         }
