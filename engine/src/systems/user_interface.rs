@@ -16,54 +16,10 @@ use components::ui_state::UiState;
 use common::ui_element::UiElement;
 use common::ui_primitive::UiPrimitive;
 
-#[derive(Debug, Fail)]
-pub enum UiError {
-    #[fail(display = "{}", _0)]
-    AssemblyError(#[cause] EcsError),
-    #[fail(display = "{}", _0)]
-    CacheError(String),
-    #[fail(display = "{}", _0)]
-    FactError(#[cause] FactoryError),
-    #[fail(display = "{}", _0)]
-    MeshCreationError(#[cause] MeshError),
-}
-
-impl From<EcsError> for UiError {
-    fn from(value: EcsError) -> Self {
-        UiError::AssemblyError(value)
-    }
-}
-
-impl From<CacheWriteErr> for UiError {
-    fn from(value: CacheWriteErr) -> Self {
-        use rusttype::gpu_cache::CacheWriteErr::*;
-        use self::UiError::*;
-
-        match value {
-            GlyphTooLarge => CacheError("At least one of the queued glyphs is too big to fit into
-                                        the cache, even if all other glyphs are removed".into()),
-            NoRoomForWholeQueue => CacheError("Not all of the requested glyphs can fit into the
-                                              cache, even if the cache is completely cleared before
-                                              the attempt".into()),
-        }
-    }
-}
-
-impl From<FactoryError> for UiError {
-    fn from(value: FactoryError) -> Self {
-        UiError::FactError(value)
-    }
-}
-
-impl From<MeshError> for UiError {
-    fn from(value: MeshError) -> Self {
-        UiError::MeshCreationError(value)
-    }
-}
-
 /// The `UserInterface` is responsible for managing the state associated with the user interface.
 /// It also processes events that relate to the UI.
 pub struct UserInterface {
+    /// Provides access to the graphics `Display`. Internally this is just an Rc.
     display: Display,
 }
 
@@ -74,6 +30,7 @@ impl UserInterface {
             display: display.clone(),
         }
     }
+    /// Creates a new speech-bubble `UiElement` and attaches it to the `UiState`.
     fn create_speech_bubble(&self, entities: &mut Assembly, factory: &mut ComponentFactory, target: &str, content: &str, lifetime: u64) -> Result<(), UiError> {
         // Attempt to find the entity named in `target` and retreive its world position.
         let entity_pos_world = entities.rsf2::<_, Description, Model>(|&(d, _)| d.name == target)
@@ -192,5 +149,51 @@ impl SystemTrait<EngineEvent, ComponentFactory> for UserInterface {
         self.update_lifetimes(entities)
             .expect("Unable to update the UI element lifetimes");
         None
+    }
+}
+
+/// Operations of the `UserInterface` may fail. `UiError` describes those errors.
+#[derive(Debug, Fail)]
+pub enum UiError {
+    #[fail(display = "{}", _0)]
+    AssemblyError(#[cause] EcsError),
+    #[fail(display = "{}", _0)]
+    CacheError(String),
+    #[fail(display = "{}", _0)]
+    FactError(#[cause] FactoryError),
+    #[fail(display = "{}", _0)]
+    MeshCreationError(#[cause] MeshError),
+}
+
+impl From<EcsError> for UiError {
+    fn from(value: EcsError) -> Self {
+        UiError::AssemblyError(value)
+    }
+}
+
+impl From<CacheWriteErr> for UiError {
+    fn from(value: CacheWriteErr) -> Self {
+        use rusttype::gpu_cache::CacheWriteErr::*;
+        use self::UiError::*;
+
+        match value {
+            GlyphTooLarge => CacheError("At least one of the queued glyphs is too big to fit into
+                                        the cache, even if all other glyphs are removed".into()),
+            NoRoomForWholeQueue => CacheError("Not all of the requested glyphs can fit into the
+                                              cache, even if the cache is completely cleared before
+                                              the attempt".into()),
+        }
+    }
+}
+
+impl From<FactoryError> for UiError {
+    fn from(value: FactoryError) -> Self {
+        UiError::FactError(value)
+    }
+}
+
+impl From<MeshError> for UiError {
+    fn from(value: MeshError) -> Self {
+        UiError::MeshCreationError(value)
     }
 }
