@@ -42,7 +42,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let fov_y = f32::consts::PI / 4.0;
             let z_near = 0.01;
             let z_far = 1000.0;
-            let eye = Point3::new(0.0, 0.0, 0.0);
+            let eye = Point3::new(0.0, 0.0, 1.0);
             let target = Point3::new(0.0, 0.0, -1.0);
             let up = Vector3::y();
 
