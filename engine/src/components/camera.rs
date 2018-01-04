@@ -3,6 +3,7 @@
 use ecs::ComponentTrait;
 use nalgebra::{Perspective3, Isometry3, Matrix4, Vector3, Point3, Point2};
 use alga::linear::{Transformation, ProjectiveTransformation};
+use common::ray::Ray;
 
 /// The `Camera` encapsulates functionality necessary to provide a camera to the `Renderer`.
 pub struct Camera {
@@ -22,6 +23,7 @@ impl Camera {
     pub fn new(dims: [u32; 2], fov_y: f32, z_near: f32, z_far: f32, eye: &Point3<f32>, target: &Point3<f32>, up: &Vector3<f32>) -> Self {
         let projection = Perspective3::new(dims[0] as f32 / dims[1] as f32, fov_y, z_near, z_far);
         let view = Isometry3::look_at_rh(eye, target, up);
+
         Self {
             matrix: projection.as_matrix() * view.to_homogeneous(),
             projection: projection,
@@ -48,6 +50,7 @@ impl Camera {
     pub fn ndc_point_to_screen(&self, point: &Point3<f32>) -> Point2<f32> {
         let w = self.dimensions[0] as f32;
         let h = self.dimensions[1] as f32;
+
         Point2::new((w / 2.0) * (point.x + 1.0),
                     (h / 2.0) * (point.y + 1.0))
     }
@@ -57,6 +60,7 @@ impl Camera {
         let h = self.dimensions[1] as f32;
         let n = self.projection.znear();
         let f = self.projection.zfar();
+
         Point3::new((2.0 * point.x) / w - 1.0,
                     (2.0 * point.y) / h - 1.0,
                     (n + f) / (n - f))
@@ -68,6 +72,13 @@ impl Camera {
     /// Transforms a screen point to world-space.
     pub fn screen_point_to_world(&self, point: &Point2<f32>) -> Point3<f32> {
         self.ndc_point_to_world(&self.screen_point_to_ndc(point))
+    }
+    /// Transforms a screen point to world-space as a ray originating from the camera.
+    pub fn screen_point_to_ray(&self, point: &Point2<f32>) -> Ray<f32> {
+        let origin = Point3::from_coordinates(self.view.translation.vector);
+        let direction = self.screen_point_to_world(point).coords.normalize();
+
+        Ray {origin, direction}
     }
     /// Recalculates the projection-view matrix.
     fn recalculate_matrix(&mut self) {
