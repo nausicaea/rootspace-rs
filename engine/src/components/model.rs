@@ -30,6 +30,7 @@ impl Model {
             inner: Affine3::identity(),
         }
     }
+    /// Decomposes the model matrix into its TRS constituents.
     pub fn decompose(&self) -> AffineTransform<f32> {
         From::from(self.inner)
     }
