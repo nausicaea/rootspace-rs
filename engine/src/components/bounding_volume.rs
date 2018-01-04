@@ -163,7 +163,7 @@ impl BoundingVolume {
     }
     /// Performs an intersection test of the `BoundingVolume` against the supplied `Ray`.
     /// Optionally returns a tuple of `Ray` position and intersection point.
-    pub fn intersect_ray(&self, ray: &Ray) -> Option<(f32, Point3<f32>)> {
+    pub fn intersect_ray(&self, ray: &Ray<f32>) -> Option<(f32, Point3<f32>)> {
         match *self {
             BoundingVolume::Sphere {ref center, ref square_radius} => {
                 let l = center.coords - ray.origin.coords;
