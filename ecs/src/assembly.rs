@@ -9,19 +9,19 @@ use component_group::{ComponentTrait, ComponentGroup};
 macro_rules! impl_read {
     ($name:ident, $t:tt) => {
         /// Borrows all instances of the specified component.
-        pub fn $name<$t: ComponentTrait>(&self) -> Vec<&$t> {
-            self.entities.values()
-                .filter(|g| g.has::<$t>())
-                .map(|g| g.borrow::<$t>().unwrap_or_else(|_| unreachable!()))
+        pub fn $name<$t: ComponentTrait>(&self) -> Vec<(Entity, &$t)> {
+            self.entities.iter()
+                .filter(|&(_, ref g)| g.has::<$t>())
+                .map(|(e, g)| (e.clone(), g.borrow::<$t>().unwrap_or_else(|_| unreachable!())))
                 .collect()
         }
     };
     ($name:ident, $($t:tt),*) => {
         /// Borrows from all entities that have all specified components.
-        pub fn $name<$($t: ComponentTrait),*>(&self) -> Vec<($(&$t),*)> {
-            self.entities.values()
-                .filter(|g| $(g.has::<$t>())&&*)
-                .map(|g| ($(g.borrow::<$t>().unwrap_or_else(|_| unreachable!())),*))
+        pub fn $name<$($t: ComponentTrait),*>(&self) -> Vec<(Entity, $(&$t),*)> {
+            self.entities.iter()
+                .filter(|&(_, g)| $(g.has::<$t>())&&*)
+                .map(|(e, g)| (e.clone(), $(g.borrow::<$t>().unwrap_or_else(|_| unreachable!())),*))
                 .collect()
         }
     };
@@ -34,10 +34,10 @@ macro_rules! impl_read_filtered {
     ($name:ident, $t:tt) => {
         /// Borrows all instances of the specified component, if their values pass the specified
         /// filter.
-        pub fn $name<F, $t: ComponentTrait>(&self, filter: F) -> Vec<&$t> where for<'r> F: FnMut(&'r &$t) -> bool {
-            self.entities.values()
-                .filter(|g| g.has::<$t>())
-                .map(|g| g.borrow::<$t>().unwrap_or_else(|_| unreachable!()))
+        pub fn $name<F, $t: ComponentTrait>(&self, filter: F) -> Vec<(Entity, &$t)> where for<'r> F: FnMut(&'r (Entity, &$t)) -> bool {
+            self.entities.iter()
+                .filter(|&(_, ref g)| g.has::<$t>())
+                .map(|(e, g)| (e.clone(), g.borrow::<$t>().unwrap_or_else(|_| unreachable!())))
                 .filter(filter)
                 .collect()
         }
@@ -45,10 +45,10 @@ macro_rules! impl_read_filtered {
     ($name:ident, $($t:tt),*) => {
         /// Borrows from all entities that have all specified components and whose values pass the
         /// specified filter.
-        pub fn $name<F, $($t: ComponentTrait),*>(&self, filter: F) -> Vec<($(&$t),*)> where for<'r> F: FnMut(&'r ($(&$t),*)) -> bool {
-            self.entities.values()
-                .filter(|g| $(g.has::<$t>())&&*)
-                .map(|g| ($(g.borrow::<$t>().unwrap_or_else(|_| unreachable!())),*))
+        pub fn $name<F, $($t: ComponentTrait),*>(&self, filter: F) -> Vec<(Entity, $(&$t),*)> where for<'r> F: FnMut(&'r (Entity, $(&$t),*)) -> bool {
+            self.entities.iter()
+                .filter(|&(_, ref g)| $(g.has::<$t>())&&*)
+                .map(|(e, g)| (e.clone(), $(g.borrow::<$t>().unwrap_or_else(|_| unreachable!())),*))
                 .filter(filter)
                 .collect()
         }
@@ -61,7 +61,7 @@ macro_rules! impl_read_single {
     ($name:ident, $base:ident, $t:tt) => {
         /// Borrows the specified component, ensuring that only a single entity matches the given
         /// conditions.
-        pub fn $name<$t: ComponentTrait>(&self) -> Result<&$t, EcsError> {
+        pub fn $name<$t: ComponentTrait>(&self) -> Result<(Entity, &$t), EcsError> {
             let mut components = self.$base::<$t>();
 
             match components.len() {
@@ -74,7 +74,7 @@ macro_rules! impl_read_single {
     ($name:ident, $base:ident, $($t:tt),*) => {
         /// Borrows the specified components, ensuring that only a single entity matches the given
         /// conditions.
-        pub fn $name<$($t: ComponentTrait),*>(&self) -> Result<($(&$t),*), EcsError> {
+        pub fn $name<$($t: ComponentTrait),*>(&self) -> Result<(Entity, $(&$t),*), EcsError> {
             let mut components = self.$base::<$($t),*>();
 
             match components.len() {
@@ -92,7 +92,7 @@ macro_rules! impl_read_single_filtered {
     ($name:ident, $base:ident, $t:tt) => {
         /// Borrows the specified component, ensuring that only a single entity matches the given
         /// conditions (defined by the component and filter).
-        pub fn $name<F, $t: ComponentTrait>(&self, filter: F) -> Result<&$t, EcsError> where for<'r> F: FnMut(&'r &$t) -> bool {
+        pub fn $name<F, $t: ComponentTrait>(&self, filter: F) -> Result<(Entity, &$t), EcsError> where for<'r> F: FnMut(&'r (Entity, &$t)) -> bool {
             let mut components = self.$base::<F, $t>(filter);
 
             match components.len() {
@@ -105,7 +105,7 @@ macro_rules! impl_read_single_filtered {
     ($name:ident, $base:ident, $($t:tt),*) => {
         /// Borrows the specified components, ensuring that only a single entity matches the given
         /// conditions (defined by the components and filter).
-        pub fn $name<F, $($t: ComponentTrait),*>(&self, filter: F) -> Result<($(&$t),*), EcsError> where for<'r> F: FnMut(&'r ($(&$t),*)) -> bool{
+        pub fn $name<F, $($t: ComponentTrait),*>(&self, filter: F) -> Result<(Entity, $(&$t),*), EcsError> where for<'r> F: FnMut(&'r (Entity, $(&$t),*)) -> bool{
             let mut components = self.$base::<F, $($t),*>(filter);
 
             match components.len() {
@@ -191,24 +191,24 @@ impl Assembly {
     impl_read_single_filtered!(rsf3, rf3, A, B, C);
     impl_read_single_filtered!(rsf4, rf4, A, B, C, D);
     /// Provides mutable access to all instances of the specified component type.
-    pub fn w1<C: ComponentTrait>(&mut self) -> Vec<&mut C> {
-        self.entities.values_mut()
-            .filter(|g| g.has::<C>())
-            .map(|g| g.borrow_mut::<C>().unwrap_or_else(|_| unreachable!()))
+    pub fn w1<C: ComponentTrait>(&mut self) -> Vec<(Entity, &mut C)> {
+        self.entities.iter_mut()
+            .filter(|&(_, ref g)| g.has::<C>())
+            .map(|(e, g)| (e.clone(), g.borrow_mut::<C>().unwrap_or_else(|_| unreachable!())))
             .collect()
     }
     /// Provides mutable access to all entities' components that match the specified type and
     /// supplied filter.
-    pub fn wf1<F, C: ComponentTrait>(&mut self, filter: F) -> Vec<&mut C> where for<'r> F: FnMut(&'r &mut C) -> bool {
-        self.entities.values_mut()
-            .filter(|g| g.has::<C>())
-            .map(|g| g.borrow_mut::<C>().unwrap_or_else(|_| unreachable!()))
+    pub fn wf1<F, C: ComponentTrait>(&mut self, filter: F) -> Vec<(Entity, &mut C)> where for<'r> F: FnMut(&'r (Entity, &mut C)) -> bool {
+        self.entities.iter_mut()
+            .filter(|&(_, ref g)| g.has::<C>())
+            .map(|(e, g)| (e.clone(), g.borrow_mut::<C>().unwrap_or_else(|_| unreachable!())))
             .filter(filter)
             .collect()
     }
     /// Ensures that only a single entity matches the bounds given by the specified component
     /// type and filter. Errors otherwise. Mutable version.
-    pub fn ws1<C: ComponentTrait>(&mut self) -> Result<&mut C, EcsError> {
+    pub fn ws1<C: ComponentTrait>(&mut self) -> Result<(Entity, &mut C), EcsError> {
         let mut components = self.w1::<C>();
 
         match components.len() {
@@ -219,7 +219,7 @@ impl Assembly {
     }
     /// Ensures that only a single entity matches the bounds given by the specified component
     /// type and filter. Errors otherwise. Mutable version.
-    pub fn wsf1<F, C: ComponentTrait>(&mut self, filter: F) -> Result<&mut C, EcsError> where for<'r> F: FnMut(&'r &mut C) -> bool {
+    pub fn wsf1<F, C: ComponentTrait>(&mut self, filter: F) -> Result<(Entity, &mut C), EcsError> where for<'r> F: FnMut(&'r (Entity, &mut C)) -> bool {
         let mut components = self.wf1::<F, C>(filter);
 
         match components.len() {

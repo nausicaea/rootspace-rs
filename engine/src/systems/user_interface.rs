@@ -33,8 +33,8 @@ impl UserInterface {
     /// Creates a new speech-bubble `UiElement` and attaches it to the `UiState`.
     fn create_speech_bubble(&self, entities: &mut Assembly, factory: &mut ComponentFactory, target: &str, content: &str, lifetime: u64) -> Result<(), UiError> {
         // Attempt to find the entity named in `target` and retreive its world position.
-        let entity_pos_world = entities.rsf2::<_, Description, Model>(|&(d, _)| d.name == target)
-            .map(|(_, m)| {
+        let entity_pos_world = entities.rsf2::<_, Description, Model>(|&(_, d, _)| d.name == target)
+            .map(|(_, _, m)| {
                 let a = m.decompose();
                 Point3::from_coordinates(a.translation.vector)
             })?;
@@ -42,10 +42,10 @@ impl UserInterface {
         // Project the entity position to normalized device coordinates (this requires the camera
         // entity).
         let entity_pos_ndc = entities.rs1::<Camera>()
-            .map(|c| c.world_point_to_ndc(&entity_pos_world))?;
+            .map(|(_, c)| c.world_point_to_ndc(&entity_pos_world))?;
 
         // Obtain a mutable reference to the `UiState`.
-        let ui_state = entities.ws1::<UiState>()?;
+        let (_, ui_state) = entities.ws1::<UiState>()?;
 
         // Layout the glyphs based on the textual `content`.
         let (glyphs, text_dims_px) = layout_paragraph_cached(&mut ui_state.font_cache_cpu,
@@ -108,7 +108,7 @@ impl UserInterface {
     /// lifetimes.
     fn update_lifetimes(&self, entities: &mut Assembly) -> Result<(), EcsError> {
         entities.ws1::<UiState>()
-            .map(|u| {
+            .map(|(_, u)| {
                 if !u.lifetimes.is_empty() {
                     let to_delete = u.lifetimes.iter()
                         .filter(|&(_, l)| l.0.elapsed() >= l.1)
@@ -138,7 +138,7 @@ impl SystemTrait<EngineEvent, ComponentFactory> for UserInterface {
             EngineEvent::SpeechBubble(ref t, ref c, l) => self.create_speech_bubble(entities, factory, t, c, l).unwrap(),
             EngineEvent::ResizeWindow(w, h) => {
                 entities.ws1::<UiState>()
-                    .map(|u| u.dimensions = [w, h])
+                    .map(|(_, u)| u.dimensions = [w, h])
                     .unwrap()
             },
             _ => (),

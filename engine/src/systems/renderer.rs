@@ -81,7 +81,7 @@ impl Renderer {
     }
     fn render_entities(&self, entities: &Assembly, target: &mut Frame, params: &DrawParameters) {
         entities.rs1::<Camera>()
-            .map(|c| {
+            .map(|(_, c)| {
                 for node in self.scene_graph.iter() {
                     if let Ok(mesh) = entities.borrow_component::<Mesh>(&node.entity) {
                         if let Ok(material) = entities.borrow_component::<Material>(&node.entity) {
@@ -98,7 +98,7 @@ impl Renderer {
     }
     fn render_user_interface(&self, entities: &Assembly, target: &mut Frame, params: &DrawParameters) {
         entities.rs1::<UiState>()
-            .map(|u| {
+            .map(|(_, u)| {
                 for e in u.elements.values() {
                     for p in &e.primitives {
                         let uniforms = UiUniforms {
@@ -136,7 +136,7 @@ impl<F> SystemTrait<EngineEvent, F> for Renderer {
             },
             EngineEvent::ResizeWindow(w, h) => {
                 entities.ws1::<Camera>()
-                    .map(|c| c.set_dimensions([w, h]))
+                    .map(|(_, c)| c.set_dimensions([w, h]))
                     .expect("Unable to update the projection matrices.");
                 None
             },
