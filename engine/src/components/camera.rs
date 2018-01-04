@@ -6,6 +6,7 @@ use alga::linear::{Transformation, ProjectiveTransformation};
 use common::ray::Ray;
 
 /// The `Camera` encapsulates functionality necessary to provide a camera to the `Renderer`.
+#[derive(Serialize, Deserialize)]
 pub struct Camera {
     /// Provides access to the projection-view matrix. It is recalculated with changes to the
     /// `Camera`.

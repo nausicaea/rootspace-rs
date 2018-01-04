@@ -6,7 +6,7 @@ use ecs::ComponentTrait;
 use common::affine_transform::AffineTransform;
 
 /// `Model` provides an abstraction for the model matrix for each 3D object.
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Model {
     /// Provides access to the model matrix (an affine TRS matrix).
     inner: Affine3<f32>,

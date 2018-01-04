@@ -3,7 +3,7 @@
 use ecs::ComponentTrait;
 
 /// The `Description` component encodes information that describes a particular entity.
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Description {
     /// Holds the name of the connected entity or object.
     pub name: String,

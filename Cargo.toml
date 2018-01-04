@@ -3,6 +3,7 @@ name = "rootspace-rs"
 description = "A game wrapped in uncertainty and mis(t)ery"
 version = "0.1.0"
 authors = ["Eleanore Young"]
+repository = "https://github.com/nausicaea/rootspace-rs"
 
 [workspace]
 
@@ -10,6 +11,6 @@ authors = ["Eleanore Young"]
 clap = "^2.28.0"
 log = "^0.3.8"
 fern = "^0.4.3"
-nalgebra = "^0.13.1"
+nalgebra = { version = "^0.13.1", features = ["serde-serialize"] }
 ecs = {path = "ecs"}
 engine = {path = "engine"}
