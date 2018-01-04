@@ -1,4 +1,5 @@
 pub mod ray;
+pub mod affine_transform;
 pub mod vertex;
 pub mod uniforms;
 pub mod ui_uniforms;

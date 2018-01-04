@@ -5,7 +5,7 @@ use nalgebra::{Point3, Vector2, Vector3};
 use rusttype::gpu_cache::CacheWriteErr;
 use uuid::Uuid;
 use ecs::{LoopStageFlag, SystemTrait, Assembly, EcsError};
-use utilities::{layout_paragraph_cached, decompose_trs_matrix};
+use utilities::layout_paragraph_cached;
 use event::{EngineEventFlag, EngineEvent};
 use factory::{FactoryError, ComponentFactory};
 use components::description::Description;
@@ -35,8 +35,8 @@ impl UserInterface {
         // Attempt to find the entity named in `target` and retreive its world position.
         let entity_pos_world = entities.rsf2::<_, Description, Model>(|&(d, _)| d.name == target)
             .map(|(_, m)| {
-                let (t, _, _) = decompose_trs_matrix(m);
-                Point3::from_coordinates(t.vector)
+                let a = m.decompose();
+                Point3::from_coordinates(a.translation.vector)
             })?;
 
         // Project the entity position to normalized device coordinates (this requires the camera

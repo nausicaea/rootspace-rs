@@ -3,6 +3,7 @@
 use std::ops::{Deref, DerefMut, Mul};
 use nalgebra::{Vector3, Isometry3, Affine3, Matrix4};
 use ecs::ComponentTrait;
+use common::affine_transform::AffineTransform;
 
 /// `Model` provides an abstraction for the model matrix for each 3D object.
 #[derive(Clone)]
@@ -28,6 +29,9 @@ impl Model {
         Model {
             inner: Affine3::identity(),
         }
+    }
+    pub fn decompose(&self) -> AffineTransform<f32> {
+        From::from(self.inner)
     }
 }
 
