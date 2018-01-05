@@ -1,7 +1,8 @@
 //! The `bounding_volume` module provides access to the `BoundingVolume` component.
 
 use std::f32;
-use nalgebra::{Point3, Vector3};
+use alga::linear::Transformation;
+use nalgebra::{Point3, Vector3, Affine3};
 use glium::buffer::ReadError;
 use ecs::ComponentTrait;
 use components::mesh::Mesh;
@@ -12,8 +13,8 @@ use common::ray::Ray;
 /// collision detection.
 #[derive(Debug, Clone)]
 pub enum BoundingVolume {
-    /// Defines an axis-aligned bounding-box (AABB).
-    Aabb {center: Point3<f32>, extents: Vector3<f32>},
+    /// Defines an oriented bounding-box (OBB).
+    Obb {center: Point3<f32>, extents: Vector3<f32>, base: [Vector3<f32>; 3]},
     /// Defines a discrete oriented polytope (k-DOP).
     Dop(Vec<(Vector3<f32>, f32, f32)>),
     /// Defines a sphere.
@@ -21,9 +22,9 @@ pub enum BoundingVolume {
 }
 
 impl BoundingVolume {
-    /// Creates an optimal axis-aligned bounding-box from a set of vertices (`Vertex`) by
+    /// Creates an optimal oriented bounding-box from a set of vertices (`Vertex`) by
     /// determining the minimum and maximum extents of the `Vertex` positions.
-    pub fn new_aabb(vertices: &[Vertex]) -> Self {
+    pub fn new_obb(vertices: &[Vertex]) -> Self {
         // Iterate through all vertices and grab both minima and maxima.
         let init = (Vector3::new(f32::INFINITY, f32::INFINITY, f32::INFINITY),
             Vector3::new(-f32::INFINITY, -f32::INFINITY, -f32::INFINITY));
@@ -54,9 +55,10 @@ impl BoundingVolume {
         // Calculate the bounding volume center.
         let center = (min + max) / 2.0;
 
-        BoundingVolume::Aabb {
+        BoundingVolume::Obb {
             center: Point3::from_coordinates(center),
             extents: max - center,
+            base: [Vector3::x(), Vector3::y(), Vector3::z()],
         }
     }
     /// Creates an optimal discrete oriented polytope with `k = 8` in a similar fashion as with
@@ -147,9 +149,9 @@ impl BoundingVolume {
         }
     }
     /// Creates an optimal axis-aligned bounding-box from the supplied mesh.
-    pub fn from_mesh_aabb(mesh: &Mesh) -> Result<Self, ReadError> {
+    pub fn from_mesh_obb(mesh: &Mesh) -> Result<Self, ReadError> {
         let vertex_data = mesh.vertices.read()?;
-        Ok(Self::new_aabb(&vertex_data))
+        Ok(Self::new_obb(&vertex_data))
     }
     /// Creates an optimal discrete oriented polytope with `k = 8` from the supplied mesh.
     pub fn from_mesh_dop8(mesh: &Mesh) -> Result<Self, ReadError> {
@@ -160,6 +162,17 @@ impl BoundingVolume {
     pub fn from_mesh_sphere(mesh: &Mesh) -> Result<Self, ReadError> {
         let vertex_data = mesh.vertices.read()?;
         Ok(Self::new_sphere(&vertex_data))
+    }
+    pub fn as_transformed(&self, transform: &Affine3<f32>) -> Self {
+        match *self {
+            BoundingVolume::Sphere {ref center, ref square_radius} => {
+                BoundingVolume::Sphere {
+                    center: transform.transform_point(center),
+                    square_radius: *square_radius,
+                }
+            },
+            _ => unimplemented!(),
+        }
     }
     /// Performs an intersection test of the `BoundingVolume` against the supplied `Ray`.
     /// Optionally returns a tuple of `Ray` position and intersection point.
@@ -188,16 +201,16 @@ impl BoundingVolume {
                     s + q
                 };
 
-                Some((t, ray.origin + ray.direction * t))
+                Some((t, ray.at(t)))
             },
-            BoundingVolume::Aabb {ref center, ref extents} => {
+            BoundingVolume::Obb {ref center, ref extents, ref base} => {
                 let epsilon = 0.001;
                 let mut t_min = -f32::INFINITY;
                 let mut t_max = f32::INFINITY;
                 let p = center.coords - ray.origin.coords;
                 for i in 0..3 {
-                    let e = p[i];
-                    let f = ray.direction[i];
+                    let e = base[i].dot(&p);
+                    let f = base[i].dot(&ray.direction);
                     if f.abs() > epsilon {
                         let mut t_1 = (e + extents[i]) / f;
                         let mut t_2 = (e - extents[i]) / f;
@@ -225,9 +238,9 @@ impl BoundingVolume {
                 }
 
                 if t_min > 0.0 {
-                    Some((t_min, ray.origin + ray.direction * t_min))
+                    Some((t_min, ray.at(t_min)))
                 } else {
-                    Some((t_max, ray.origin + ray.direction * t_max))
+                    Some((t_max, ray.at(t_max)))
                 }
             },
             _ => unimplemented!(),
@@ -242,7 +255,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_aabb() {
+    fn test_obb() {
         let min = [-0.5, -0.5];
         let max = [0.5, 0.5];
         let vertices = vec![
@@ -252,12 +265,15 @@ mod test {
             Vertex::new([max[0], max[1], 0.0], [1.0, 1.0], [0.0, 0.0, 1.0]),
         ];
 
-        match BoundingVolume::new_aabb(&vertices) {
-            BoundingVolume::Aabb {center: c, extents: r} => {
+        match BoundingVolume::new_obb(&vertices) {
+            BoundingVolume::Obb {center: c, extents: r, base: b} => {
                 assert!(c == Point3::origin(), "Got {:?} instead", c);
                 assert!(r == Vector3::new(0.5, 0.5, 0.0), "Got {:?} instead", r);
+                assert!(b[0] == Vector3::x(), "Got {:?} instead", b[0]);
+                assert!(b[1] == Vector3::y(), "Got {:?} instead", b[1]);
+                assert!(b[2] == Vector3::z(), "Got {:?} instead", b[2]);
             },
-            bv => panic!("Expected an AABB enum variant, got {:?} instead", bv),
+            bv => panic!("Expected an OBB enum variant, got {:?} instead", bv),
         }
     }
     #[test]

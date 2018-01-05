@@ -1,7 +1,8 @@
 //! The `camera` module provides the `Camera` component.
 
+use std::f32;
 use ecs::ComponentTrait;
-use nalgebra::{Perspective3, Isometry3, Matrix4, Vector3, Point3, Point2};
+use nalgebra::{Perspective3, Isometry3, Matrix4, Vector3, Point3, Point2, Unit};
 use alga::linear::{Transformation, ProjectiveTransformation};
 use common::ray::Ray;
 
@@ -75,11 +76,15 @@ impl Camera {
         self.ndc_point_to_world(&self.screen_point_to_ndc(point))
     }
     /// Transforms a screen point to world-space as a ray originating from the camera.
-    pub fn screen_point_to_ray(&self, point: &Point2<f32>) -> Ray<f32> {
-        let origin = Point3::from_coordinates(self.view.translation.vector);
-        let direction = self.screen_point_to_world(point).coords.normalize();
+    pub fn screen_point_to_ray(&self, point: &Point2<f32>) -> Option<Ray<f32>> {
+        let origin = self.view.translation.vector;
+        let direction = self.screen_point_to_world(point).coords;
 
-        Ray {origin, direction}
+        Unit::try_new(direction, f32::EPSILON)
+            .map(|d| Ray {
+                origin:Point3::from_coordinates(origin),
+                direction: d
+            })
     }
     /// Recalculates the projection-view matrix.
     fn recalculate_matrix(&mut self) {
