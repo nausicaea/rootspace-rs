@@ -25,41 +25,7 @@ impl BoundingVolume {
     /// Creates an optimal oriented bounding-box from a set of vertices (`Vertex`) by
     /// determining the minimum and maximum extents of the `Vertex` positions.
     pub fn new_obb(vertices: &[Vertex]) -> Self {
-        // Iterate through all vertices and grab both minima and maxima.
-        let init = (Vector3::new(f32::INFINITY, f32::INFINITY, f32::INFINITY),
-            Vector3::new(-f32::INFINITY, -f32::INFINITY, -f32::INFINITY));
-
-        let (min, max) = vertices.iter()
-            .fold(init, |s, v| {
-                let mut next_s = s;
-                let p = Vector3::new(v.position[0], v.position[1], v.position[2]);
-
-                if p.x < s.0.x {
-                    next_s.0.x = p.x
-                } else if p.x > s.1.x {
-                    next_s.1.x = p.x
-                }
-                if p.y < s.0.y {
-                    next_s.0.y = p.y
-                } else if p.y > s.1.y {
-                    next_s.1.y = p.y
-                }
-                if p.z < s.0.z {
-                    next_s.0.z = p.z
-                } else if p.z > s.1.z {
-                    next_s.1.z = p.z
-                }
-                next_s
-            });
-
-        // Calculate the bounding volume center.
-        let center = (min + max) / 2.0;
-
-        BoundingVolume::Obb {
-            center: Point3::from_coordinates(center),
-            extents: max - center,
-            base: [Vector3::x(), Vector3::y(), Vector3::z()],
-        }
+        unimplemented!()
     }
     /// Creates an optimal discrete oriented polytope with `k = 8` in a similar fashion as with
     /// the AABB (which can also be seen as 6-DOP).
