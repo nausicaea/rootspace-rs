@@ -5,7 +5,7 @@ use std::time::Duration;
 use nalgebra;
 use nalgebra::{Point3, Vector3};
 use engine::{Orchestrator, EventMonitor, DebugConsole, DebugShell,
-    Renderer, EventInterface, Model, Description, Mesh, Material, UserInterface,
+    Renderer, EventInterface, Model, Description, Mesh, UserInterface,
     UiState, Common, SpeechBubble, SceneGraph, SceneNode, Camera};
 
 pub fn run(resource_path: &Path, debugging: bool) {
@@ -74,25 +74,70 @@ pub fn run(resource_path: &Path, debugging: bool) {
             o.world.add_component(&canvas, u).unwrap();
         }
 
-        // Assemble the test entity.
+        // Assemble the first test entity.
         {
             let position = Vector3::new(0.0, 0.0, -10.0);
             let axisangle = nalgebra::zero();
+            let scale = Vector3::new(1.0, 1.0, 1.0);
             let vs = o.resource_path.join("shaders").join("test-vertex.glsl");
             let fs = o.resource_path.join("shaders").join("test-fragment.glsl");
 
-            let test_entity = o.world.create_entity();
-            let d = Description::new("test-entity");
-            let model = Model::new(position, axisangle, Vector3::new(1.0, 1.0, 1.0));
+            let test_entity_a = o.world.create_entity();
+            let d = Description::new("test-entity-a");
+            let model = Model::new(position, axisangle, scale);
             let mesh = Mesh::new_quad(&renderer.display, 0.0).unwrap();
-            let material = Material::new(&renderer.display, &vs, &fs, None, None, None).unwrap();
+            let material = o.world.aux.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
 
-            renderer.scene_graph.insert(SceneNode::new(test_entity.clone(), model.clone())).unwrap();
+            renderer.scene_graph.insert(SceneNode::new(test_entity_a.clone(), model.clone())).unwrap();
 
-            o.world.add_component(&test_entity, d).unwrap();
-            o.world.add_component(&test_entity, model).unwrap();
-            o.world.add_component(&test_entity, mesh).unwrap();
-            o.world.add_component(&test_entity, material).unwrap();
+            o.world.add_component(&test_entity_a, d).unwrap();
+            o.world.add_component(&test_entity_a, model).unwrap();
+            o.world.add_component(&test_entity_a, mesh).unwrap();
+            o.world.add_component(&test_entity_a, material).unwrap();
+        }
+
+        // Assemble the second test entity.
+        {
+            let position = Vector3::new(-2.0, 1.0, -7.0);
+            let axisangle = Vector3::new(0.0, f32::consts::PI / 4.0, 0.0);
+            let scale = Vector3::new(1.0, 1.0, 1.0);
+            let vs = o.resource_path.join("shaders").join("test-vertex.glsl");
+            let fs = o.resource_path.join("shaders").join("test-fragment.glsl");
+
+            let test_entity_b = o.world.create_entity();
+            let d = Description::new("test-entity-b");
+            let model = Model::new(position, axisangle, scale);
+            let mesh = Mesh::new_cube(&renderer.display).unwrap();
+            let material = o.world.aux.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
+
+            renderer.scene_graph.insert(SceneNode::new(test_entity_b.clone(), model.clone())).unwrap();
+
+            o.world.add_component(&test_entity_b, d).unwrap();
+            o.world.add_component(&test_entity_b, model).unwrap();
+            o.world.add_component(&test_entity_b, mesh).unwrap();
+            o.world.add_component(&test_entity_b, material).unwrap();
+        }
+
+        // Assemble the third test entity.
+        {
+            let position = Vector3::new(1.0, -1.5, -5.0);
+            let axisangle = Vector3::new(1.0, 1.0, 1.0) * f32::consts::PI / 4.0;
+            let scale = Vector3::new(1.0, 1.0, 1.0);
+            let vs = o.resource_path.join("shaders").join("test-vertex.glsl");
+            let fs = o.resource_path.join("shaders").join("test-fragment.glsl");
+
+            let test_entity_c = o.world.create_entity();
+            let d = Description::new("test-entity-c");
+            let model = Model::new(position, axisangle, scale);
+            let mesh = Mesh::new_cube(&renderer.display).unwrap();
+            let material = o.world.aux.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
+
+            renderer.scene_graph.insert(SceneNode::new(test_entity_c.clone(), model.clone())).unwrap();
+
+            o.world.add_component(&test_entity_c, d).unwrap();
+            o.world.add_component(&test_entity_c, model).unwrap();
+            o.world.add_component(&test_entity_c, mesh).unwrap();
+            o.world.add_component(&test_entity_c, material).unwrap();
         }
 
         // Add systems to the world.

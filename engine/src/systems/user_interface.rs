@@ -31,7 +31,7 @@ impl UserInterface {
         }
     }
     /// Creates a new speech-bubble `UiElement` and attaches it to the `UiState`.
-    fn create_speech_bubble(&self, entities: &mut Assembly, factory: &mut ComponentFactory, target: &str, content: &str, lifetime: u64) -> Result<(), UiError> {
+    fn create_speech_bubble(&self, entities: &mut Assembly, aux: &mut ComponentFactory, target: &str, content: &str, lifetime: u64) -> Result<(), UiError> {
         // Attempt to find the entity named in `target` and retreive its world position.
         let entity_pos_world = entities.rsf2::<_, Description, Model>(|&(_, d, _)| d.name == target)
             .map(|(_, _, m)| {
@@ -82,12 +82,12 @@ impl UserInterface {
         let rect_mesh = Mesh::new_quad(&self.display, 0.0)?;
 
         // Create the primitive materials.
-        let text_material = factory.new_material(&self.display,
+        let text_material = aux.new_material(&self.display,
                                           &ui_state.speech_bubble.text_vertex_shader,
                                           &ui_state.speech_bubble.text_fragment_shader, None, None,
                                           None)?;
 
-        let rect_material = factory.new_material(&self.display,
+        let rect_material = aux.new_material(&self.display,
                                           &ui_state.speech_bubble.rect_vertex_shader,
                                           &ui_state.speech_bubble.rect_fragment_shader, None,
                                           Some(&ui_state.speech_bubble.rect_diffuse_texture),
@@ -133,9 +133,9 @@ impl SystemTrait<EngineEvent, ComponentFactory> for UserInterface {
     fn get_event_filter(&self) -> EngineEventFlag {
         EngineEventFlag::SPEECH_BUBBLE | EngineEventFlag::RESIZE_WINDOW
     }
-    fn handle_event(&mut self, entities: &mut Assembly, factory: &mut ComponentFactory, event: &EngineEvent) -> Option<EngineEvent> {
+    fn handle_event(&mut self, entities: &mut Assembly, aux: &mut ComponentFactory, event: &EngineEvent) -> Option<EngineEvent> {
         match *event {
-            EngineEvent::SpeechBubble(ref t, ref c, l) => self.create_speech_bubble(entities, factory, t, c, l).unwrap(),
+            EngineEvent::SpeechBubble(ref t, ref c, l) => self.create_speech_bubble(entities, aux, t, c, l).unwrap(),
             EngineEvent::ResizeWindow(w, h) => {
                 entities.ws1::<UiState>()
                     .map(|(_, u)| u.dimensions = [w, h])

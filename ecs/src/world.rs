@@ -9,33 +9,43 @@ use system::SystemTrait;
 
 /// Encapsulates a set of systems, entities and components that describe an abstract universe of
 /// data and behaviour.
-pub struct World<E: EventTrait, F: Default> {
+pub struct World<E: EventTrait, A: Default> {
+    /// This field stores arbitrary an auxiliary object, that is passed to systems during the
+    /// update and event-handling calls. Consider using this for caching, file-system persistence,
+    /// global state, etc.
+    pub aux: A,
+    /// If this flag is `true`, the `World` will suspend any render calls.
+    pub rendering_suspended: bool,
+    /// Stores any currently queued events. These will be passed on to the relevant systems in
+    /// event-handling calls.
     event_queue: VecDeque<E>,
-    systems: Vec<Box<SystemTrait<E, F>>>,
-    factory: F,
+    /// Stores all systems as boxed trait objects. Systems primarily encode behaviour.
+    systems: Vec<Box<SystemTrait<E, A>>>,
+    /// The `Assembly` stores entities and their components. A reference is passed to systems
+    /// during the update, event-handling and render calls.
     assembly: Assembly,
-    rendering_suspended: bool,
 }
 
-impl<E: EventTrait, F: Default> Default for World<E, F> {
+impl<E: EventTrait, A: Default> Default for World<E, A> {
+    /// Creates a default instance of `World`.
     fn default() -> Self {
         World {
+            aux: Default::default(),
+            rendering_suspended: Default::default(),
             event_queue: Default::default(),
             systems: Default::default(),
-            factory: Default::default(),
             assembly: Default::default(),
-            rendering_suspended: Default::default(),
         }
     }
 }
 
-impl<E: EventTrait, F: Default> World<E, F> {
+impl<E: EventTrait, A: Default> World<E, A> {
     /// Creates a new, empty instance of `World`.
     pub fn new() -> Self {
         Default::default()
     }
     /// Adds a new system to the `World`.
-    pub fn add_system<S: SystemTrait<E, F> + 'static>(&mut self, system: S) {
+    pub fn add_system<S: SystemTrait<E, A> + 'static>(&mut self, system: S) {
         self.systems.push(Box::new(system));
     }
     /// Iterates over all queued events and dispatches them to the relevant systems.
@@ -67,7 +77,7 @@ impl<E: EventTrait, F: Default> World<E, F> {
 
         for system in &mut self.systems {
             if LoopStage::Update.match_filter(system.get_loop_stage_filter()) {
-                if let Some((mut pe, mut e)) = system.update(&mut self.assembly, &mut self.factory, time, delta_time) {
+                if let Some((mut pe, mut e)) = system.update(&mut self.assembly, &mut self.aux, time, delta_time) {
                     priority_events.append(&mut pe);
                     events.append(&mut e);
                 }
@@ -109,7 +119,7 @@ impl<E: EventTrait, F: Default> World<E, F> {
 
         for system in &mut self.systems {
             if LoopStage::HandleEvent.match_filter(system.get_loop_stage_filter()) && event.match_filter(system.get_event_filter()) {
-                if let Some(e) = system.handle_event(&mut self.assembly, &mut self.factory, event) {
+                if let Some(e) = system.handle_event(&mut self.assembly, &mut self.aux, event) {
                     events.push(e);
                 }
             }

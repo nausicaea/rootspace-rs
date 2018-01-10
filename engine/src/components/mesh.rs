@@ -27,15 +27,62 @@ impl Mesh {
     }
     /// Creates a new unit square.
     pub fn new_quad(display: &Display, z_value: f32) -> Result<Self, MeshError> {
-        let min = [-0.5, -0.5];
-        let max = [0.5, 0.5];
-        let vertices = vec![
-            Vertex::new([min[0], max[1], z_value], [0.0, 1.0], [0.0, 0.0, 1.0]),
-            Vertex::new([min[0], min[1], z_value], [0.0, 0.0], [0.0, 0.0, 1.0]),
-            Vertex::new([max[0], min[1], z_value], [1.0, 0.0], [0.0, 0.0, 1.0]),
-            Vertex::new([max[0], max[1], z_value], [1.0, 1.0], [0.0, 0.0, 1.0]),
+        // Specifies the half of the width of the square.
+        let hw = 0.5;
+        let vertices = [
+            Vertex::new([-hw, hw, z_value], [0.0, 1.0], [0.0, 0.0, 1.0]),
+            Vertex::new([-hw, -hw, z_value], [0.0, 0.0], [0.0, 0.0, 1.0]),
+            Vertex::new([hw, -hw, z_value], [1.0, 0.0], [0.0, 0.0, 1.0]),
+            Vertex::new([hw, hw, z_value], [1.0, 1.0], [0.0, 0.0, 1.0]),
         ];
-        let indices = vec![0, 1, 2, 2, 3, 0];
+        let indices = [0, 1, 2, 2, 3, 0];
+
+        Self::new(display, &vertices, &indices, index::PrimitiveType::TrianglesList)
+    }
+    /// Creates a new unit cube.
+    pub fn new_cube(display: &Display) -> Result<Self, MeshError> {
+        // Specifies half of the width of the cube.
+        let hw = 0.5;
+        let vertices = [
+            // Front face
+            Vertex::new([-hw, hw, hw], [0.0, 1.0], [0.0, 0.0, 1.0]),
+            Vertex::new([-hw, -hw, hw], [0.0, 0.0], [0.0, 0.0, 1.0]),
+            Vertex::new([hw, -hw, hw], [1.0, 0.0], [0.0, 0.0, 1.0]),
+            Vertex::new([hw, hw, hw], [1.0, 1.0], [0.0, 0.0, 1.0]),
+            // Back face
+            Vertex::new([hw, hw, -hw], [0.0, 1.0], [0.0, 0.0, -1.0]),
+            Vertex::new([hw, -hw, -hw], [0.0, 0.0], [0.0, 0.0, -1.0]),
+            Vertex::new([-hw, -hw, -hw], [1.0, 0.0], [0.0, 0.0, -1.0]),
+            Vertex::new([-hw, hw, -hw], [1.0, 1.0], [0.0, 0.0, -1.0]),
+            // Right face
+            Vertex::new([hw, hw, hw], [0.0, 1.0], [1.0, 0.0, 0.0]),
+            Vertex::new([hw, -hw, hw], [0.0, 0.0], [1.0, 0.0, 0.0]),
+            Vertex::new([hw, -hw, -hw], [1.0, 0.0], [1.0, 0.0, 0.0]),
+            Vertex::new([hw, hw, -hw], [1.0, 1.0], [1.0, 0.0, 0.0]),
+            // Left face
+            Vertex::new([-hw, hw, -hw], [0.0, 1.0], [-1.0, 0.0, 0.0]),
+            Vertex::new([-hw, -hw, -hw], [0.0, 0.0], [-1.0, 0.0, 0.0]),
+            Vertex::new([-hw, -hw, hw], [1.0, 0.0], [-1.0, 0.0, 0.0]),
+            Vertex::new([-hw, hw, hw], [1.0, 1.0], [-1.0, 0.0, 0.0]),
+            // Top face
+            Vertex::new([-hw, hw, -hw], [0.0, 1.0], [0.0, 1.0, 0.0]),
+            Vertex::new([-hw, hw, hw], [0.0, 0.0], [0.0, 1.0, 0.0]),
+            Vertex::new([hw, hw, hw], [1.0, 0.0], [0.0, 1.0, 0.0]),
+            Vertex::new([hw, hw, -hw], [1.0, 1.0], [0.0, 1.0, 0.0]),
+            // Bottom face
+            Vertex::new([-hw, -hw, hw], [0.0, 1.0], [0.0, -1.0, 0.0]),
+            Vertex::new([-hw, -hw, -hw], [0.0, 0.0], [0.0, -1.0, 0.0]),
+            Vertex::new([hw, -hw, -hw], [1.0, 0.0], [0.0, -1.0, 0.0]),
+            Vertex::new([hw, -hw, hw], [1.0, 1.0], [0.0, -1.0, 0.0]),
+        ];
+        let indices = [
+            0, 1, 2, 2, 3, 0,
+            4, 5, 6, 6, 7, 4,
+            8, 9, 10, 10, 11, 8,
+            12, 13, 14, 14, 15, 12,
+            16, 17, 18, 18, 19, 16,
+            20, 21, 22, 22, 23, 20,
+        ];
 
         Self::new(display, &vertices, &indices, index::PrimitiveType::TrianglesList)
     }
