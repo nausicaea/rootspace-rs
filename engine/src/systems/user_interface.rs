@@ -132,10 +132,17 @@ impl SystemTrait<EngineEvent, ComponentFactory> for UserInterface {
         LoopStageFlag::HANDLE_EVENT | LoopStageFlag::UPDATE
     }
     fn get_event_filter(&self) -> EngineEventFlag {
-        EngineEventFlag::SPEECH_BUBBLE | EngineEventFlag::RESIZE_WINDOW
+        EngineEventFlag::READY | EngineEventFlag::SPEECH_BUBBLE | EngineEventFlag::RESIZE_WINDOW
     }
     fn handle_event(&mut self, entities: &mut Assembly, aux: &mut ComponentFactory, event: &EngineEvent) -> Option<EngineEvent> {
         match *event {
+            EngineEvent::Ready => {
+                // When first getting ready, make sure that exactly one UiState component is
+                // present.
+                entities.rs1::<UiState>().expect("The UiserInterface system requires exactly one entity with a UiState component");
+                // Also require the camera to be present.
+                entities.rs1::<Camera>().expect("The UserInterface system requires exactly one entity with a Camera component");
+            },
             EngineEvent::SpeechBubble(ref t, ref c, l) => {
                 self.create_speech_bubble(entities, aux, t, c, l)
                     .unwrap_or_else(|e| warn!("Could not create a speech bubble: {}", e))

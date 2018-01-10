@@ -131,6 +131,8 @@ impl<F> SystemTrait<EngineEvent, F> for Renderer {
     fn handle_event(&mut self, entities: &mut Assembly, _: &mut F, event: &EngineEvent) -> Option<EngineEvent> {
         match *event {
             EngineEvent::Ready => {
+                // When first getting ready, ensure that a single camer a is present.
+                entities.rs1::<Camera>().expect("The Renderer system requires exactly one entity with a Camera component");
                 self.ready = true;
                 Some(EngineEvent::RendererReady)
             },
