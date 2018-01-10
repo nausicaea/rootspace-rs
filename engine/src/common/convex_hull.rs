@@ -214,7 +214,7 @@ impl<N> IndexedPoint<N> where N: Scalar + Real + Float {
     /// Returns `true` if the `IndexedPoint` does not contain infinities and the index is set to a
     /// value.
     pub fn is_valid(&self) -> bool {
-        self.idx.is_some() && self.value.iter().all(|c| !c.is_infinite())
+        self.idx.is_some() && !self.value.iter().any(|c| c.is_infinite())
     }
 }
 
