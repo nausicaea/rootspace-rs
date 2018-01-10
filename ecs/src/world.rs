@@ -10,9 +10,9 @@ use system::SystemTrait;
 /// Encapsulates a set of systems, entities and components that describe an abstract universe of
 /// data and behaviour.
 pub struct World<E: EventTrait, F: Default> {
+    pub factory: F,
     event_queue: VecDeque<E>,
     systems: Vec<Box<SystemTrait<E, F>>>,
-    factory: F,
     assembly: Assembly,
     rendering_suspended: bool,
 }
@@ -20,9 +20,9 @@ pub struct World<E: EventTrait, F: Default> {
 impl<E: EventTrait, F: Default> Default for World<E, F> {
     fn default() -> Self {
         World {
+            factory: Default::default(),
             event_queue: Default::default(),
             systems: Default::default(),
-            factory: Default::default(),
             assembly: Default::default(),
             rendering_suspended: Default::default(),
         }
