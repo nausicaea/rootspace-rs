@@ -23,6 +23,25 @@ fn convex_hull<N>(vertices: &[Vector3<N>]) -> Result<(), Error> where N: Scalar 
 
     // Based on the Akl-Toussain heuristic, also exclude all points that lie within the
     // tetrahedron, as they will never be part of the convex hull anyway.
+    for face_idx in mesh.faces.keys() {
+        // Collect the vertices of the current face
+        let face_vertices = mesh.iter_face_edges(face_idx)
+            .map(|e| vertices[Into::<usize>::into(e.vertex)])
+            .collect::<Vec<_>>();
+
+        // Calculate the incentre and the normal of the face (assuming it's a triangle).
+        let o = incentre(&face_vertices[0], &face_vertices[1], &face_vertices[2]);
+        let n = normal(&face_vertices[0], &face_vertices[1], &face_vertices[2])
+            .ok_or(Error::DegenerateTriangle)?;
+
+        // Exclude any vertex that is not in front of the current face.
+        for (i, p) in vertices.iter().enumerate() {
+            if (p - o).dot(&n) < N::default_epsilon() {
+                excluded_indices.push(Into::<VertexIndex>::into(i))
+            }
+        }
+    }
+    excluded_indices.dedup();
 
     Ok(())
 }

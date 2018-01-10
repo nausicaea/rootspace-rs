@@ -155,6 +155,10 @@ impl Mesh {
 
         Ok(())
     }
+    pub fn iter_face_edges(&self, face_idx: &FaceIndex) -> EdgeIterator {
+        let face = &self.faces[face_idx];
+        EdgeIterator::new(self, face.first_edge)
+    }
     /// For every face in the mesh, ensure that there is a bidirectional circle of half-edges
     /// around the face that all point to said face. Furthermore, ensure that each half-edge
     /// contains a valid opposite half-edge index.
@@ -211,6 +215,48 @@ impl Mesh {
         }
 
         Ok(())
+    }
+}
+
+/// The `EdgeIterator` allows the iteration over edges in a circle, starting at an initial edge
+/// index.
+pub struct EdgeIterator<'a> {
+    mesh: &'a Mesh,
+    first_edge_idx: EdgeIndex,
+    edge_idx: Option<EdgeIndex>,
+}
+
+impl<'a> EdgeIterator<'a> {
+    /// Creates a new `EdgeIterator`.
+    pub fn new(mesh: &'a Mesh, first_edge_idx: EdgeIndex) -> Self {
+        Self {
+            mesh: mesh,
+            first_edge_idx: first_edge_idx,
+            edge_idx: None,
+        }
+    }
+}
+
+impl<'a> Iterator for EdgeIterator<'a> {
+    type Item = &'a HalfEdge;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        // If we have returned to the first edge, stop the iteration.
+        if self.edge_idx == Some(self.first_edge_idx) {
+            return None;
+        }
+
+        // If this is the first time next() is called, the edge index will not have been set yet.
+        if self.edge_idx.is_none() {
+            self.edge_idx = Some(self.first_edge_idx);
+        }
+
+        // Retrieve the current edge and increment the index.
+        let current_edge = &self.mesh.edges[&self.edge_idx.unwrap()];
+        self.edge_idx = Some(current_edge.next.unwrap());
+
+        // Return a reference to the current edge.
+        Some(current_edge)
     }
 }
 
