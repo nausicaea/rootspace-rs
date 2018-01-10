@@ -9,18 +9,18 @@ use system::SystemTrait;
 
 /// Encapsulates a set of systems, entities and components that describe an abstract universe of
 /// data and behaviour.
-pub struct World<E: EventTrait, F: Default> {
-    pub factory: F,
+pub struct World<E: EventTrait, A: Default> {
+    pub aux: A,
     event_queue: VecDeque<E>,
-    systems: Vec<Box<SystemTrait<E, F>>>,
+    systems: Vec<Box<SystemTrait<E, A>>>,
     assembly: Assembly,
     rendering_suspended: bool,
 }
 
-impl<E: EventTrait, F: Default> Default for World<E, F> {
+impl<E: EventTrait, A: Default> Default for World<E, A> {
     fn default() -> Self {
         World {
-            factory: Default::default(),
+            aux: Default::default(),
             event_queue: Default::default(),
             systems: Default::default(),
             assembly: Default::default(),
@@ -29,13 +29,13 @@ impl<E: EventTrait, F: Default> Default for World<E, F> {
     }
 }
 
-impl<E: EventTrait, F: Default> World<E, F> {
+impl<E: EventTrait, A: Default> World<E, A> {
     /// Creates a new, empty instance of `World`.
     pub fn new() -> Self {
         Default::default()
     }
     /// Adds a new system to the `World`.
-    pub fn add_system<S: SystemTrait<E, F> + 'static>(&mut self, system: S) {
+    pub fn add_system<S: SystemTrait<E, A> + 'static>(&mut self, system: S) {
         self.systems.push(Box::new(system));
     }
     /// Iterates over all queued events and dispatches them to the relevant systems.
@@ -67,7 +67,7 @@ impl<E: EventTrait, F: Default> World<E, F> {
 
         for system in &mut self.systems {
             if LoopStage::Update.match_filter(system.get_loop_stage_filter()) {
-                if let Some((mut pe, mut e)) = system.update(&mut self.assembly, &mut self.factory, time, delta_time) {
+                if let Some((mut pe, mut e)) = system.update(&mut self.assembly, &mut self.aux, time, delta_time) {
                     priority_events.append(&mut pe);
                     events.append(&mut e);
                 }
@@ -109,7 +109,7 @@ impl<E: EventTrait, F: Default> World<E, F> {
 
         for system in &mut self.systems {
             if LoopStage::HandleEvent.match_filter(system.get_loop_stage_filter()) && event.match_filter(system.get_event_filter()) {
-                if let Some(e) = system.handle_event(&mut self.assembly, &mut self.factory, event) {
+                if let Some(e) = system.handle_event(&mut self.assembly, &mut self.aux, event) {
                     events.push(e);
                 }
             }
