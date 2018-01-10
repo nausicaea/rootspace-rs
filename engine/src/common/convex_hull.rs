@@ -1,3 +1,4 @@
+use std::collections::VecDeque;
 use num_traits::float::Float;
 use nalgebra::{zero, Vector3, Unit, Scalar, Real};
 use common::half_edge_mesh::{Mesh, VertexIndex};
@@ -42,6 +43,9 @@ fn convex_hull<N>(vertices: &[Vector3<N>]) -> Result<(), Error> where N: Scalar 
         }
     }
     excluded_indices.dedup();
+
+    // Create a queue of `Face`s.
+    let mut face_queue = mesh.faces.values().cloned().collect::<VecDeque<_>>();
 
     Ok(())
 }
