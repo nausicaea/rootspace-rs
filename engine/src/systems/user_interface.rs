@@ -37,7 +37,8 @@ impl UserInterface {
             .map(|(_, _, m)| {
                 let a = m.decompose();
                 Point3::from_coordinates(a.translation.vector)
-            })?;
+            })
+            .map_err(|e| UiError::EntityNotFound(target.into(), e))?;
 
         // Project the entity position to normalized device coordinates (this requires the camera
         // entity).
@@ -135,11 +136,14 @@ impl SystemTrait<EngineEvent, ComponentFactory> for UserInterface {
     }
     fn handle_event(&mut self, entities: &mut Assembly, aux: &mut ComponentFactory, event: &EngineEvent) -> Option<EngineEvent> {
         match *event {
-            EngineEvent::SpeechBubble(ref t, ref c, l) => self.create_speech_bubble(entities, aux, t, c, l).unwrap(),
+            EngineEvent::SpeechBubble(ref t, ref c, l) => {
+                self.create_speech_bubble(entities, aux, t, c, l)
+                    .unwrap_or_else(|e| warn!("Could not create a speech bubble: {}", e))
+            },
             EngineEvent::ResizeWindow(w, h) => {
                 entities.ws1::<UiState>()
                     .map(|(_, u)| u.dimensions = [w, h])
-                    .unwrap()
+                    .expect("Could not adjust the UI dimensions")
             },
             _ => (),
         }
@@ -163,6 +167,8 @@ pub enum UiError {
     FactError(#[cause] FactoryError),
     #[fail(display = "{}", _0)]
     MeshCreationError(#[cause] MeshError),
+    #[fail(display = "Unable to uniquely identify the entity '{}'", _0)]
+    EntityNotFound(String, #[cause] EcsError),
 }
 
 impl From<EcsError> for UiError {
