@@ -10,21 +10,31 @@ use system::SystemTrait;
 /// Encapsulates a set of systems, entities and components that describe an abstract universe of
 /// data and behaviour.
 pub struct World<E: EventTrait, A: Default> {
+    /// This field stores arbitrary an auxiliary object, that is passed to systems during the
+    /// update and event-handling calls. Consider using this for caching, file-system persistence,
+    /// global state, etc.
     pub aux: A,
+    /// If this flag is `true`, the `World` will suspend any render calls.
+    pub rendering_suspended: bool,
+    /// Stores any currently queued events. These will be passed on to the relevant systems in
+    /// event-handling calls.
     event_queue: VecDeque<E>,
+    /// Stores all systems as boxed trait objects. Systems primarily encode behaviour.
     systems: Vec<Box<SystemTrait<E, A>>>,
+    /// The `Assembly` stores entities and their components. A reference is passed to systems
+    /// during the update, event-handling and render calls.
     assembly: Assembly,
-    rendering_suspended: bool,
 }
 
 impl<E: EventTrait, A: Default> Default for World<E, A> {
+    /// Creates a default instance of `World`.
     fn default() -> Self {
         World {
             aux: Default::default(),
+            rendering_suspended: Default::default(),
             event_queue: Default::default(),
             systems: Default::default(),
             assembly: Default::default(),
-            rendering_suspended: Default::default(),
         }
     }
 }
