@@ -5,7 +5,7 @@ use std::time::Duration;
 use nalgebra;
 use nalgebra::{Point3, Vector3};
 use engine::{Orchestrator, EventMonitor, DebugConsole, DebugShell,
-    Renderer, EventInterface, Model, Description, Mesh, Material, UserInterface,
+    Renderer, EventInterface, Model, Description, Mesh, UserInterface,
     UiState, Common, SpeechBubble, SceneGraph, SceneNode, Camera};
 
 pub fn run(resource_path: &Path, debugging: bool) {
