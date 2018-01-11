@@ -1,16 +1,11 @@
 use std::collections::VecDeque;
 use num_traits::float::Float;
 use nalgebra::{zero, Vector3, Unit, Scalar, Real};
-use common::half_edge_mesh::{Mesh, VertexIndex};
+use common::half_edge_mesh::{Mesh, FaceIndex, VertexIndex};
 use common::half_edge_mesh::Error as MError;
 
 /// Generates a convex hull given a set of points in 3-space.
 fn convex_hull<N>(vertices: &[Vector3<N>]) -> Result<(), Error> where N: Scalar + Real + Float {
-    // If the point cloud contains less than four vertices, a convex hull cannot be created.
-    if vertices.len() < 4 {
-        return Err(Error::TooFewPoints);
-    }
-
     // Apply the Akl-Toussain heuristic which allows to greatly reduce the search space of the
     // problem.
     let tetrahedron = akl_toussain_heuristic(&vertices)?;
@@ -25,27 +20,78 @@ fn convex_hull<N>(vertices: &[Vector3<N>]) -> Result<(), Error> where N: Scalar 
     // Based on the Akl-Toussain heuristic, also exclude all points that lie within the
     // tetrahedron, as they will never be part of the convex hull anyway.
     for face_idx in mesh.faces.keys() {
-        // Collect the vertices of the current face
-        let face_vertices = mesh.iter_face_edges(face_idx)
-            .map(|e| vertices[Into::<usize>::into(e.vertex)])
-            .collect::<Vec<_>>();
-
-        // Calculate the incentre and the normal of the face (assuming it's a triangle).
-        let o = incentre(&face_vertices[0], &face_vertices[1], &face_vertices[2]);
-        let n = normal(&face_vertices[0], &face_vertices[1], &face_vertices[2])
+        let (o, n) = triangle_params(&mesh, vertices, face_idx)
             .ok_or(Error::DegenerateTriangle)?;
 
         // Exclude any vertex that is not in front of the current face.
         for (i, p) in vertices.iter().enumerate() {
-            if (p - o).dot(&n) < N::default_epsilon() {
-                excluded_indices.push(Into::<VertexIndex>::into(i))
+            if is_seen(&o, &n, p) {
+                excluded_indices.push(VertexIndex::new(i))
             }
         }
     }
     excluded_indices.dedup();
 
-    // Create a queue of `Face`s.
-    let mut face_queue = mesh.faces.values().cloned().collect::<VecDeque<_>>();
+    // Create a queue of `Face`s, and use those to partition the point cloud, in order to generate
+    // the convex hull.
+    let mut face_queue = mesh.faces.keys().cloned().collect::<VecDeque<_>>();
+    while let Some(face_idx) = face_queue.pop_front() {
+        // If the current face has already been discarded, carry on.
+        if !mesh.faces.contains_key(&face_idx) {
+            continue;
+        }
+
+        // Gather the points visible from the current face.
+        let (o, n) = triangle_params(&mesh, vertices, &face_idx)
+            .ok_or(Error::DegenerateTriangle)?;
+
+        let visible_points = vertices.iter()
+            .enumerate()
+            .filter(|&(i, p)| !is_excluded(&excluded_indices, i) && is_seen(&o, &n, p))
+            .map(|(i, p)| IndexedPoint::new(Some(i), *p))
+            .collect::<Vec<_>>();
+
+        // Find the farthest point from the current face.
+        let init: (IndexedPoint<N>, N) = (IndexedPoint::zero(), zero());
+        let (max_p, _) = visible_points.iter().fold(init, |state, p| {
+            let dist_sq = proj_dist(&o, &n, &p.value);
+            if dist_sq > state.1 {
+                (p.clone(), dist_sq)
+            } else {
+                state
+            }
+        });
+
+        // If no most distant point was found, ignore the current face and carry on.
+        if !max_p.is_valid() {
+            continue;
+        }
+
+        // The original implementation from [Mark Hinz](https://github.com/mhintz/convex_hull/blob/master/src/convex_hull.rs)
+        // features the following workaround for invalid face generation based on the previously
+        // found maximum point.
+        excluded_indices.push(max_p.idx.unwrap());
+
+        // Collect all faces whose normals point in the direction of the recently determined most
+        // distant point. This basically means that we calculate the edge horizon (i.e. the outline
+        // of the mesh, when seen from `max_p`.
+        let light_faces = mesh.faces.keys()
+            .filter(|fidx| {
+                let (o, n) = triangle_params(&mesh, vertices, fidx).unwrap();
+                is_seen(&o, &n, &max_p.value)
+            })
+            .cloned()
+            .collect::<Vec<_>>();
+
+        // Extend the mesh to `max_p` while replacing the faces in `light_faces`.
+        let mut new_faces = mesh.extend_mesh(max_p.idx.unwrap(), &light_faces)
+            .map(|faces| faces.iter().cloned().collect::<VecDeque<_>>())?;
+
+        // Add the new faces to the queue.
+        face_queue.append(&mut new_faces);
+    }
+
+    mesh.verify()?;
 
     Ok(())
 }
@@ -56,6 +102,11 @@ fn convex_hull<N>(vertices: &[Vector3<N>]) -> Result<(), Error> where N: Scalar 
 /// corresponds to the apex and the three subsequent indices form the base of the tetrahedron in
 /// counter-clockwise order when seen from the apex.
 fn akl_toussain_heuristic<N>(vertices: &[Vector3<N>]) -> Result<[VertexIndex; 4], Error> where N: Scalar + Real + Float {
+    // If the point cloud contains less than four vertices, a convex hull cannot be created.
+    if vertices.len() < 4 {
+        return Err(Error::TooFewPoints);
+    }
+
     // Find the two extreme points along each axis of the point cloud.
     let init = [[IndexedPoint::infinity(),
                 IndexedPoint::neg_infinity()],
@@ -172,6 +223,37 @@ fn dist_sq_segment<N>(a: &Vector3<N>, b: &Vector3<N>, p: &Vector3<N>) -> N where
     d.dot(&d)
 }
 
+/// Returns `true` if the supplied index lies within the list of excluded indices.
+fn is_excluded(excluded_indices: &[VertexIndex], idx: usize) -> bool {
+    excluded_indices.iter().position(|ei| ei == &VertexIndex::new(idx)).is_some()
+}
+
+/// Given a `Mesh`, vertices, and a `FaceIndex`, treate that face as a triangle, and calculate the
+/// incentre and its normal.
+fn triangle_params<N>(mesh: &Mesh, vertices: &[Vector3<N>], face_idx: &FaceIndex) -> Option<(Vector3<N>, Unit<Vector3<N>>)> where N: Scalar + Real {
+    // Collect the vertices of the current face
+    let face_vertices = mesh.iter_face_edges(face_idx)
+        .map(|e| vertices[Into::<usize>::into(e.vertex)])
+        .collect::<Vec<_>>();
+
+    // Calculate the incentre and the normal of the face (assuming it's a triangle).
+    let o = incentre(&face_vertices[0], &face_vertices[1], &face_vertices[2]);
+    let n = normal(&face_vertices[0], &face_vertices[1], &face_vertices[2])?;
+
+    Some((o, n))
+}
+
+/// Returns `true` if the line `op` projected onto the normal `n` is positive. In other words, the
+/// point `o` "sees" the point `p` when looking in the direction of `n`.
+fn is_seen<N>(o: &Vector3<N>, n: &Unit<Vector3<N>>, p: &Vector3<N>) -> bool where N: Scalar + Real {
+    proj_dist(o, n, p) > N::default_epsilon()
+}
+
+/// Calculates the length of the projection of line `op` onto `n`.
+fn proj_dist<N>(o: &Vector3<N>, n: &Unit<Vector3<N>>, p: &Vector3<N>) -> N where N: Scalar + Real {
+    (p - o).dot(n)
+}
+
 /// Calculates the incentre of a triangle.
 fn incentre<N>(a: &Vector3<N>, b: &Vector3<N>, c: &Vector3<N>) -> Vector3<N> where N: Scalar + Real {
     let a_norm = a.norm();
@@ -241,6 +323,7 @@ impl<N> IndexedPoint<N> where N: Scalar + Real + Float {
     }
 }
 
+/// Generating a convex hull may fail. `Error` describes those errors.
 #[derive(Debug, Fail)]
 pub enum Error {
     #[fail(display = "The supplied point cloud contains less than four points")]
@@ -258,6 +341,7 @@ pub enum Error {
 }
 
 impl From<MError> for Error {
+    /// Converts a error from the half-edge mesh set of errors.
     fn from(value: MError) -> Self {
         Error::MeshError(value)
     }

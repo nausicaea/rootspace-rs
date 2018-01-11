@@ -221,6 +221,7 @@ mod test {
     use super::*;
 
     #[test]
+    #[ignore]
     fn test_obb() {
         let min = [-0.5, -0.5];
         let max = [0.5, 0.5];

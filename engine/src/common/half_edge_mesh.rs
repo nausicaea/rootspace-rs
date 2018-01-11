@@ -95,12 +95,17 @@ impl Mesh {
         mesh.reconnect_adjacent()?;
 
         // Ensure that the mesh is closed and complete.
-        mesh.verify_mesh()?;
+        mesh.verify()?;
 
         Ok(mesh)
     }
+    /// Extends the `Mesh` to the specified vertex while replacing the specified faces with new
+    /// ones.
+    pub fn extend_mesh(&mut self, a: VertexIndex, replace_faces: &[FaceIndex]) -> Result<Vec<FaceIndex>, Error> {
+        unimplemented!()
+    }
     /// Adds a new triangle to the `Mesh` and returns its indices.
-    pub fn add_triangle(&mut self, a: VertexIndex, b: VertexIndex, c: VertexIndex) -> (FaceIndex, EdgeIndex, EdgeIndex, EdgeIndex) {
+    fn add_triangle(&mut self, a: VertexIndex, b: VertexIndex, c: VertexIndex) -> (FaceIndex, EdgeIndex, EdgeIndex, EdgeIndex) {
         // Create the triangle edges and single face.
         let ea_idx = self.add_free_edge(a);
         let eb_idx = self.add_free_edge(b);
@@ -115,21 +120,21 @@ impl Mesh {
         (face_idx, ea_idx, eb_idx, ec_idx)
     }
     /// Adds a free `HalfEdge` to the mesh and returns its index.
-    pub fn add_free_edge(&mut self, vert: VertexIndex) -> EdgeIndex {
+    fn add_free_edge(&mut self, vert: VertexIndex) -> EdgeIndex {
         let edge_idx = self.next_edge_idx;
         self.next_edge_idx.increment();
         self.edges.insert(edge_idx, HalfEdge::from_vertex(vert));
         edge_idx
     }
     /// Adds a free `Face` to the mesh and returns its index.
-    pub fn add_free_face(&mut self, edge: EdgeIndex) -> FaceIndex {
+    fn add_free_face(&mut self, edge: EdgeIndex) -> FaceIndex {
         let face_idx = self.next_face_idx;
         self.next_face_idx.increment();
         self.faces.insert(face_idx, Face::from_edge(edge));
         face_idx
     }
     /// Iterates through the `HalfEdge`s of the mesh and pairs up all adjacent `HalfEdge`s.
-    pub fn reconnect_adjacent(&mut self) -> Result<(), Error> {
+    fn reconnect_adjacent(&mut self) -> Result<(), Error> {
         // The connectivity map contains a pair of vertex indices and the connecting edge index.
         let mut connectivity_map: HashMap<(VertexIndex, VertexIndex), EdgeIndex> = HashMap::new();
 
@@ -155,6 +160,7 @@ impl Mesh {
 
         Ok(())
     }
+    /// Returns an iterator over the `HalfEdge`s around the specified `Face`.
     pub fn iter_face_edges(&self, face_idx: &FaceIndex) -> EdgeIterator {
         let face = &self.faces[face_idx];
         EdgeIterator::new(self, face.first_edge)
@@ -162,7 +168,7 @@ impl Mesh {
     /// For every face in the mesh, ensure that there is a bidirectional circle of half-edges
     /// around the face that all point to said face. Furthermore, ensure that each half-edge
     /// contains a valid opposite half-edge index.
-    pub fn verify_mesh(&self) -> Result<(), Error> {
+    pub fn verify(&self) -> Result<(), Error> {
         for (face_idx, face) in self.faces.iter() {
             if let Some(first_edge) = self.edges.get(&face.first_edge) {
                 // Verify the first edge (the one referenced by the face).
@@ -286,6 +292,13 @@ impl FaceIndex {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct VertexIndex(usize);
 
+impl VertexIndex {
+    /// Creates a new `VertexIndex`.
+    pub fn new(idx: usize) -> Self {
+        VertexIndex(idx)
+    }
+}
+
 impl From<usize> for VertexIndex {
     /// Creates a `VertexIndex` from a `usize` value.
     fn from(value: usize) -> Self {
@@ -318,4 +331,22 @@ pub enum Error {
     EdgeWithInvalidEdgeReferences,
     #[fail(display = "The requested face is surrounded by an invalid number of edges")]
     InvalidEdgeCount,
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn verify_empty_mesh() {
+        let m = Mesh::new();
+        m.verify().expect("The empty half-edge mesh did not verify");
+    }
+
+    #[test]
+    fn verify_tetrahedron() {
+        let indices = [VertexIndex::new(0), VertexIndex::new(1), VertexIndex::new(2), VertexIndex::new(3)];
+        let m = Mesh::from_tetrahedron_vertices(&indices).expect("Could not create a tetrahedron mesh");
+        m.verify().expect("The tetrahedron half-edge mesh did not verify");
+    }
 }
