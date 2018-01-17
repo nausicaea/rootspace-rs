@@ -7,11 +7,11 @@ use uuid::Uuid;
 use rusttype::gpu_cache::Cache;
 use glium::Display;
 use glium::texture::{Texture2d, RawImage2d, UncompressedFloatFormat, MipmapsOption, ClientFormat, TextureCreationError};
-use ecs::ComponentTrait;
 use common::ui_element::UiElement;
 use common::ui_styles::{Common, SpeechBubble};
 
 /// The `UiState` component encodes information about the user interface.
+#[derive(Component)]
 pub struct UiState {
     /// Holds all user interface elements, so-called `UiElement`s, indexed by a `Uuid`.
     pub elements: HashMap<Uuid, UiElement>,
@@ -56,5 +56,3 @@ impl UiState {
         })
     }
 }
-
-impl ComponentTrait for UiState {}

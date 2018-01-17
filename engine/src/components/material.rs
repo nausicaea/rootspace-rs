@@ -7,11 +7,10 @@ use glium::{Display, Program, Texture2d};
 use glium::program;
 use glium::texture;
 use image;
-use ecs::ComponentTrait;
 use utilities::{load_text_file, load_image_file};
 
 /// The `Material` represents an abstraction of a real-world material of an object.
-#[derive(Clone)]
+#[derive(Clone, Component)]
 pub struct Material {
     /// Provides access to the shader program.
     pub shader: Rc<Program>,
@@ -52,8 +51,6 @@ impl Material {
         })
     }
 }
-
-impl ComponentTrait for Material {}
 
 /// Operations with `Material` may fail. `MaterialError` describes those errors.
 #[derive(Debug, Fail)]

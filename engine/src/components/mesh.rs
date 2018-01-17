@@ -5,11 +5,11 @@ use glium::vertex;
 use glium::index;
 use rusttype::{PositionedGlyph, point, vector, Rect};
 use rusttype::gpu_cache::Cache;
-use ecs::ComponentTrait;
 use common::vertex::Vertex;
 
 /// The `Mesh` encapsulates a vertex and an index buffer. In concert, they specify all vertices of
 /// a 3D object.
+#[derive(Component)]
 pub struct Mesh {
     /// Holds the vertex buffer object.
     pub vertices: VertexBuffer<Vertex>,
@@ -120,8 +120,6 @@ impl Mesh {
         Self::new(display, &vertices, &indices, index::PrimitiveType::TrianglesList)
     }
 }
-
-impl ComponentTrait for Mesh {}
 
 /// Operations with `Mesh` might fail. `MeshError` describes those errors.
 #[derive(Debug, Fail)]

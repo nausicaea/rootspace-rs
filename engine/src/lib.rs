@@ -23,6 +23,8 @@ extern crate unicode_normalization;
 extern crate rusttype;
 extern crate daggy;
 extern crate ecs;
+#[macro_use]
+extern crate ecs_derive;
 
 mod utilities;
 mod event;

@@ -4,14 +4,13 @@ use std::f32;
 use alga::linear::Transformation;
 use nalgebra::{Point3, Vector3, Affine3};
 use glium::buffer::ReadError;
-use ecs::ComponentTrait;
 use components::mesh::Mesh;
 use common::vertex::Vertex;
 use common::ray::Ray;
 
 /// The `BoundingVolume` component describes simplified volumes of entities or objects to use for
 /// collision detection.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Component)]
 pub enum BoundingVolume {
     /// Defines an oriented bounding-box (OBB).
     Obb {center: Point3<f32>, extents: Vector3<f32>, base: [Vector3<f32>; 3]},
@@ -213,8 +212,6 @@ impl BoundingVolume {
         }
     }
 }
-
-impl ComponentTrait for BoundingVolume {}
 
 #[cfg(test)]
 mod test {

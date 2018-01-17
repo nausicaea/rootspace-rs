@@ -1,9 +1,7 @@
 //! The `description` module provides access to the `Description` component.
 
-use ecs::ComponentTrait;
-
 /// The `Description` component encodes information that describes a particular entity.
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Component)]
 pub struct Description {
     /// Holds the name of the connected entity or object.
     pub name: String,
@@ -17,5 +15,3 @@ impl Description {
         }
     }
 }
-
-impl ComponentTrait for Description {}

@@ -1,13 +1,12 @@
 //! The `camera` module provides the `Camera` component.
 
 use std::f32;
-use ecs::ComponentTrait;
 use nalgebra::{Perspective3, Isometry3, Matrix4, Vector3, Point3, Point2, Unit};
 use alga::linear::{Transformation, ProjectiveTransformation};
 use common::ray::Ray;
 
 /// The `Camera` encapsulates functionality necessary to provide a camera to the `Renderer`.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Component)]
 pub struct Camera {
     /// Provides access to the projection-view matrix. It is recalculated with changes to the
     /// `Camera`.
@@ -91,5 +90,3 @@ impl Camera {
         self.matrix = self.projection.as_matrix() * self.view.to_homogeneous()
     }
 }
-
-impl ComponentTrait for Camera {}

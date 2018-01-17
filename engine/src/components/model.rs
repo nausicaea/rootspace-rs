@@ -2,11 +2,10 @@
 
 use std::ops::{Deref, DerefMut, Mul};
 use nalgebra::{Vector3, Isometry3, Affine3, Matrix4};
-use ecs::ComponentTrait;
 use common::affine_transform::AffineTransform;
 
 /// `Model` provides an abstraction for the model matrix for each 3D object.
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Component)]
 pub struct Model {
     /// Provides access to the model matrix (an affine TRS matrix).
     inner: Affine3<f32>,
@@ -59,5 +58,3 @@ impl<'a> Mul for &'a Model {
         }
     }
 }
-
-impl ComponentTrait for Model {}

@@ -253,7 +253,6 @@ dependencies = [
 name = "ecs-derive"
 version = "0.1.0"
 dependencies = [
- "ecs 0.1.0",
  "quote 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "syn 0.12.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]

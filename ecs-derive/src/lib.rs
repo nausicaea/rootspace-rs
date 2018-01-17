@@ -4,31 +4,25 @@ extern crate proc_macro;
 extern crate syn;
 #[macro_use]
 extern crate quote;
-extern crate ecs;
 
 use proc_macro::TokenStream;
-use ecs::ComponentTrait;
 
 /// Implements the `Component` custom derive.
 #[proc_macro_derive(Component)]
-pub fn component(input: TokenStream) -> TokenStream {
+pub fn derive_component(input: TokenStream) -> TokenStream {
     // Parse the token stream
-    let ast = syn::parse(input).expect("Could not parse the input token stream");
+    let ast: syn::DeriveInput = syn::parse(input).expect("Could not parse the input token stream");
 
-    // Build the impl
-    let gen = impl_component(&ast);
-
-    // Return the generated impl
-    gen.into()
-}
-
-/// Implements the `ComponentTrait` for the input type.
-fn impl_component(ast: &syn::DeriveInput) -> quote::Tokens {
     // Get the name of the type.
     let name = &ast.ident;
 
     // Generate the impl.
-    quote! {
+    let gen = quote! {
+        use ecs::ComponentTrait;
+
         impl ComponentTrait for #name {}
-    }
+    };
+
+    // Return the generated impl
+    gen.into()
 }
