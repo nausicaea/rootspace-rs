@@ -161,17 +161,6 @@ impl BoundingVolume {
         let vertex_data = mesh.vertices.read()?;
         Ok(Self::new_8dop(&vertex_data))
     }
-    pub fn as_transformed(&self, transform: &Affine3<f32>) -> Self {
-        match *self {
-            BoundingVolume::Sphere {ref center, ref square_radius} => {
-                BoundingVolume::Sphere {
-                    center: transform.transform_point(center),
-                    square_radius: *square_radius,
-                }
-            },
-            _ => unimplemented!(),
-        }
-    }
     /// Performs an intersection test of the `BoundingVolume` against the supplied `Ray`.
     /// Optionally returns a tuple of `Ray` position and intersection point.
     pub fn intersect_ray(&self, ray: &Ray<f32>) -> Option<(f32, Point3<f32>)> {
