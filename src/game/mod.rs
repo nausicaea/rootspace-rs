@@ -6,7 +6,8 @@ use nalgebra;
 use nalgebra::{Point3, Vector3};
 use engine::{Orchestrator, EventMonitor, DebugConsole, DebugShell,
     Renderer, EventInterface, Model, Description, Mesh, UserInterface,
-    UiState, Common, SpeechBubble, SceneGraph, SceneNode, Camera};
+    UiState, Common, SpeechBubble, SceneGraph, SceneNode, Camera,
+    BoundingVolume};
 
 pub fn run(resource_path: &Path, debugging: bool) {
     // The following variables set up the state of the engine.
@@ -87,6 +88,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let model = Model::new(position, axisangle, scale);
             let mesh = Mesh::new_quad(&renderer.display, 0.0).unwrap();
             let material = o.world.aux.factory.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
+            let bounding_volume = BoundingVolume::from_mesh_aabb(&mesh).unwrap();
 
             renderer.scene_graph.insert(SceneNode::new(test_entity_a.clone(), model.clone())).unwrap();
 
@@ -94,6 +96,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             o.world.add_component(&test_entity_a, model).unwrap();
             o.world.add_component(&test_entity_a, mesh).unwrap();
             o.world.add_component(&test_entity_a, material).unwrap();
+            o.world.add_component(&test_entity_a, bounding_volume).unwrap();
         }
 
         // Assemble the second test entity.
@@ -109,6 +112,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let model = Model::new(position, axisangle, scale);
             let mesh = Mesh::new_cube(&renderer.display).unwrap();
             let material = o.world.aux.factory.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
+            let bounding_volume = BoundingVolume::from_mesh_aabb(&mesh).unwrap();
 
             renderer.scene_graph.insert(SceneNode::new(test_entity_b.clone(), model.clone())).unwrap();
 
@@ -116,6 +120,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             o.world.add_component(&test_entity_b, model).unwrap();
             o.world.add_component(&test_entity_b, mesh).unwrap();
             o.world.add_component(&test_entity_b, material).unwrap();
+            o.world.add_component(&test_entity_b, bounding_volume).unwrap();
         }
 
         // Assemble the third test entity.
@@ -131,6 +136,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let model = Model::new(position, axisangle, scale);
             let mesh = Mesh::new_cube(&renderer.display).unwrap();
             let material = o.world.aux.factory.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
+            let bounding_volume = BoundingVolume::from_mesh_aabb(&mesh).unwrap();
 
             renderer.scene_graph.insert(SceneNode::new(test_entity_c.clone(), model.clone())).unwrap();
 
@@ -138,6 +144,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             o.world.add_component(&test_entity_c, model).unwrap();
             o.world.add_component(&test_entity_c, mesh).unwrap();
             o.world.add_component(&test_entity_c, material).unwrap();
+            o.world.add_component(&test_entity_c, bounding_volume).unwrap();
         }
 
         // Add systems to the world.
