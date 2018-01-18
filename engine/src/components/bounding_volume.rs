@@ -1,8 +1,7 @@
 //! The `bounding_volume` module provides access to the `BoundingVolume` component.
 
 use std::f32;
-use alga::linear::Transformation;
-use nalgebra::{Point3, Vector3, Affine3};
+use nalgebra::{Point3, Vector3};
 use glium::buffer::ReadError;
 use components::mesh::Mesh;
 use common::vertex::Vertex;
