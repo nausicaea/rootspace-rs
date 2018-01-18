@@ -1,4 +1,5 @@
 use nalgebra::{Point3, Vector3, Scalar, Unit, Real};
+use ecs::Entity;
 use common::affine_transform::AffineTransform;
 
 /// A `Ray` characterises a ray (a line segment with an origin, direction and infinite length in

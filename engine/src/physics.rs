@@ -1,6 +1,5 @@
-use nalgebra::Point3;
 use alga::linear::Transformation;
-use ecs::{Entity, Assembly};
+use ecs::Assembly;
 use common::ray::{Ray, RaycastHit};
 use components::model::Model;
 use components::bounding_volume::BoundingVolume;
