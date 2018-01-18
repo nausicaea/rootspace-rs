@@ -133,7 +133,7 @@ mod test {
     #[test]
     fn test_transform_point() {
         let a = AffineTransform::from_parts(Translation3::from_vector(Vector3::new(0.1, 0.2, 0.3)), UnitQuaternion::identity(), Vector3::new(1.0, 2.0, 3.0));
-        let b = Point3::from_coordinates(Vector3::new(1.0, 1.0, 1.0));
+        let b = Point3::new(1.0, 1.0, 1.0);
         let c = a.transform_point(&b);
 
         assert!(c.x == 1.1 && c.y == 2.2 && c.z == 3.3, "Got {:?} instead", c);
@@ -149,7 +149,7 @@ mod test {
     #[test]
     fn test_inverse_transform_point() {
         let a = AffineTransform::from_parts(Translation3::from_vector(Vector3::new(0.1, 0.2, 0.3)), UnitQuaternion::identity(), Vector3::new(1.0, 2.0, 3.0));
-        let b = Point3::from_coordinates(Vector3::new(1.1, 2.2, 3.3));
+        let b = Point3::new(1.1, 2.2, 3.3);
         let c = a.inverse_transform_point(&b);
 
         assert!(c.x == 1.0 && c.y == 1.0 && c.z == 1.0, "Got {:?} instead", c);

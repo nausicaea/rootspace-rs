@@ -1,3 +1,4 @@
+use std::fmt;
 use nalgebra::{Point3, Vector3, Scalar, Unit, Real};
 use ecs::Entity;
 use common::affine_transform::AffineTransform;
@@ -47,14 +48,27 @@ impl<N> Ray<N> where N: Scalar + Real {
     }
 }
 
+impl<N> fmt::Display for Ray<N> where N: Scalar + Real {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Ray {{origin: {}, direction: {}}}", self.origin, self.direction.unwrap())
+    }
+}
+
 /// When performing raycasting, the `RaycastHit` structure indicates a positive intersection test
 /// between a `Ray` and a `BoundingVolume`.
-pub struct RaycastHit {
+#[derive(Debug, Clone, PartialEq)]
+pub struct RaycastHit<N> where N: Scalar + Real {
     /// Names the `Entity` that was hit by the `Ray`.
     pub target: Entity,
     /// Names the point in world space closest to the `Ray` origin at which the intersection took
     /// place.
-    pub point: Point3<f32>,
+    pub point: Point3<N>,
+}
+
+impl<N> fmt::Display for RaycastHit<N> where N: Scalar + Real {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "RaycastHit {{target: {}, point: {}}}", self.target, self.point)
+    }
 }
 
 #[cfg(test)]
@@ -63,16 +77,16 @@ mod test {
 
     #[test]
     fn test_at() {
-        let o = Point3::from_coordinates(Vector3::new(0.0, 0.0, 0.0));
+        let o = Point3::new(0.0, 0.0, 0.0);
         let d = Unit::new_normalize(Vector3::new(1.0, 0.0, 0.0));
         let r = Ray::new(o, d);
 
         assert!(r.at(0.0) == o);
-        assert!(r.at(1.0) == Point3::from_coordinates(Vector3::new(1.0, 0.0, 0.0)));
+        assert!(r.at(1.0) == Point3::new(1.0, 0.0, 0.0));
     }
     #[test]
     fn test_transform() {
-        let o = Point3::from_coordinates(Vector3::new(0.0, 0.0, 0.0));
+        let o = Point3::new(0.0, 0.0, 0.0);
         let d = Unit::new_normalize(Vector3::new(1.0, 0.0, 0.0));
         let r = Ray::new(o, d);
 
@@ -82,7 +96,7 @@ mod test {
     }
     #[test]
     fn test_inverse_transform() {
-        let o = Point3::from_coordinates(Vector3::new(0.0, 0.0, 0.0));
+        let o = Point3::new(0.0, 0.0, 0.0);
         let d = Unit::new_normalize(Vector3::new(1.0, 0.0, 0.0));
         let r = Ray::new(o, d);
 

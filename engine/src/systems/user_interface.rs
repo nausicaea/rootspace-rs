@@ -1,7 +1,7 @@
 use std::time::{Instant, Duration};
 use glium::Display;
 use nalgebra;
-use nalgebra::{Point3, Vector2, Vector3};
+use nalgebra::{Point2, Point3, Vector2, Vector3};
 use rusttype::gpu_cache::CacheWriteErr;
 use uuid::Uuid;
 use ecs::{LoopStageFlag, SystemTrait, Assembly, EcsError};
@@ -133,7 +133,7 @@ impl SystemTrait<EngineEvent, Singletons> for UserInterface {
         LoopStageFlag::HANDLE_EVENT | LoopStageFlag::UPDATE
     }
     fn get_event_filter(&self) -> EngineEventFlag {
-        EngineEventFlag::READY | EngineEventFlag::SPEECH_BUBBLE | EngineEventFlag::RESIZE_WINDOW
+        EngineEventFlag::READY | EngineEventFlag::SPEECH_BUBBLE | EngineEventFlag::RESIZE_WINDOW | EngineEventFlag::CURSOR_POSITION
     }
     fn handle_event(&mut self, entities: &mut Assembly, aux: &mut Singletons, event: &EngineEvent) -> Option<EngineEvent> {
         match *event {
@@ -153,6 +153,21 @@ impl SystemTrait<EngineEvent, Singletons> for UserInterface {
                     .map(|(_, u)| u.dimensions = [w, h])
                     .expect("Could not adjust the UI dimensions")
             },
+            EngineEvent::CursorPosition(x, y) => {
+                let cursor_position = Point2::new(x, y);
+
+                entities.ws1::<UiState>()
+                    .map(|(_, u)| u.cursor_position = cursor_position)
+                    .expect("Could not adjust the cursor position state variable in the UI");
+
+                let cursor_ray = entities.rs1::<Camera>()
+                    .map(|(_, c)| c.screen_point_to_ray(&cursor_position).expect("The cursor position cannot be represented as a ray"))
+                    .expect("Unable to use the camera to perform point transformations");
+
+                if let Some(hit) = aux.physics.raycast(entities, &cursor_ray) {
+                    trace!("You've hit {}", hit.target);
+                }
+            },
             _ => (),
         }
         None
@@ -160,6 +175,7 @@ impl SystemTrait<EngineEvent, Singletons> for UserInterface {
     fn update(&mut self, entities: &mut Assembly, _: &mut Singletons, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {
         self.update_lifetimes(entities)
             .expect("Unable to update the UI element lifetimes");
+
         None
     }
 }

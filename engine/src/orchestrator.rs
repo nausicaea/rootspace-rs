@@ -2,7 +2,7 @@ use std::cmp;
 use std::path::{PathBuf, Path};
 use std::time::{Instant, Duration};
 
-use ecs::{World, EcsEvent};
+use ecs::World;
 use event::EngineEvent;
 use singletons::Singletons;
 
@@ -35,7 +35,7 @@ impl Orchestrator {
     /// `Orchestrator` and subsequently the `World` may be initialized.
     pub fn run<I>(&mut self, init: I) where I: FnOnce(&mut Orchestrator) {
         init(self);
-        self.world.dispatch(EcsEvent::Ready.into());
+        self.world.dispatch(EngineEvent::Ready);
         self.main_loop();
     }
     /// Runs the actual game loop. This loop uses a fixed time-step method to ensure that

@@ -48,35 +48,35 @@ impl Camera {
 
     }
     /// Transforms a point in normalized device coordinates to screen-space.
-    pub fn ndc_point_to_screen(&self, point: &Point3<f32>) -> Point2<f32> {
+    pub fn ndc_point_to_screen(&self, point: &Point3<f32>) -> Point2<u32> {
         let w = self.dimensions[0] as f32;
         let h = self.dimensions[1] as f32;
 
-        Point2::new((w / 2.0) * (point.x + 1.0),
-                    (h / 2.0) * (1.0 - point.y))
+        Point2::new(((w / 2.0) * (point.x + 1.0)).ceil() as u32,
+                    ((h / 2.0) * (1.0 - point.y)).ceil() as u32)
     }
     /// Transforms a screen point to normalized device coordinates.
-    pub fn screen_point_to_ndc(&self, point: &Point2<f32>) -> Point3<f32> {
+    pub fn screen_point_to_ndc(&self, point: &Point2<u32>) -> Point3<f32> {
         let w = self.dimensions[0] as f32;
         let h = self.dimensions[1] as f32;
         let n = self.projection.znear();
         let f = self.projection.zfar();
 
-        Point3::new((2.0 * point.x) / w - 1.0,
-                    1.0 - (2.0 * point.y) / h,
-                    (n + f) / (n - f))
+        Point3::new((2.0 * point.x as f32) / w - 1.0,
+                    1.0 - (2.0 * point.y as f32) / h,
+                    ((f + n) / (f - n)).floor())
     }
     /// Transforms a point in world-space to a screen point.
-    pub fn world_point_to_screen(&self, point: &Point3<f32>) -> Point2<f32> {
+    pub fn world_point_to_screen(&self, point: &Point3<f32>) -> Point2<u32> {
         self.ndc_point_to_screen(&self.world_point_to_ndc(point))
     }
     /// Transforms a screen point to world-space.
-    pub fn screen_point_to_world(&self, point: &Point2<f32>) -> Point3<f32> {
+    pub fn screen_point_to_world(&self, point: &Point2<u32>) -> Point3<f32> {
         self.ndc_point_to_world(&self.screen_point_to_ndc(point))
     }
     /// Transforms a screen point to world-space as a ray originating from the camera.
-    pub fn screen_point_to_ray(&self, point: &Point2<f32>) -> Option<Ray<f32>> {
-        let origin = self.view.translation.vector;
+    pub fn screen_point_to_ray(&self, point: &Point2<u32>) -> Option<Ray<f32>> {
+        let origin = -self.view.translation.vector;
         let direction = self.screen_point_to_world(point).coords;
 
         Unit::try_new(direction, f32::EPSILON)

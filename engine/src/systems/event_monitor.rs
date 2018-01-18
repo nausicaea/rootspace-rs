@@ -17,7 +17,7 @@ impl<A> SystemTrait<EngineEvent, A> for EventMonitor {
         LoopStageFlag::HANDLE_EVENT
     }
     fn get_event_filter(&self) -> EngineEventFlag {
-        EngineEventFlag::ALL_EVENTS
+        EngineEventFlag::ALL_EVENTS & !EngineEventFlag::CURSOR_POSITION
     }
     fn handle_event(&mut self, _: &mut Assembly, _: &mut A, event: &EngineEvent) -> Option<EngineEvent> {
         trace!("Received event '{:?}'", event);
