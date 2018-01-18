@@ -86,7 +86,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let d = Description::new("test-entity-a");
             let model = Model::new(position, axisangle, scale);
             let mesh = Mesh::new_quad(&renderer.display, 0.0).unwrap();
-            let material = o.world.aux.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
+            let material = o.world.aux.factory.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
 
             renderer.scene_graph.insert(SceneNode::new(test_entity_a.clone(), model.clone())).unwrap();
 
@@ -108,7 +108,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let d = Description::new("test-entity-b");
             let model = Model::new(position, axisangle, scale);
             let mesh = Mesh::new_cube(&renderer.display).unwrap();
-            let material = o.world.aux.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
+            let material = o.world.aux.factory.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
 
             renderer.scene_graph.insert(SceneNode::new(test_entity_b.clone(), model.clone())).unwrap();
 
@@ -130,7 +130,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let d = Description::new("test-entity-c");
             let model = Model::new(position, axisangle, scale);
             let mesh = Mesh::new_cube(&renderer.display).unwrap();
-            let material = o.world.aux.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
+            let material = o.world.aux.factory.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
 
             renderer.scene_graph.insert(SceneNode::new(test_entity_c.clone(), model.clone())).unwrap();
 

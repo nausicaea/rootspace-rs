@@ -26,14 +26,13 @@ extern crate ecs;
 #[macro_use]
 extern crate ecs_derive;
 
-mod event;
-mod factory;
-mod physics;
-mod scene_graph;
-mod orchestrator;
-mod common;
-mod components;
-mod systems;
+pub mod event;
+pub mod singletons;
+pub mod scene_graph;
+pub mod orchestrator;
+pub mod common;
+pub mod components;
+pub mod systems;
 
 pub use self::event::EngineEvent;
 pub use self::common::ui_styles::{Common, SpeechBubble};
@@ -50,6 +49,5 @@ pub use self::systems::debug_console::DebugConsole;
 pub use self::systems::debug_shell::DebugShell;
 pub use self::systems::renderer::Renderer;
 pub use self::systems::user_interface::UserInterface;
-pub use self::factory::ComponentFactory;
 pub use self::scene_graph::{SceneGraph, SceneNode};
 pub use self::orchestrator::Orchestrator;

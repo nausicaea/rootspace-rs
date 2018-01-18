@@ -6,7 +6,8 @@ use rusttype::gpu_cache::CacheWriteErr;
 use uuid::Uuid;
 use ecs::{LoopStageFlag, SystemTrait, Assembly, EcsError};
 use event::{EngineEventFlag, EngineEvent};
-use factory::{FactoryError, ComponentFactory};
+use singletons::Singletons;
+use singletons::factory::FactoryError;
 use components::description::Description;
 use components::camera::Camera;
 use components::model::Model;
@@ -31,7 +32,7 @@ impl UserInterface {
         }
     }
     /// Creates a new speech-bubble `UiElement` and attaches it to the `UiState`.
-    fn create_speech_bubble(&self, entities: &mut Assembly, aux: &mut ComponentFactory, target: &str, content: &str, lifetime: u64) -> Result<(), UiError> {
+    fn create_speech_bubble(&self, entities: &mut Assembly, aux: &mut Singletons, target: &str, content: &str, lifetime: u64) -> Result<(), UiError> {
         // Attempt to find the entity named in `target` and retreive its world position.
         let entity_pos_world = entities.rsf2::<_, Description, Model>(|&(_, d, _)| d.name == target)
             .map(|(_, _, m)| {
@@ -83,12 +84,12 @@ impl UserInterface {
         let rect_mesh = Mesh::new_quad(&self.display, 0.0)?;
 
         // Create the primitive materials.
-        let text_material = aux.new_material(&self.display,
+        let text_material = aux.factory.new_material(&self.display,
                                           &ui_state.speech_bubble.text_vertex_shader,
                                           &ui_state.speech_bubble.text_fragment_shader, None, None,
                                           None)?;
 
-        let rect_material = aux.new_material(&self.display,
+        let rect_material = aux.factory.new_material(&self.display,
                                           &ui_state.speech_bubble.rect_vertex_shader,
                                           &ui_state.speech_bubble.rect_fragment_shader, None,
                                           Some(&ui_state.speech_bubble.rect_diffuse_texture),
@@ -127,14 +128,14 @@ impl UserInterface {
     }
 }
 
-impl SystemTrait<EngineEvent, ComponentFactory> for UserInterface {
+impl SystemTrait<EngineEvent, Singletons> for UserInterface {
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         LoopStageFlag::HANDLE_EVENT | LoopStageFlag::UPDATE
     }
     fn get_event_filter(&self) -> EngineEventFlag {
         EngineEventFlag::READY | EngineEventFlag::SPEECH_BUBBLE | EngineEventFlag::RESIZE_WINDOW
     }
-    fn handle_event(&mut self, entities: &mut Assembly, aux: &mut ComponentFactory, event: &EngineEvent) -> Option<EngineEvent> {
+    fn handle_event(&mut self, entities: &mut Assembly, aux: &mut Singletons, event: &EngineEvent) -> Option<EngineEvent> {
         match *event {
             EngineEvent::Ready => {
                 // When first getting ready, make sure that exactly one UiState component is
@@ -156,7 +157,7 @@ impl SystemTrait<EngineEvent, ComponentFactory> for UserInterface {
         }
         None
     }
-    fn update(&mut self, entities: &mut Assembly, _: &mut ComponentFactory, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {
+    fn update(&mut self, entities: &mut Assembly, _: &mut Singletons, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {
         self.update_lifetimes(entities)
             .expect("Unable to update the UI element lifetimes");
         None

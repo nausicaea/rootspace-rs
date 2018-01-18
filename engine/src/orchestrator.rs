@@ -4,7 +4,7 @@ use std::time::{Instant, Duration};
 
 use ecs::{World, EcsEvent};
 use event::EngineEvent;
-use factory::ComponentFactory;
+use singletons::Singletons;
 
 /// The `Orchestrator` owns the `World` and manages time (and the game loop).
 pub struct Orchestrator {
@@ -17,7 +17,7 @@ pub struct Orchestrator {
     /// If `true`, activate debugging functionality.
     pub debug: bool,
     /// Holds an instance of the `World`.
-    pub world: World<EngineEvent, ComponentFactory>,
+    pub world: World<EngineEvent, Singletons>,
 }
 
 impl Orchestrator {

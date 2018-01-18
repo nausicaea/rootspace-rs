@@ -117,7 +117,7 @@ impl Renderer {
     }
 }
 
-impl<F> SystemTrait<EngineEvent, F> for Renderer {
+impl<A> SystemTrait<EngineEvent, A> for Renderer {
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         if self.ready {
             LoopStageFlag::HANDLE_EVENT | LoopStageFlag::RENDER
@@ -128,7 +128,7 @@ impl<F> SystemTrait<EngineEvent, F> for Renderer {
     fn get_event_filter(&self) -> EngineEventFlag {
         EngineEventFlag::READY | EngineEventFlag::RESIZE_WINDOW
     }
-    fn handle_event(&mut self, entities: &mut Assembly, _: &mut F, event: &EngineEvent) -> Option<EngineEvent> {
+    fn handle_event(&mut self, entities: &mut Assembly, _: &mut A, event: &EngineEvent) -> Option<EngineEvent> {
         match *event {
             EngineEvent::Ready => {
                 // When first getting ready, ensure that a single camer a is present.

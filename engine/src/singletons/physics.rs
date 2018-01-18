@@ -4,17 +4,10 @@ use common::ray::{Ray, RaycastHit};
 use components::model::Model;
 use components::bounding_volume::BoundingVolume;
 
-pub struct Physics {
-}
+#[derive(Default)]
+pub struct PhysicsController {}
 
-impl Default for Physics {
-    fn default() -> Self {
-        Self {
-        }
-    }
-}
-
-impl Physics {
+impl PhysicsController {
     /// Returns the first intersection of the ray with any object in the `Assembly` with a
     /// `BoundingVolume` component. Currently no spatial partitioning is performed, thus, this
     /// algorithm is likely to be very slow.
