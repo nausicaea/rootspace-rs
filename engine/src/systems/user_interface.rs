@@ -5,7 +5,6 @@ use nalgebra::{Point3, Vector2, Vector3};
 use rusttype::gpu_cache::CacheWriteErr;
 use uuid::Uuid;
 use ecs::{LoopStageFlag, SystemTrait, Assembly, EcsError};
-use utilities::layout_paragraph_cached;
 use event::{EngineEventFlag, EngineEvent};
 use factory::{FactoryError, ComponentFactory};
 use components::description::Description;
@@ -15,6 +14,7 @@ use components::mesh::{Mesh, MeshError};
 use components::ui_state::UiState;
 use common::ui_element::UiElement;
 use common::ui_primitive::UiPrimitive;
+use common::text_rendering::layout_paragraph_cached;
 
 /// The `UserInterface` is responsible for managing the state associated with the user interface.
 /// It also processes events that relate to the UI.

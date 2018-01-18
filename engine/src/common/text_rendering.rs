@@ -1,40 +1,9 @@
 use std::borrow::Cow;
-use std::fs::File;
-use std::io::{Read, Error};
-use std::path::Path;
-use image;
 use glium::Rect;
 use glium::texture::{Texture2d, ClientFormat, RawImage2d};
 use rusttype::{PositionedGlyph, Font, Scale, point};
 use rusttype::gpu_cache::{Cache, CacheWriteErr};
 use unicode_normalization::UnicodeNormalization;
-
-/// Reads the specified file into a string.
-pub fn load_text_file(file_path: &Path) -> Result<String, Error> {
-    let mut buf = String::new();
-    File::open(file_path)
-        .and_then(|mut f| f.read_to_string(&mut buf))?;
-
-    Ok(buf)
-}
-
-/// Reads the specified file into a vector of bytes.
-pub fn load_binary_file(file_path: &Path) -> Result<Vec<u8>, Error> {
-    let mut buf = Vec::new();
-    File::open(file_path)
-        .and_then(|mut f| f.read_to_end(&mut buf))?;
-
-    Ok(buf)
-}
-
-/// Reads the specified file as an image.
-pub fn load_image_file(file_path: &Path) -> Result<RawImage2d<u8>, image::ImageError> {
-    let dyn_img = image::open(file_path)?;
-    let rgba_img = dyn_img.to_rgba();
-    let dimensions = rgba_img.dimensions();
-
-    Ok(RawImage2d::from_raw_rgba_reversed(&rgba_img.into_raw(), dimensions))
-}
 
 /// Given a string of text, font parameters and a text width, generates a set of positioned glyphs.
 /// TODO: Write a better word-wrapping algorithm based on [StackOverflow](https://stackoverflow.com/a/857770)
@@ -90,12 +59,14 @@ pub fn layout_paragraph_cached<'a>(cache: &mut Cache<'a>, cache_tex: &Texture2d,
     Ok((glyphs, text_dims))
 }
 
+/// Updates the font cache based on the supplied glyphs.
 fn enqueue_glyphs<'a>(cache: &mut Cache<'a>, glyphs: &[PositionedGlyph<'a>]) {
     for glyph in glyphs {
         cache.queue_glyph(0, glyph.clone());
     }
 }
 
+/// Given an up-to-date font cache (CPU side), updates the specified texture (e.g. the GPU side).
 fn update_cache(cache: &mut Cache, cache_tex: &Texture2d) -> Result<(), CacheWriteErr> {
     cache.cache_queued(|rect, data| {
         cache_tex.main_level().write(Rect {

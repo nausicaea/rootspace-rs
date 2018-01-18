@@ -7,7 +7,7 @@ use glium::{Display, Program, Texture2d};
 use glium::program;
 use glium::texture;
 use image;
-use utilities::{load_text_file, load_image_file};
+use common::file_manipulation::{load_text_file, load_image_file};
 
 /// The `Material` represents an abstraction of a real-world material of an object.
 #[derive(Clone, Component)]

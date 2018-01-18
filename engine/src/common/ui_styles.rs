@@ -2,7 +2,7 @@ use std::path::{PathBuf, Path};
 use std::io::Error;
 use rusttype::{FontCollection, Font};
 use nalgebra::Vector2;
-use utilities::load_binary_file;
+use common::file_manipulation::load_binary_file;
 
 #[derive(Debug, Fail)]
 pub enum UiStylesError {

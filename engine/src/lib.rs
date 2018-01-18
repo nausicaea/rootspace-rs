@@ -26,9 +26,9 @@ extern crate ecs;
 #[macro_use]
 extern crate ecs_derive;
 
-mod utilities;
 mod event;
 mod factory;
+mod physics;
 mod scene_graph;
 mod orchestrator;
 mod common;
