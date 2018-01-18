@@ -5,11 +5,11 @@ use std::collections::HashMap;
 use std::time::{Instant, Duration};
 use uuid::Uuid;
 use rusttype::gpu_cache::Cache;
-use nalgebra::Point2;
 use glium::Display;
 use glium::texture::{Texture2d, RawImage2d, UncompressedFloatFormat, MipmapsOption, ClientFormat, TextureCreationError};
 use common::ui_element::UiElement;
 use common::ui_styles::{Common, SpeechBubble};
+use common::ray::RaycastHit;
 
 /// The `UiState` component encodes information about the user interface.
 #[derive(Component)]
@@ -26,9 +26,7 @@ pub struct UiState {
     pub common: Common,
     /// Provides access to speech-bubble style settings.
     pub speech_bubble: SpeechBubble,
-    /// Provides access to the most recent viewport dimensions.
-    pub dimensions: [u32; 2],
-    pub cursor_position: Point2<u32>,
+    pub raycast_hit: Option<RaycastHit<f32>>,
 }
 
 impl UiState {
@@ -54,8 +52,7 @@ impl UiState {
             font_cache_gpu: gpu_cache,
             common: common,
             speech_bubble: speech_bubble,
-            dimensions: *dimensions,
-            cursor_position: Point2::new(dimensions[0] / 2, dimensions[1] / 2),
+            raycast_hit: None,
         })
     }
 }

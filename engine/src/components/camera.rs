@@ -8,6 +8,8 @@ use common::ray::Ray;
 /// The `Camera` encapsulates functionality necessary to provide a camera to the `Renderer`.
 #[derive(Serialize, Deserialize, Component)]
 pub struct Camera {
+    /// Provides access to the viewport dimensions.
+    pub dimensions: [u32; 2],
     /// Provides access to the projection-view matrix. It is recalculated with changes to the
     /// `Camera`.
     pub matrix: Matrix4<f32>,
@@ -15,8 +17,6 @@ pub struct Camera {
     projection: Perspective3<f32>,
     /// Provides access to the view data (not a matrix, but constituents).
     view: Isometry3<f32>,
-    /// Provides access to the viewport dimensions.
-    dimensions: [u32; 2],
 }
 
 impl Camera {
@@ -26,10 +26,10 @@ impl Camera {
         let view = Isometry3::look_at_rh(eye, target, up);
 
         Self {
+            dimensions: dims,
             matrix: projection.as_matrix() * view.to_homogeneous(),
             projection: projection,
             view: view,
-            dimensions: dims,
         }
     }
     /// Changes the aspect ratio of the `Camera` projection matrix.

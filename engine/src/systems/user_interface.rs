@@ -43,8 +43,8 @@ impl UserInterface {
 
         // Project the entity position to normalized device coordinates (this requires the camera
         // entity).
-        let entity_pos_ndc = entities.rs1::<Camera>()
-            .map(|(_, c)| c.world_point_to_ndc(&entity_pos_world))?;
+        let (entity_pos_ndc, px_dims, dimensions) = entities.rs1::<Camera>()
+            .map(|(_, c)| (c.world_point_to_ndc(&entity_pos_world), c.dimensions, Vector2::new(c.dimensions[0] as f32, c.dimensions[1] as f32)))?;
 
         // Obtain a mutable reference to the `UiState`.
         let (_, ui_state) = entities.ws1::<UiState>()?;
@@ -58,7 +58,6 @@ impl UserInterface {
                                                              content)?;
 
         // Calculate positions and dimensions of the involved primitives: Text and Rect.
-        let dimensions = Vector2::new(ui_state.dimensions[0] as f32, ui_state.dimensions[1] as f32);
         let margin_left = ui_state.speech_bubble.margin_left as f32 / dimensions.x;
         let margin_right = ui_state.speech_bubble.margin_right as f32 / dimensions.x;
         let margin_top = ui_state.speech_bubble.margin_top as f32 / dimensions.y;
@@ -78,7 +77,7 @@ impl UserInterface {
         let rect_model = Model::new(nalgebra::zero(), nalgebra::zero(), Vector3::new(rect_dims_ndc.x, rect_dims_ndc.y, 1.0));
 
         // Create the text mesh.
-        let text_mesh = Mesh::new_text(&self.display, &ui_state.dimensions, 0.0, &ui_state.font_cache_cpu, &glyphs, &text_dims_ndc.into())?;
+        let text_mesh = Mesh::new_text(&self.display, &px_dims, 0.0, &ui_state.font_cache_cpu, &glyphs, &text_dims_ndc.into())?;
 
         // Create the speech-bubble rectangle mesh.
         let rect_mesh = Mesh::new_quad(&self.display, 0.0)?;
@@ -133,7 +132,7 @@ impl SystemTrait<EngineEvent, Singletons> for UserInterface {
         LoopStageFlag::HANDLE_EVENT | LoopStageFlag::UPDATE
     }
     fn get_event_filter(&self) -> EngineEventFlag {
-        EngineEventFlag::READY | EngineEventFlag::SPEECH_BUBBLE | EngineEventFlag::RESIZE_WINDOW | EngineEventFlag::CURSOR_POSITION
+        EngineEventFlag::READY | EngineEventFlag::SPEECH_BUBBLE | EngineEventFlag::CURSOR_POSITION
     }
     fn handle_event(&mut self, entities: &mut Assembly, aux: &mut Singletons, event: &EngineEvent) -> Option<EngineEvent> {
         match *event {
@@ -148,24 +147,35 @@ impl SystemTrait<EngineEvent, Singletons> for UserInterface {
                 self.create_speech_bubble(entities, aux, t, c, l)
                     .unwrap_or_else(|e| warn!("Could not create a speech bubble: {}", e))
             },
-            EngineEvent::ResizeWindow(w, h) => {
-                entities.ws1::<UiState>()
-                    .map(|(_, u)| u.dimensions = [w, h])
-                    .expect("Could not adjust the UI dimensions")
-            },
             EngineEvent::CursorPosition(x, y) => {
                 let cursor_position = Point2::new(x, y);
-
-                entities.ws1::<UiState>()
-                    .map(|(_, u)| u.cursor_position = cursor_position)
-                    .expect("Could not adjust the cursor position state variable in the UI");
 
                 let cursor_ray = entities.rs1::<Camera>()
                     .map(|(_, c)| c.screen_point_to_ray(&cursor_position).expect("The cursor position cannot be represented as a ray"))
                     .expect("Unable to use the camera to perform point transformations");
 
+                let previous_hit = entities.rs1::<UiState>()
+                    .map(|(_, u)| u.raycast_hit.clone())
+                    .expect("Unable to get the previous raycast hit from the UI");
+
                 if let Some(hit) = aux.physics.raycast(entities, &cursor_ray) {
-                    trace!("You've hit {}", hit.target);
+                    if let Some(prev_hit) = previous_hit {
+                        if hit.target != prev_hit.target {
+                            entities.ws1::<UiState>()
+                                .map(|(_, u)| u.raycast_hit = Some(hit))
+                                .expect("Unable to set the raycast hit in the UI");
+                        }
+                    } else {
+                        entities.ws1::<UiState>()
+                            .map(|(_, u)| u.raycast_hit = Some(hit))
+                            .expect("Unable to set the raycast hit in the UI");
+                    }
+                } else {
+                    if previous_hit.is_some() {
+                        entities.ws1::<UiState>()
+                            .map(|(_, u)| u.raycast_hit = None)
+                            .expect("Unable to set the raycast hit in the UI");
+                    }
                 }
             },
             _ => (),
