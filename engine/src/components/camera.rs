@@ -53,7 +53,7 @@ impl Camera {
         let h = self.dimensions[1] as f32;
 
         Point2::new((w / 2.0) * (point.x + 1.0),
-                    (h / 2.0) * (point.y + 1.0))
+                    (h / 2.0) * (1.0 - point.y))
     }
     /// Transforms a screen point to normalized device coordinates.
     pub fn screen_point_to_ndc(&self, point: &Point2<f32>) -> Point3<f32> {
@@ -63,7 +63,7 @@ impl Camera {
         let f = self.projection.zfar();
 
         Point3::new((2.0 * point.x) / w - 1.0,
-                    (2.0 * point.y) / h - 1.0,
+                    1.0 - (2.0 * point.y) / h,
                     (n + f) / (n - f))
     }
     /// Transforms a point in world-space to a screen point.
