@@ -31,7 +31,7 @@ impl<A> SystemTrait<EngineEvent, A> for EventInterface {
         LoopStageFlag::UPDATE
     }
     fn update(&mut self, _: &mut Assembly, _: &mut A, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {
-        let pd = Vec::new();
+        let mut pd = Vec::new();
         let mut d = Vec::new();
 
         self.events_loop.poll_events(|ge| {
@@ -39,6 +39,7 @@ impl<A> SystemTrait<EngineEvent, A> for EventInterface {
                 Event::WindowEvent {event: we, ..} => match we {
                     WindowEvent::Closed => d.push(EngineEvent::Shutdown),
                     WindowEvent::Resized(w, h) => d.push(EngineEvent::ResizeWindow(w, h)),
+                    WindowEvent::MouseMoved {position: (x, y), ..} => pd.push(EngineEvent::CursorPosition(x.floor() as u32, y.floor() as u32)),
                     _ => (),
                 },
                 Event::Suspended(v) => d.push(EngineEvent::Suspend(v)),

@@ -12,6 +12,7 @@ bitflags! {
         const RESIZE_WINDOW = 0x40;
         const RELOAD_SHADERS = 0x80;
         const SPEECH_BUBBLE = 0x100;
+        const CURSOR_POSITION = 0x200;
         const ALL_EVENTS = u64::MAX;
     }
 }
@@ -27,6 +28,7 @@ pub enum EngineEvent {
     ResizeWindow(u32, u32),
     ReloadShaders,
     SpeechBubble(String, String, u64),
+    CursorPosition(u32, u32),
 }
 
 impl EventTrait for EngineEvent {
@@ -70,6 +72,7 @@ impl From<EngineEvent> for EngineEventFlag {
             ResizeWindow(..) => EngineEventFlag::RESIZE_WINDOW,
             ReloadShaders => EngineEventFlag::RELOAD_SHADERS,
             SpeechBubble(..) => EngineEventFlag::SPEECH_BUBBLE,
+            CursorPosition(..) => EngineEventFlag::CURSOR_POSITION,
         }
     }
 }
