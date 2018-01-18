@@ -46,6 +46,16 @@ impl<N> Ray<N> where N: Scalar + Real {
     }
 }
 
+/// When performing raycasting, the `RaycastHit` structure indicates a positive intersection test
+/// between a `Ray` and a `BoundingVolume`.
+pub struct RaycastHit {
+    /// Names the `Entity` that was hit by the `Ray`.
+    pub target: Entity,
+    /// Names the point in world space closest to the `Ray` origin at which the intersection took
+    /// place.
+    pub point: Point3<f32>,
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
