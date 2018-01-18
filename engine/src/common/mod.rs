@@ -1,8 +1,5 @@
 pub mod ray;
 pub mod affine_transform;
-pub mod half_edge_mesh;
-pub mod convex_hull;
-pub mod merge_sort;
 pub mod vertex;
 pub mod uniforms;
 pub mod ui_uniforms;
