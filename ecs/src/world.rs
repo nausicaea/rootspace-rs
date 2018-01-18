@@ -10,9 +10,9 @@ use system::SystemTrait;
 /// Encapsulates a set of systems, entities and components that describe an abstract universe of
 /// data and behaviour.
 pub struct World<E: EventTrait, A: Default> {
-    /// This field stores arbitrary an auxiliary object, that is passed to systems during the
+    /// This field stores an arbitrary auxiliary object, that is passed to systems during the
     /// update and event-handling calls. Consider using this for caching, file-system persistence,
-    /// global state, etc.
+    /// global state, singleton objects, etc.
     pub aux: A,
     /// If this flag is `true`, the `World` will suspend any render calls.
     pub rendering_suspended: bool,
@@ -70,7 +70,8 @@ impl<E: EventTrait, A: Default> World<E, A> {
 
         true
     }
-    /// Updated the current simulation of the `World`.
+    /// Updates the current simulation of the `World` by iterating through all systems that
+    /// subscribe to the update call.
     pub fn update(&mut self, time: &Duration, delta_time: &Duration) {
         let mut priority_events = Vec::new();
         let mut events = Vec::new();
@@ -91,7 +92,8 @@ impl<E: EventTrait, A: Default> World<E, A> {
             self.dispatch(e);
         }
     }
-    /// Renders the current state of the `World`.
+    /// Renders the current state of the `World` by iterating through all systems that subscribe to
+    /// the render call.
     pub fn render(&mut self, time: &Duration, delta_time: &Duration) {
         if !self.rendering_suspended {
             let mut events = Vec::new();
@@ -109,7 +111,7 @@ impl<E: EventTrait, A: Default> World<E, A> {
             }
         }
     }
-    /// Sends an event to the queue.
+    /// Sends an event to the queue for later processing.
     pub fn dispatch(&mut self, event: E) {
         self.event_queue.push_back(event);
     }
