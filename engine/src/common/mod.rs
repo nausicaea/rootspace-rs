@@ -8,3 +8,4 @@ pub mod ui_element;
 pub mod ui_styles;
 pub mod file_manipulation;
 pub mod text_rendering;
+pub mod text_manipulation;
