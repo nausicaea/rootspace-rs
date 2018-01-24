@@ -1,6 +1,7 @@
 //! The `bounding_volume` module provides access to the `BoundingVolume` component.
 
 use std::f32;
+use std::mem;
 use nalgebra::{Point3, Vector3};
 use glium::buffer::ReadError;
 use components::mesh::Mesh;
@@ -202,9 +203,7 @@ impl BoundingVolume {
                         let mut t_2 = (e - extents[i]) / f;
 
                         if t_1 > t_2 {
-                            let tmp = t_1;
-                            t_1 = t_2;
-                            t_2 = tmp;
+                            mem::swap(&mut t_1, &mut t_2);
                         }
 
                         if t_1 > t_min {

@@ -36,7 +36,7 @@ impl PhysicsController {
     /// intersection was found.
     pub fn stateful_raycast(&mut self, entities: &Assembly, ray: &Ray<f32>, current_target: &Option<Entity>) -> StatefulHit {
         if let Some(hit) = self.raycast(entities, ray) {
-            if let &Some(ref tgt) = current_target {
+            if let Some(ref tgt) = *current_target {
                 if &hit.target != tgt {
                     StatefulHit::NewHit(hit)
                 } else {

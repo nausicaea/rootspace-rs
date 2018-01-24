@@ -39,7 +39,7 @@ impl<N> AffineTransform<N> where N: Scalar + Real {
     }
     /// Transforms the specified vector.
     pub fn transform_vector(&self, vector: &Vector3<N>) -> Vector3<N> {
-        self.rotation * self.scale.component_mul(&vector)
+        self.rotation * self.scale.component_mul(vector)
     }
     /// Applies the inverse transformation to the specified point.
     pub fn inverse_transform_point(&self, point: &Point3<N>) -> Point3<N> {
