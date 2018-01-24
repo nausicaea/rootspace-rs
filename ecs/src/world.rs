@@ -56,8 +56,7 @@ impl<E: EventTrait, A: Default> World<E, A> {
         for e in events {
             match e.as_ecs_event() {
                 Some(EcsEvent::ImmediateShutdown) => {
-                    info!("Shutting down now! At this point, all unsaved state is lost.");
-                    return false
+                    return false;
                 },
                 Some(EcsEvent::Shutdown) => {
                     self.dispatch_immediate(&e);

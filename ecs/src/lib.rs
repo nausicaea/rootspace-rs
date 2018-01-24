@@ -13,8 +13,6 @@ extern crate failure;
 extern crate failure_derive;
 #[macro_use]
 extern crate bitflags;
-#[macro_use]
-extern crate log;
 
 /// Returns the names of multiple types as String. Uses `std::intrinsics::type_name` and thus
 /// requires the unstable feature `core_intrinsics` only available on rust nightly. Without this,
