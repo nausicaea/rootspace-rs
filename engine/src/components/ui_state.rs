@@ -9,7 +9,7 @@ use glium::Display;
 use glium::texture::{Texture2d, RawImage2d, UncompressedFloatFormat, MipmapsOption, ClientFormat, TextureCreationError};
 use common::ui_element::UiElement;
 use common::ui_styles::{Common, SpeechBubble};
-use common::ray::RaycastHit;
+use common::ray::ObjectHit;
 
 /// The `UiState` component encodes information about the user interface.
 #[derive(Component)]
@@ -26,7 +26,7 @@ pub struct UiState {
     pub common: Common,
     /// Provides access to speech-bubble style settings.
     pub speech_bubble: SpeechBubble,
-    pub raycast_hit: Option<RaycastHit<f32>>,
+    pub raycast_hit: Option<ObjectHit<f32>>,
 }
 
 impl UiState {

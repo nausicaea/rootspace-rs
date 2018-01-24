@@ -54,10 +54,10 @@ impl<N> fmt::Display for Ray<N> where N: Scalar + Real {
     }
 }
 
-/// When performing raycasting, the `RaycastHit` structure indicates a positive intersection test
+/// When performing raycasting, the `ObjectHit` structure indicates a positive intersection test
 /// between a `Ray` and a `BoundingVolume`.
 #[derive(Debug, Clone, PartialEq)]
-pub struct RaycastHit<N> where N: Scalar + Real {
+pub struct ObjectHit<N> where N: Scalar + Real {
     /// Names the `Entity` that was hit by the `Ray`.
     pub target: Entity,
     /// Names the point in world space closest to the `Ray` origin at which the intersection took
@@ -65,9 +65,9 @@ pub struct RaycastHit<N> where N: Scalar + Real {
     pub point: Point3<N>,
 }
 
-impl<N> fmt::Display for RaycastHit<N> where N: Scalar + Real {
+impl<N> fmt::Display for ObjectHit<N> where N: Scalar + Real {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "RaycastHit {{target: {}, point: {}}}", self.target, self.point)
+        write!(f, "ObjectHit {{target: {}, point: {}}}", self.target, self.point)
     }
 }
 
