@@ -8,6 +8,7 @@ use ecs::{LoopStageFlag, SystemTrait, Assembly, EcsError};
 use event::{EngineEventFlag, EngineEvent};
 use singletons::Singletons;
 use singletons::factory::FactoryError;
+use singletons::physics::StatefulHit;
 use components::description::Description;
 use components::camera::Camera;
 use components::model::Model;
@@ -154,28 +155,25 @@ impl SystemTrait<EngineEvent, Singletons> for UserInterface {
                     .map(|(_, c)| c.screen_point_to_ray(&cursor_position).expect("The cursor position cannot be represented as a ray"))
                     .expect("Unable to use the camera to perform point transformations");
 
-                let previous_hit = entities.rs1::<UiState>()
-                    .map(|(_, u)| u.raycast_hit.clone())
-                    .expect("Unable to get the previous raycast hit from the UI");
+                let previous_target = entities.rs1::<UiState>()
+                    .map(|(_, u)| u.raycast_target.clone())
+                    .expect("Unable to get the previous raycast target from the UI");
 
-                if let Some(hit) = aux.physics.raycast(entities, &cursor_ray) {
-                    if let Some(prev_hit) = previous_hit {
-                        if hit.target != prev_hit.target {
-                            entities.ws1::<UiState>()
-                                .map(|(_, u)| u.raycast_hit = Some(hit))
-                                .expect("Unable to set the raycast hit in the UI");
-                        }
-                    } else {
+                match aux.physics.stateful_raycast(entities, &cursor_ray, &previous_target) {
+                    StatefulHit::NewHit(hit) => {
+                        debug!("You've hit a new object: {}", hit.target);
                         entities.ws1::<UiState>()
-                            .map(|(_, u)| u.raycast_hit = Some(hit))
-                            .expect("Unable to set the raycast hit in the UI");
-                    }
-                } else {
-                    if previous_hit.is_some() {
+                            .map(|(_, u)| u.raycast_target = Some(hit.target.clone()))
+                            .expect("Unable to update the current raycast target");
+                    },
+                    StatefulHit::RepeatHit(hit) => {
+                        trace!("You've hit the same object: {}", hit.target);
+                    },
+                    _ => {
                         entities.ws1::<UiState>()
-                            .map(|(_, u)| u.raycast_hit = None)
-                            .expect("Unable to set the raycast hit in the UI");
-                    }
+                            .map(|(_, u)| u.raycast_target = None)
+                            .expect("Unable to update the current raycast target");
+                    },
                 }
             },
             _ => (),
