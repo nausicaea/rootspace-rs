@@ -1,5 +1,3 @@
-#![feature(core_intrinsics)]
-
 //! The `ecs` module provides functionality to represent an Entity-Component-System architecture.
 //! The `World` collects multiple boxed `SystemTrait`s which operate on the `ComponentTrait`s of
 //! the registered `Entities` (in an `Assembly`) via three main loop stages: event handling,
@@ -13,22 +11,6 @@ extern crate failure;
 extern crate failure_derive;
 #[macro_use]
 extern crate bitflags;
-
-/// Returns the names of multiple types as String. Uses `std::intrinsics::type_name` and thus
-/// requires the unstable feature `core_intrinsics` only available on rust nightly. Without this,
-/// ECS errors are practically impossible to diagnose.
-macro_rules! type_names {
-    ($t:tt) => {{
-        use std::intrinsics::type_name;
-        String::from(unsafe {type_name::<$t>()})
-    }};
-    ($($t:tt),*) => {{
-        use std::intrinsics::type_name;
-        let mut buf = String::new();
-        $(buf.push_str(unsafe {type_name::<$t>()}); buf.push_str(", ");)*
-        buf
-    }};
-}
 
 mod error;
 mod event;

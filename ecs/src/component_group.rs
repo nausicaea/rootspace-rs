@@ -42,14 +42,14 @@ impl ComponentGroup {
         self.components
             .get(&TypeId::of::<C>())
             .map(|c| c.downcast_ref::<C>().expect(DOWNCAST_ERROR))
-            .ok_or_else(|| EcsError::ComponentNotFound(type_names!(C)))
+            .ok_or_else(|| EcsError::ComponentNotFound)
     }
     /// Mutably borrows an instance of a component of the specified type.
     pub fn borrow_mut<C: ComponentTrait>(&mut self) -> Result<&mut C, EcsError> {
         self.components
             .get_mut(&TypeId::of::<C>())
             .map(|c| c.downcast_mut::<C>().expect(DOWNCAST_ERROR))
-            .ok_or_else(|| EcsError::ComponentNotFound(type_names!(C)))
+            .ok_or_else(|| EcsError::ComponentNotFound)
     }
 }
 

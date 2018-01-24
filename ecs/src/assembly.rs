@@ -65,9 +65,9 @@ macro_rules! impl_read_single {
             let mut components = self.$base::<$t>();
 
             match components.len() {
-                0 => Err(EcsError::ComponentNotFound(type_names!($t))),
+                0 => Err(EcsError::ComponentNotFound),
                 1 => Ok(components.pop().unwrap_or_else(|| unreachable!())),
-                _ => Err(EcsError::MultipleComponentsFound(type_names!($t))),
+                _ => Err(EcsError::MultipleComponentsFound),
             }
         }
     };
@@ -78,9 +78,9 @@ macro_rules! impl_read_single {
             let mut components = self.$base::<$($t),*>();
 
             match components.len() {
-                0 => Err(EcsError::ComponentNotFound(type_names!($($t),*))),
+                0 => Err(EcsError::ComponentNotFound),
                 1 => Ok(components.pop().unwrap_or_else(|| unreachable!())),
-                _ => Err(EcsError::MultipleComponentsFound(type_names!($($t),*))),
+                _ => Err(EcsError::MultipleComponentsFound),
             }
         }
     };
@@ -96,9 +96,9 @@ macro_rules! impl_read_single_filtered {
             let mut components = self.$base::<F, $t>(filter);
 
             match components.len() {
-                0 => Err(EcsError::ComponentNotFound(type_names!($t))),
+                0 => Err(EcsError::ComponentNotFound),
                 1 => Ok(components.pop().unwrap_or_else(|| unreachable!())),
-                _ => Err(EcsError::MultipleComponentsFound(type_names!($t))),
+                _ => Err(EcsError::MultipleComponentsFound),
             }
         }
     };
@@ -109,9 +109,9 @@ macro_rules! impl_read_single_filtered {
             let mut components = self.$base::<F, $($t),*>(filter);
 
             match components.len() {
-                0 => Err(EcsError::ComponentNotFound(type_names!($($t),*))),
+                0 => Err(EcsError::ComponentNotFound),
                 1 => Ok(components.pop().unwrap_or_else(|| unreachable!())),
-                _ => Err(EcsError::MultipleComponentsFound(type_names!($($t),*))),
+                _ => Err(EcsError::MultipleComponentsFound),
             }
         }
     };
@@ -212,9 +212,9 @@ impl Assembly {
         let mut components = self.w1::<C>();
 
         match components.len() {
-            0 => Err(EcsError::ComponentNotFound(type_names!(C))),
+            0 => Err(EcsError::ComponentNotFound),
             1 => Ok(components.pop().unwrap_or_else(|| unreachable!())),
-            _ => Err(EcsError::MultipleComponentsFound(type_names!(C))),
+            _ => Err(EcsError::MultipleComponentsFound),
         }
     }
     /// Ensures that only a single entity matches the bounds given by the specified component
@@ -223,9 +223,9 @@ impl Assembly {
         let mut components = self.wf1::<F, C>(filter);
 
         match components.len() {
-            0 => Err(EcsError::ComponentNotFound(type_names!(C))),
+            0 => Err(EcsError::ComponentNotFound),
             1 => Ok(components.pop().unwrap_or_else(|| unreachable!())),
-            _ => Err(EcsError::MultipleComponentsFound(type_names!(C))),
+            _ => Err(EcsError::MultipleComponentsFound),
         }
     }
 }
