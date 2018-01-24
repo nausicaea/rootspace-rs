@@ -14,7 +14,7 @@ mod game;
 use std::io;
 use std::path::PathBuf;
 use clap::{Arg, App};
-use log::LogLevelFilter;
+use log::LevelFilter;
 use fern::Dispatch;
 
 fn main() {
@@ -49,14 +49,14 @@ fn main() {
 
     // Configure the logging system.
     let log_level_filter = if quiet {
-        LogLevelFilter::Off
+        LevelFilter::Off
     } else {
         match verbosity {
-            0 => LogLevelFilter::Error,
-            1 => LogLevelFilter::Warn,
-            2 => LogLevelFilter::Info,
-            3 => LogLevelFilter::Debug,
-            _ => LogLevelFilter::Trace,
+            0 => LevelFilter::Error,
+            1 => LevelFilter::Warn,
+            2 => LevelFilter::Info,
+            3 => LevelFilter::Debug,
+            _ => LevelFilter::Trace,
         }
     };
     Dispatch::new()

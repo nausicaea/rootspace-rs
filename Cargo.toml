@@ -9,9 +9,9 @@ repository = "https://github.com/nausicaea/rootspace-rs"
 
 [dependencies]
 clap = "^2.28.0"
-log = "^0.3.8"
-fern = "^0.4.3"
-nalgebra = { version = "^0.13.1", features = ["serde-serialize"] }
+log = "^0.4.1"
+fern = "^0.5.2"
+nalgebra = {version = "^0.13.1", features = ["serde-serialize"]}
 ecs = {path = "ecs"}
 ecs-derive = {path = "ecs-derive"}
 engine = {path = "engine"}

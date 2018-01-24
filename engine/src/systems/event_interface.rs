@@ -39,7 +39,7 @@ impl<A> SystemTrait<EngineEvent, A> for EventInterface {
                 Event::WindowEvent {event: we, ..} => match we {
                     WindowEvent::Closed => d.push(EngineEvent::Shutdown),
                     WindowEvent::Resized(w, h) => d.push(EngineEvent::ResizeWindow(w, h)),
-                    WindowEvent::MouseMoved {position: (x, y), ..} => pd.push(EngineEvent::CursorPosition(x.floor() as u32, y.floor() as u32)),
+                    WindowEvent::CursorMoved {position: (x, y), ..} => pd.push(EngineEvent::CursorPosition(x.floor() as u32, y.floor() as u32)),
                     _ => (),
                 },
                 Event::Suspended(v) => d.push(EngineEvent::Suspend(v)),
