@@ -27,6 +27,7 @@ pub struct UiState {
     /// Provides access to speech-bubble style settings.
     pub speech_bubble: SpeechBubble,
     pub raycast_target: Option<Entity>,
+    pub active_tooltip: Option<Uuid>,
 }
 
 impl UiState {
@@ -53,6 +54,7 @@ impl UiState {
             common: common,
             speech_bubble: speech_bubble,
             raycast_target: None,
+            active_tooltip: None,
         })
     }
 }

@@ -149,10 +149,8 @@ impl SystemTrait<EngineEvent, Singletons> for UserInterface {
                     .unwrap_or_else(|e| warn!("Could not create a speech bubble: {}", e))
             },
             EngineEvent::CursorPosition(x, y) => {
-                let cursor_position = Point2::new(x, y);
-
                 let cursor_ray = entities.rs1::<Camera>()
-                    .map(|(_, c)| c.screen_point_to_ray(&cursor_position).expect("The cursor position cannot be represented as a ray"))
+                    .map(|(_, c)| c.screen_point_to_ray(&Point2::new(x, y)).expect("The cursor position cannot be represented as a ray"))
                     .expect("Unable to use the camera to perform point transformations");
 
                 let previous_target = entities.rs1::<UiState>()
@@ -162,14 +160,17 @@ impl SystemTrait<EngineEvent, Singletons> for UserInterface {
                 match aux.physics.stateful_raycast(entities, &cursor_ray, &previous_target) {
                     StatefulHit::NewHit(hit) => {
                         debug!("You've hit a new object: {}", hit.target);
+                        // Create a new tooltip.
                         entities.ws1::<UiState>()
                             .map(|(_, u)| u.raycast_target = Some(hit.target.clone()))
                             .expect("Unable to update the current raycast target");
                     },
                     StatefulHit::RepeatHit(hit) => {
                         trace!("You've hit the same object: {}", hit.target);
+                        // Update the position of the active tooltip (there may only ever be one).
                     },
                     _ => {
+                        // Destroy the active tooltip.
                         entities.ws1::<UiState>()
                             .map(|(_, u)| u.raycast_target = None)
                             .expect("Unable to update the current raycast target");
