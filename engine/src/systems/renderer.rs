@@ -15,17 +15,6 @@ use common::uniforms::Uniforms;
 use components::ui_state::UiState;
 use common::ui_uniforms::UiUniforms;
 
-#[derive(Debug)]
-pub enum RendererError {
-    DisplayError(DisplayCreationError),
-}
-
-impl From<DisplayCreationError> for RendererError {
-    fn from(value: DisplayCreationError) -> RendererError {
-        RendererError::DisplayError(value)
-    }
-}
-
 /// The `Renderer`'s task is to manage the graphical display and render entities as well as the
 /// user interface.
 pub struct Renderer {
@@ -163,5 +152,16 @@ impl<A> SystemTrait<EngineEvent, A> for Renderer {
         target.finish()
             .expect("Unable to finalize the current frame");
         None
+    }
+}
+
+#[derive(Debug)]
+pub enum RendererError {
+    DisplayError(DisplayCreationError),
+}
+
+impl From<DisplayCreationError> for RendererError {
+    fn from(value: DisplayCreationError) -> RendererError {
+        RendererError::DisplayError(value)
     }
 }
