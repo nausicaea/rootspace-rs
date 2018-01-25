@@ -4,29 +4,23 @@ use std::path::Path;
 use glium::Display;
 use components::material::{Material, MaterialError};
 
-#[derive(Debug, Fail)]
-pub enum FactoryError {
-    #[fail(display = "{}", _0)]
-    MaterialCreationError(#[cause] MaterialError),
-}
-
-impl From<MaterialError> for FactoryError {
-    fn from(value: MaterialError) -> Self {
-        FactoryError::MaterialCreationError(value)
-    }
-}
-
 /// `ComponentFactory` provides a way to create components and cache them for reuse later. Due to
-/// the internal use of `Rc`, componens created thus are immutable.
+/// the internal use of `Rc`, componens created thus are immutable. This allows to save a lot of
+/// time with shader compilation once the cache can be serialized to disk or when objects are
+/// reused frequently.
 #[derive(Default)]
 pub struct ComponentFactory {
+    /// A cache of `Material` components.
     materials: HashMap<u64, Material>,
 }
 
 impl ComponentFactory {
+    /// Creates a new `ComponentFactory`.
     pub fn new() -> Self {
         Default::default()
     }
+    /// Creates a new `Material` component or returns a cached instance with the specified
+    /// parameters.
     pub fn new_material(&mut self, display: &Display, vs: &Path, fs: &Path, gs: Option<&Path>, dt: Option<&Path>, nt: Option<&Path>) -> Result<Material, FactoryError> {
         let hash = self.calculate_material_hash(vs, fs, gs, dt, nt);
 
@@ -46,5 +40,19 @@ impl ComponentFactory {
         dt.hash(&mut s);
         nt.hash(&mut s);
         s.finish()
+    }
+}
+
+/// Operations of the `ComponentFactory` may fail with the following errors.
+#[derive(Debug, Fail)]
+pub enum FactoryError {
+    #[fail(display = "{}", _0)]
+    MaterialCreationError(#[cause] MaterialError),
+}
+
+impl From<MaterialError> for FactoryError {
+    /// Converts a `MaterialError` to a `FactoryError`.
+    fn from(value: MaterialError) -> Self {
+        FactoryError::MaterialCreationError(value)
     }
 }
