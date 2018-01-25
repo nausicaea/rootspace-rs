@@ -7,7 +7,7 @@ use components::bounding_volume::BoundingVolume;
 /// The `PhysicsController` provides means to perform collision detection and other physics
 /// operations.
 #[derive(Default)]
-pub struct PhysicsController {}
+pub struct PhysicsController;
 
 impl PhysicsController {
     /// Returns the first intersection of the ray with any object in the `Assembly` with a
