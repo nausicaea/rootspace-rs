@@ -27,12 +27,15 @@ impl EventInterface {
 }
 
 impl<A> SystemTrait<EngineEvent, A> for EventInterface {
+    /// `EventInterface` does not have any requirements wrt. to the `Assembly`.
     fn verify_requirements(&self, _: &Assembly) -> bool {
         true
     }
+    /// `EventInterface` subscribes to the update call.
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         LoopStageFlag::UPDATE
     }
+    /// Polls for operating system events and relays them to the ECS event queue.
     fn update(&mut self, _: &mut Assembly, _: &mut A, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {
         let mut pd = Vec::new();
         let mut d = Vec::new();

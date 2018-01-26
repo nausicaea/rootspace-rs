@@ -6,31 +6,6 @@ use clap::{App, Arg, AppSettings};
 use ecs::{Assembly, LoopStageFlag, SystemTrait};
 use event::{EngineEventFlag, EngineEvent};
 
-#[derive(Debug, Fail)]
-pub enum DebugShellError {
-    #[fail(display = "'{}' is not a recognized builtin or command", _0)]
-    CommandNotFound(String),
-    #[fail(display = "The required argument '{}' is missing for command '{}'", _1, _0)]
-    MissingArgument(String, String),
-    #[fail(display = "{}", _0)]
-    ParseError(#[cause] ParseIntError),
-}
-
-impl From<ParseIntError> for DebugShellError {
-    fn from(value: ParseIntError) -> Self {
-        DebugShellError::ParseError(value)
-    }
-}
-
-type ShellResult = Result<Option<EngineEvent>, DebugShellError>;
-
-/// Represents a basic shell command.
-pub trait CustomCommand {
-    /// Executes the command given a set of command line arguments. The first argument refers to
-    /// the command name.
-    fn run(&self, args: &[String]) -> ShellResult;
-}
-
 /// The `DebugShell` listens for `ConsoleCommand` events and interprets them as commands. The shell
 /// provides both builtin commands and the ability to register custom commands through the
 /// `CustomCommand` trait.
@@ -128,15 +103,20 @@ impl DebugShell {
 }
 
 impl<A> SystemTrait<EngineEvent, A> for DebugShell {
+    /// `DebugShell` has no requirements wrt. the `Assembly`.
     fn verify_requirements(&self, _: &Assembly) -> bool {
         true
     }
+    /// `DebugShell` subscribes to the `handle_event` call.
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         LoopStageFlag::HANDLE_EVENT
     }
+    /// `DebugShell` subscribes to the `ConsoleCommand` event.
     fn get_event_filter(&self) -> EngineEventFlag {
         EngineEventFlag::CONSOLE_COMMAND
     }
+    /// Interprets a `ConsoleCommand` event as a command to the engine and executes the respective
+    /// actions, while printing the output to the console.
     fn handle_event(&mut self, _: &mut Assembly, _: &mut A, event: &EngineEvent) -> Option<EngineEvent> {
         match *event {
             EngineEvent::ConsoleCommand(ref c) => self.interpret(c).unwrap_or_else(|e| {println!("{}", e); None}),
@@ -144,3 +124,29 @@ impl<A> SystemTrait<EngineEvent, A> for DebugShell {
         }
     }
 }
+
+#[derive(Debug, Fail)]
+pub enum DebugShellError {
+    #[fail(display = "'{}' is not a recognized builtin or command", _0)]
+    CommandNotFound(String),
+    #[fail(display = "The required argument '{}' is missing for command '{}'", _1, _0)]
+    MissingArgument(String, String),
+    #[fail(display = "{}", _0)]
+    ParseError(#[cause] ParseIntError),
+}
+
+impl From<ParseIntError> for DebugShellError {
+    fn from(value: ParseIntError) -> Self {
+        DebugShellError::ParseError(value)
+    }
+}
+
+type ShellResult = Result<Option<EngineEvent>, DebugShellError>;
+
+/// Represents a basic shell command.
+pub trait CustomCommand {
+    /// Executes the command given a set of command line arguments. The first argument refers to
+    /// the command name.
+    fn run(&self, args: &[String]) -> ShellResult;
+}
+

@@ -129,12 +129,16 @@ impl UserInterface {
 }
 
 impl SystemTrait<EngineEvent, Singletons> for UserInterface {
+    /// The `UserInterface` depends on the presence of exactly one `UiState` and exactly one
+    /// `Camera` component.
     fn verify_requirements(&self, entities: &Assembly) -> bool {
         entities.count1::<UiState>() == 1 && entities.count1::<Camera>() == 1
     }
+    /// `UserInterface` subscribes to the `handle_event` and update calls.
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         LoopStageFlag::HANDLE_EVENT | LoopStageFlag::UPDATE
     }
+    /// `UserInterface` subscribes to the `SpeechBubble` and the `CursorPosition` events.
     fn get_event_filter(&self) -> EngineEventFlag {
         EngineEventFlag::SPEECH_BUBBLE | EngineEventFlag::CURSOR_POSITION
     }

@@ -107,9 +107,12 @@ impl Renderer {
 }
 
 impl<A> SystemTrait<EngineEvent, A> for Renderer {
+    /// The `Renderer` depends on the presence of exactly one `Camera` component.
     fn verify_requirements(&self, entities: &Assembly) -> bool {
         entities.count1::<Camera>() == 1
     }
+    /// If the `Renderer` has completed initialization, it subscribes to the `handle_event` and
+    /// render calls. Otherwise, it will only listen for events.
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         if self.ready {
             LoopStageFlag::HANDLE_EVENT | LoopStageFlag::RENDER
@@ -117,9 +120,13 @@ impl<A> SystemTrait<EngineEvent, A> for Renderer {
             LoopStageFlag::HANDLE_EVENT
         }
     }
+    /// `Renderer` subscribes to the `Ready` and `ResizeWindow` events.
     fn get_event_filter(&self) -> EngineEventFlag {
         EngineEventFlag::READY | EngineEventFlag::RESIZE_WINDOW
     }
+    /// Once the `Ready` event has been received, the `Renderer` completes its initialization and
+    /// emits a `RendererReady` event. Upon receiving a `ResizeWindow` event, the `Camera`
+    /// component is updated.
     fn handle_event(&mut self, entities: &mut Assembly, _: &mut A, event: &EngineEvent) -> Option<EngineEvent> {
         match *event {
             EngineEvent::Ready => {
@@ -135,6 +142,9 @@ impl<A> SystemTrait<EngineEvent, A> for Renderer {
             _ => None,
         }
     }
+    /// First updates the `SceneGraph` to receive accurate and current hierarchical model data.
+    /// Subsequently renders the `Entity`s to the frame, followed by the user interface state as
+    /// defined in `UiState`.
     fn render(&mut self, entities: &Assembly, _: &Duration, _: &Duration) -> Option<EngineEvent> {
         // Update the scene graph.
         self.scene_graph.update(entities, &|pc, cc| pc * cc)

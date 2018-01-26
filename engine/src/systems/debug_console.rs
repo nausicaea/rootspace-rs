@@ -73,12 +73,17 @@ impl DebugConsole {
 }
 
 impl<A> SystemTrait<EngineEvent, A> for DebugConsole {
+    /// `DebugConsole` has no requirements wrt. the `Assembly`.
     fn verify_requirements(&self, _: &Assembly) -> bool {
         true
     }
+    /// `DebugConsole` subscribes to the update call.
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         LoopStageFlag::UPDATE
     }
+    /// Attempts to retrieve data from the worker thread and emits a `ConsoleCommand` event once a
+    /// full line of input has been received. Also performs argument splitting before emitting the
+    /// event.
     fn update(&mut self, _: &mut Assembly, _: &mut A, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {
         self.try_read_line()
             .map(|s| split_arguments(&s, self.escape_char, self.quote_char))
