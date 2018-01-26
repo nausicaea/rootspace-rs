@@ -126,6 +126,9 @@ impl UserInterface {
                 }
             })
     }
+    fn handle_cursor_event(&self, entities: &mut Assembly, aux: &mut Singletons, position: &Point2<u32>) -> Result<(), UiError> {
+        Ok(())
+    }
 }
 
 impl SystemTrait<EngineEvent, Singletons> for UserInterface {
@@ -148,34 +151,9 @@ impl SystemTrait<EngineEvent, Singletons> for UserInterface {
                 self.create_speech_bubble(entities, aux, t, c, l)
                     .unwrap_or_else(|e| warn!("Could not create a speech bubble: {}", e))
             },
-            EngineEvent::CursorPosition(x, y) => {
-                let cursor_ray = entities.rs1::<Camera>()
-                    .map(|(_, c)| c.screen_point_to_ray(&Point2::new(x, y)).expect("The cursor position cannot be represented as a ray"))
-                    .expect("Unable to use the camera to perform point transformations");
-
-                let previous_target = entities.rs1::<UiState>()
-                    .map(|(_, u)| u.raycast_target.clone())
-                    .expect("Unable to get the previous raycast target from the UI");
-
-                match aux.physics.stateful_raycast(entities, &cursor_ray, &previous_target) {
-                    StatefulHit::NewHit(hit) => {
-                        debug!("You've hit a new object: {}", hit.target);
-                        // Create a new tooltip.
-                        entities.ws1::<UiState>()
-                            .map(|(_, u)| u.raycast_target = Some(hit.target.clone()))
-                            .expect("Unable to update the current raycast target");
-                    },
-                    StatefulHit::RepeatHit(hit) => {
-                        trace!("You've hit the same object: {}", hit.target);
-                        // Update the position of the active tooltip (there may only ever be one).
-                    },
-                    _ => {
-                        // Destroy the active tooltip.
-                        entities.ws1::<UiState>()
-                            .map(|(_, u)| u.raycast_target = None)
-                            .expect("Unable to update the current raycast target");
-                    },
-                }
+            EngineEvent::CursorPosition(p) => {
+                self.handle_cursor_event(entities, aux, &p)
+                    .unwrap_or_else(|e| warn!("Could not handle cursor movement: {}", e))
             },
             _ => (),
         }

@@ -1,4 +1,5 @@
 use std::u64;
+use nalgebra::Point2;
 use ecs::{EventTrait, EcsEvent};
 
 bitflags! {
@@ -28,7 +29,7 @@ pub enum EngineEvent {
     ResizeWindow(u32, u32),
     ReloadShaders,
     SpeechBubble(String, String, u64),
-    CursorPosition(u32, u32),
+    CursorPosition(Point2<u32>),
 }
 
 impl EventTrait for EngineEvent {
@@ -72,7 +73,7 @@ impl From<EngineEvent> for EngineEventFlag {
             ResizeWindow(..) => EngineEventFlag::RESIZE_WINDOW,
             ReloadShaders => EngineEventFlag::RELOAD_SHADERS,
             SpeechBubble(..) => EngineEventFlag::SPEECH_BUBBLE,
-            CursorPosition(..) => EngineEventFlag::CURSOR_POSITION,
+            CursorPosition(_) => EngineEventFlag::CURSOR_POSITION,
         }
     }
 }
