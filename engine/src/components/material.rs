@@ -2,7 +2,7 @@
 
 use std::io;
 use std::rc::Rc;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use glium::{Display, Program, Texture2d};
 use glium::program;
 use glium::texture;
@@ -18,6 +18,11 @@ pub struct Material {
     pub diff_tex: Option<Rc<Texture2d>>,
     /// Provides access to the normal texture.
     pub norm_tex: Option<Rc<Texture2d>>,
+    vs_path: PathBuf,
+    fs_path: PathBuf,
+    gs_path: Option<PathBuf>,
+    dt_path: Option<PathBuf>,
+    nt_path: Option<PathBuf>,
 }
 
 impl Material {
@@ -29,14 +34,14 @@ impl Material {
             Some(gp) => Some(load_text_file(gp)?),
             None => None,
         };
-        let dt = match dt {
+        let dtt = match dt {
             Some(dp) => {
                 let di = load_image_file(dp)?;
                 Some(Rc::new(Texture2d::new(display, di)?))
             },
             None => None,
         };
-        let nt = match nt {
+        let ntt = match nt {
             Some(np) => {
                 let ni = load_image_file(np)?;
                 Some(Rc::new(Texture2d::new(display, ni)?))
@@ -46,8 +51,13 @@ impl Material {
 
         Ok(Material {
             shader: Rc::new(Program::from_source(display, &vss, &fss, gss.as_ref().map(|g| &**g))?),
-            diff_tex: dt,
-            norm_tex: nt,
+            diff_tex: dtt,
+            norm_tex: ntt,
+            vs_path: vs.to_path_buf(),
+            fs_path: fs.to_path_buf(),
+            gs_path: gs.map(|p| p.to_path_buf()),
+            dt_path: dt.map(|p| p.to_path_buf()),
+            nt_path: nt.map(|p| p.to_path_buf()),
         })
     }
 }
