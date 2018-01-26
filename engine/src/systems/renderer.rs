@@ -107,6 +107,9 @@ impl Renderer {
 }
 
 impl<A> SystemTrait<EngineEvent, A> for Renderer {
+    fn verify_requirements(&self, entities: &Assembly) -> bool {
+        entities.count1::<Camera>() == 1
+    }
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         if self.ready {
             LoopStageFlag::HANDLE_EVENT | LoopStageFlag::RENDER
@@ -120,8 +123,6 @@ impl<A> SystemTrait<EngineEvent, A> for Renderer {
     fn handle_event(&mut self, entities: &mut Assembly, _: &mut A, event: &EngineEvent) -> Option<EngineEvent> {
         match *event {
             EngineEvent::Ready => {
-                // When first getting ready, ensure that a single camer a is present.
-                entities.rs1::<Camera>().expect("The Renderer system requires exactly one entity with a Camera component");
                 self.ready = true;
                 Some(EngineEvent::RendererReady)
             },

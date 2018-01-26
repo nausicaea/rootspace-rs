@@ -73,6 +73,9 @@ impl DebugConsole {
 }
 
 impl<A> SystemTrait<EngineEvent, A> for DebugConsole {
+    fn verify_requirements(&self, _: &Assembly) -> bool {
+        true
+    }
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         LoopStageFlag::UPDATE
     }

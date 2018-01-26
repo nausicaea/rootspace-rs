@@ -27,6 +27,9 @@ impl EventInterface {
 }
 
 impl<A> SystemTrait<EngineEvent, A> for EventInterface {
+    fn verify_requirements(&self, _: &Assembly) -> bool {
+        true
+    }
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         LoopStageFlag::UPDATE
     }

@@ -129,21 +129,17 @@ impl UserInterface {
 }
 
 impl SystemTrait<EngineEvent, Singletons> for UserInterface {
+    fn verify_requirements(&self, entities: &Assembly) -> bool {
+        entities.count1::<UiState>() == 1 && entities.count1::<Camera>() == 1
+    }
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         LoopStageFlag::HANDLE_EVENT | LoopStageFlag::UPDATE
     }
     fn get_event_filter(&self) -> EngineEventFlag {
-        EngineEventFlag::READY | EngineEventFlag::SPEECH_BUBBLE | EngineEventFlag::CURSOR_POSITION
+        EngineEventFlag::SPEECH_BUBBLE | EngineEventFlag::CURSOR_POSITION
     }
     fn handle_event(&mut self, entities: &mut Assembly, aux: &mut Singletons, event: &EngineEvent) -> Option<EngineEvent> {
         match *event {
-            EngineEvent::Ready => {
-                // When first getting ready, make sure that exactly one UiState component is
-                // present.
-                entities.rs1::<UiState>().expect("The UiserInterface system requires exactly one entity with a UiState component");
-                // Also require the camera to be present.
-                entities.rs1::<Camera>().expect("The UserInterface system requires exactly one entity with a Camera component");
-            },
             EngineEvent::SpeechBubble(ref t, ref c, l) => {
                 self.create_speech_bubble(entities, aux, t, c, l)
                     .unwrap_or_else(|e| warn!("Could not create a speech bubble: {}", e))

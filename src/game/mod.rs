@@ -149,12 +149,12 @@ pub fn run(resource_path: &Path, debugging: bool) {
 
         // Add systems to the world.
         if o.debug {
-            o.world.add_system(EventMonitor::new());
-            o.world.add_system(DebugConsole::new(io::stdin()));
-            o.world.add_system(DebugShell::new());
+            o.world.add_system(EventMonitor::new()).unwrap();
+            o.world.add_system(DebugConsole::new(io::stdin())).unwrap();
+            o.world.add_system(DebugShell::new()).unwrap();
         }
-        o.world.add_system(UserInterface::new(&renderer.display));
-        o.world.add_system(renderer);
-        o.world.add_system(event_interface);
+        o.world.add_system(UserInterface::new(&renderer.display)).unwrap();
+        o.world.add_system(renderer).unwrap();
+        o.world.add_system(event_interface).unwrap();
     });
 }

@@ -13,6 +13,9 @@ impl EventMonitor {
 }
 
 impl<A> SystemTrait<EngineEvent, A> for EventMonitor {
+    fn verify_requirements(&self, _: &Assembly) -> bool {
+        true
+    }
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         LoopStageFlag::HANDLE_EVENT
     }
