@@ -8,4 +8,6 @@ pub enum EcsError {
     MultipleComponentsFound,
     #[fail(display = "The entity '{}' was not found in the assembly", _0)]
     EntityNotFound(Entity),
+    #[fail(display = "The system's requirements were not satisfied")]
+    UnsatisfiedRequirements,
 }

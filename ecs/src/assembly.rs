@@ -4,6 +4,25 @@ use error::EcsError;
 use entity::Entity;
 use component_group::{ComponentTrait, ComponentGroup};
 
+macro_rules! impl_count {
+    ($name:ident, $t:tt) => {
+        /// Counts the number of entities with the specified component.
+        pub fn $name<$t: ComponentTrait>(&self) -> usize {
+            self.entities.values()
+                .filter(|g| g.has::<$t>())
+                .count()
+        }
+    };
+    ($name:ident, $($t:tt),*) => {
+        /// Counts the number of entities with the specified components.
+        pub fn $name<$($t: ComponentTrait),*>(&self) -> usize {
+            self.entities.values()
+                .filter(|g| $(g.has::<$t>())&&*)
+                .count()
+        }
+    };
+}
+
 /// Implements methods that collect all entities' components under the condition that all specified
 /// types must be present in each entity.
 macro_rules! impl_read {
@@ -144,6 +163,10 @@ impl Assembly {
     pub fn has_entity(&self, entity: &Entity) -> bool {
         self.entities.contains_key(entity)
     }
+    /// Returns the number of `Entity`s in the `Assembly`.
+    pub fn entity_count(&self) -> usize {
+        self.entities.len()
+    }
     /// Adds a component to the group assigned to the specified `Entity`.
     pub fn add_component<C>(&mut self, entity: &Entity, component: C) -> Result<Option<C>, EcsError> where C: ComponentTrait {
         self.entities.get_mut(entity)
@@ -174,22 +197,6 @@ impl Assembly {
             .ok_or_else(|| EcsError::EntityNotFound(entity.clone()))
             .and_then(|g| g.borrow_mut::<C>())
     }
-    impl_read!(r1, A);
-    impl_read!(r2, A, B);
-    impl_read!(r3, A, B, C);
-    impl_read!(r4, A, B, C, D);
-    impl_read_filtered!(rf1, A);
-    impl_read_filtered!(rf2, A, B);
-    impl_read_filtered!(rf3, A, B, C);
-    impl_read_filtered!(rf4, A, B, C, D);
-    impl_read_single!(rs1, r1, A);
-    impl_read_single!(rs2, r2, A, B);
-    impl_read_single!(rs3, r3, A, B, C);
-    impl_read_single!(rs4, r4, A, B, C, D);
-    impl_read_single_filtered!(rsf1, rf1, A);
-    impl_read_single_filtered!(rsf2, rf2, A, B);
-    impl_read_single_filtered!(rsf3, rf3, A, B, C);
-    impl_read_single_filtered!(rsf4, rf4, A, B, C, D);
     /// Provides mutable access to all instances of the specified component type.
     pub fn w1<C: ComponentTrait>(&mut self) -> Vec<(Entity, &mut C)> {
         self.entities.iter_mut()
@@ -228,6 +235,26 @@ impl Assembly {
             _ => Err(EcsError::MultipleComponentsFound),
         }
     }
+    impl_count!(count1, A);
+    impl_count!(count2, A, B);
+    impl_count!(count3, A, B, C);
+    impl_count!(count4, A, B, C, D);
+    impl_read!(r1, A);
+    impl_read!(r2, A, B);
+    impl_read!(r3, A, B, C);
+    impl_read!(r4, A, B, C, D);
+    impl_read_filtered!(rf1, A);
+    impl_read_filtered!(rf2, A, B);
+    impl_read_filtered!(rf3, A, B, C);
+    impl_read_filtered!(rf4, A, B, C, D);
+    impl_read_single!(rs1, r1, A);
+    impl_read_single!(rs2, r2, A, B);
+    impl_read_single!(rs3, r3, A, B, C);
+    impl_read_single!(rs4, r4, A, B, C, D);
+    impl_read_single_filtered!(rsf1, rf1, A);
+    impl_read_single_filtered!(rsf2, rf2, A, B);
+    impl_read_single_filtered!(rsf3, rf3, A, B, C);
+    impl_read_single_filtered!(rsf4, rf4, A, B, C, D);
 }
 
 #[cfg(test)]

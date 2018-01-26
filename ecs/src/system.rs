@@ -7,6 +7,9 @@ use assembly::Assembly;
 /// Every system encodes behaviour and every system must supply at least one of the methods
 /// defined in the trait `SystemTrait`.
 pub trait SystemTrait<E: EventTrait, A> {
+    /// Returns `true` if the supplied assembly satisfies the requirements of the current system.
+    /// Can be used to require components or specific sets of them.
+    fn verify_requirements(&self, _entities: &Assembly) -> bool;
     /// Returns a bitmask that corresponds to a combination of `LoopStage`s. Based on that value,
     /// `World` will thus regularly call the other methods.
     fn get_loop_stage_filter(&self) -> LoopStageFlag;

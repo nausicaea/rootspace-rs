@@ -6,6 +6,7 @@ use event::{EcsEvent, EventTrait};
 use loop_stage::LoopStage;
 use assembly::Assembly;
 use system::SystemTrait;
+use error::EcsError;
 
 /// Encapsulates a set of systems, entities and components that describe an abstract universe of
 /// data and behaviour.
@@ -45,8 +46,13 @@ impl<E: EventTrait, A: Default> World<E, A> {
         Default::default()
     }
     /// Adds a new system to the `World`.
-    pub fn add_system<S: SystemTrait<E, A> + 'static>(&mut self, system: S) {
-        self.systems.push(Box::new(system));
+    pub fn add_system<S: SystemTrait<E, A> + 'static>(&mut self, system: S) -> Result<(), EcsError> {
+        if system.verify_requirements(&self.assembly) {
+            self.systems.push(Box::new(system));
+            Ok(())
+        } else {
+            Err(EcsError::UnsatisfiedRequirements)
+        }
     }
     /// Iterates over all queued events and dispatches them to the relevant systems.
     pub fn handle_events(&mut self) -> bool {
