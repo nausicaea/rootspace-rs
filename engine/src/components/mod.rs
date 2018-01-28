@@ -9,3 +9,4 @@ pub mod material;
 pub mod mesh;
 pub mod ui_state;
 pub mod bounding_volume;
+pub mod cursor;

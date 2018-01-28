@@ -7,7 +7,7 @@ use nalgebra::{Point3, Vector3};
 use engine::{Orchestrator, EventMonitor, DebugConsole, DebugShell,
     Renderer, EventInterface, Model, Description, Mesh, UserInterface,
     UiState, Common, SpeechBubble, SceneGraph, SceneNode, Camera,
-    BoundingVolume};
+    BoundingVolume, Cursor};
 
 pub fn run(resource_path: &Path, debugging: bool) {
     // The following variables set up the state of the engine.
@@ -55,7 +55,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             o.world.add_component(&camera, c).unwrap();
         }
 
-        // Assembly the UI canvas.
+        // Assemble the UI canvas.
         {
             let font_path = o.resource_path.join("fonts").join("SourceCodePro-Regular.ttf");
             let font_scale = 24.0;
@@ -73,6 +73,16 @@ pub fn run(resource_path: &Path, debugging: bool) {
 
             o.world.add_component(&canvas, d).unwrap();
             o.world.add_component(&canvas, u).unwrap();
+        }
+
+        // Create the Cursor
+        {
+            let cursor = o.world.create_entity();
+            let d = Description::new("cursor");
+            let c = Cursor::new();
+
+            o.world.add_component(&cursor, d).unwrap();
+            o.world.add_component(&cursor, c).unwrap();
         }
 
         // Assemble the first test entity.
