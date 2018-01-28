@@ -45,10 +45,12 @@ impl UserInterface {
         // Project the entity position to normalized device coordinates (this requires the camera
         // entity).
         let (entity_pos_ndc, px_dims, dimensions) = entities.rs1::<Camera>()
-            .map(|(_, c)| (c.world_point_to_ndc(&entity_pos_world), c.dimensions, Vector2::new(c.dimensions[0] as f32, c.dimensions[1] as f32)))?;
+            .map(|(_, c)| (c.world_point_to_ndc(&entity_pos_world), c.dimensions, Vector2::new(c.dimensions[0] as f32, c.dimensions[1] as f32)))
+            .expect("Could not access the Camera component");
 
         // Obtain a mutable reference to the `UiState`.
-        let (_, ui_state) = entities.ws1::<UiState>()?;
+        let (_, ui_state) = entities.ws1::<UiState>()
+            .expect("Could not access the UiState component");
 
         // Layout the glyphs based on the textual `content`.
         let (glyphs, text_dims_px) = layout_paragraph_cached(&mut ui_state.font_cache_cpu,
@@ -108,7 +110,7 @@ impl UserInterface {
     }
     /// Checks the lifetimes of the registered `UiElement`s and removes those with expired
     /// lifetimes.
-    fn update_lifetimes(&self, entities: &mut Assembly) -> Result<(), EcsError> {
+    fn update_lifetimes(&self, entities: &mut Assembly) {
         entities.ws1::<UiState>()
             .map(|(_, u)| {
                 if !u.lifetimes.is_empty() {
@@ -125,6 +127,7 @@ impl UserInterface {
                         });
                 }
             })
+            .expect("Could not access the UiState")
     }
     fn handle_cursor_event(&self, entities: &mut Assembly, aux: &mut Singletons, position: &Point2<u32>) -> Result<(), UiError> {
         Ok(())
@@ -160,9 +163,7 @@ impl SystemTrait<EngineEvent, Singletons> for UserInterface {
         None
     }
     fn update(&mut self, entities: &mut Assembly, _: &mut Singletons, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {
-        self.update_lifetimes(entities)
-            .expect("Unable to update the UI element lifetimes");
-
+        self.update_lifetimes(entities);
         None
     }
 }
