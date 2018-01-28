@@ -1,5 +1,5 @@
 use nalgebra::Point2;
-use glium::glutin::{MouseButton, ElementState};
+use glium::glutin::ElementState;
 
 #[derive(Component)]
 pub struct Cursor {

@@ -1,5 +1,6 @@
 use std::u64;
 use nalgebra::Point2;
+use glium::glutin::{MouseButton, ElementState};
 use ecs::{EventTrait, EcsEvent};
 
 bitflags! {
@@ -14,6 +15,7 @@ bitflags! {
         const RELOAD_SHADERS = 0x80;
         const SPEECH_BUBBLE = 0x100;
         const CURSOR_POSITION = 0x200;
+        const MOUSE_INPUT = 0x400;
         const ALL_EVENTS = u64::MAX;
     }
 }
@@ -30,6 +32,7 @@ pub enum EngineEvent {
     ReloadShaders,
     SpeechBubble(String, String, u64),
     CursorPosition(Point2<u32>),
+    MouseInput(MouseButton, ElementState),
 }
 
 impl EventTrait for EngineEvent {
@@ -74,6 +77,7 @@ impl From<EngineEvent> for EngineEventFlag {
             ReloadShaders => EngineEventFlag::RELOAD_SHADERS,
             SpeechBubble(..) => EngineEventFlag::SPEECH_BUBBLE,
             CursorPosition(_) => EngineEventFlag::CURSOR_POSITION,
+            MouseInput(..) => EngineEventFlag::MOUSE_INPUT,
         }
     }
 }
