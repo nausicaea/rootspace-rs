@@ -4,16 +4,16 @@ use glium::glutin::ElementState;
 #[derive(Component)]
 pub struct Cursor {
     pub position: Point2<u32>,
-    pub left_button: Option<ElementState>,
-    pub right_button: Option<ElementState>,
+    pub left_button: ElementState,
+    pub right_button: ElementState,
 }
 
 impl Default for Cursor {
     fn default() -> Self {
         Cursor {
             position: Point2::new(0, 0),
-            left_button: None,
-            right_button: None,
+            left_button: ElementState::Released,
+            right_button: ElementState::Released,
         }
     }
 }
