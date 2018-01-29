@@ -2,12 +2,13 @@ use std::u64;
 use nalgebra::Point2;
 use glium::glutin::{MouseButton, ElementState};
 use ecs::{EventTrait, EcsEvent};
+use components::cursor::FlankDirection;
 
 bitflags! {
     pub struct EngineEventFlag: u64 {
-        const SHUTDOWN = 0x01;
-        const IMMEDIATE_SHUTDOWN = 0x02;
-        const READY = 0x04;
+        const SHUTDOWN = 0x1;
+        const IMMEDIATE_SHUTDOWN = 0x2;
+        const READY = 0x4;
         const CONSOLE_COMMAND = 0x08;
         const RENDERER_READY = 0x10;
         const RESIZE_WINDOW = 0x20;
@@ -15,6 +16,7 @@ bitflags! {
         const SPEECH_BUBBLE = 0x80;
         const CURSOR_POSITION = 0x100;
         const MOUSE_INPUT = 0x200;
+        const MOUSE_INPUT_FLANK = 0x400;
         const ALL_EVENTS = u64::MAX;
     }
 }
@@ -31,6 +33,7 @@ pub enum EngineEvent {
     SpeechBubble(String, String, u64),
     CursorPosition(Point2<u32>),
     MouseInput(MouseButton, ElementState),
+    MouseInputFlank(MouseButton, FlankDirection),
 }
 
 impl EventTrait for EngineEvent {
@@ -73,6 +76,7 @@ impl From<EngineEvent> for EngineEventFlag {
             SpeechBubble(..) => EngineEventFlag::SPEECH_BUBBLE,
             CursorPosition(_) => EngineEventFlag::CURSOR_POSITION,
             MouseInput(..) => EngineEventFlag::MOUSE_INPUT,
+            MouseInputFlank(..) => EngineEventFlag::MOUSE_INPUT_FLANK,
         }
     }
 }

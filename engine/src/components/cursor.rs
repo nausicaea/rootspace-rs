@@ -1,19 +1,18 @@
+use std::collections::HashMap;
 use nalgebra::Point2;
-use glium::glutin::ElementState;
+use glium::glutin::{MouseButton, ElementState};
 
 #[derive(Component)]
 pub struct Cursor {
     pub position: Point2<u32>,
-    pub left_button: ElementState,
-    pub right_button: ElementState,
+    pub buttons: HashMap<MouseButton, ElementState>,
 }
 
 impl Default for Cursor {
     fn default() -> Self {
         Cursor {
             position: Point2::new(0, 0),
-            left_button: ElementState::Released,
-            right_button: ElementState::Released,
+            buttons: Default::default(),
         }
     }
 }
@@ -22,4 +21,10 @@ impl Cursor {
     pub fn new() -> Self {
         Default::default()
     }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub enum FlankDirection {
+    Up,
+    Down,
 }
