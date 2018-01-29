@@ -60,7 +60,6 @@ impl<A> SystemTrait<EngineEvent, A> for EventInterface {
                     },
                     _ => (),
                 },
-                Event::Suspended(v) => d.push(EngineEvent::Suspend(v)),
                 _ => (),
             }
         });

@@ -68,7 +68,6 @@ impl<E: EventTrait, A: Default> World<E, A> {
                     self.dispatch_immediate(&e);
                     self.dispatch(EcsEvent::ImmediateShutdown.into())
                 },
-                Some(EcsEvent::Suspend(v)) => self.rendering_suspended = v,
                 _ => self.dispatch_immediate(&e),
             }
         }

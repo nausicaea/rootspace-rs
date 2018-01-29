@@ -5,7 +5,6 @@ pub enum EcsEvent {
     Shutdown,
     ImmediateShutdown,
     Ready,
-    Suspend(bool),
 }
 
 /// Every engine event must implement the trait `EventTrait`, as some events must be converted to
