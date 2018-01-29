@@ -3,25 +3,34 @@ use ecs::{SystemTrait, LoopStageFlag, Assembly};
 use event::{EngineEvent, EngineEventFlag};
 use components::cursor::{Cursor, FlankDirection};
 
+/// Updates data within the `Cursor` component and emits events on mouse button state changes.
 #[derive(Default)]
 pub struct CursorController;
 
 impl CursorController {
+    /// Creates a new `CursorController` system.
     pub fn new() -> Self {
         Default::default()
     }
 }
 
 impl<A> SystemTrait<EngineEvent, A> for CursorController {
+    /// The `CursorController` requires exactly one `Cursor` component.
     fn verify_requirements(&self, entities: &Assembly) -> bool {
         entities.count1::<Cursor>() == 1
     }
+    /// The `CursorController` receives the event handling calls.
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         LoopStageFlag::HANDLE_EVENT
     }
+    /// The `CursorController` listens for the `CursorPosition` and `MouseInput` events.
     fn get_event_filter(&self) -> EngineEventFlag {
         EngineEventFlag::CURSOR_POSITION | EngineEventFlag::MOUSE_INPUT
     }
+    /// Upon receiving a `CursorPosition` event, the respective field of the `Cursor` component is
+    /// updated. Upon receiving a `MouseInput` event, the new button state is compared to the
+    /// previous one and a `MouseInputFlank` event is dispatched upon state changes. This allows
+    /// other systems to listen for state changes and not just for button press events.
     fn handle_event(&mut self, entities: &mut Assembly, _: &mut A, event: &EngineEvent) -> (Option<EngineEvent>, Option<EngineEvent>) {
         match *event {
             EngineEvent::CursorPosition(position) => {
