@@ -7,7 +7,7 @@ use nalgebra::{Point3, Vector3};
 use engine::{Orchestrator, EventMonitor, DebugConsole, DebugShell,
     Renderer, EventInterface, Model, Description, Mesh, UserInterface,
     UiState, Common, SpeechBubble, SceneGraph, SceneNode, Camera,
-    BoundingVolume, Cursor};
+    BoundingVolume, Cursor, CursorController};
 
 pub fn run(resource_path: &Path, debugging: bool) {
     // The following variables set up the state of the engine.
@@ -163,6 +163,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             o.world.add_system(DebugConsole::new(io::stdin())).unwrap();
             o.world.add_system(DebugShell::new()).unwrap();
         }
+        o.world.add_system(CursorController::new()).unwrap();
         o.world.add_system(UserInterface::new(&renderer.display)).unwrap();
         o.world.add_system(renderer).unwrap();
         o.world.add_system(event_interface).unwrap();
