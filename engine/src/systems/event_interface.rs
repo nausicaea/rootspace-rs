@@ -42,8 +42,8 @@ impl<A> SystemTrait<EngineEvent, A> for EventInterface {
         let mut d = Vec::new();
 
         self.events_loop.poll_events(|ge| {
-            match ge {
-                Event::WindowEvent {event: we, ..} => match we {
+            if let Event::WindowEvent {event: we, ..} = ge {
+                match we {
                     WindowEvent::Closed => d.push(EngineEvent::Shutdown),
                     WindowEvent::Resized(w, h) => d.push(EngineEvent::ResizeWindow(w, h)),
                     WindowEvent::CursorMoved {position: (x, y), ..} => {
@@ -59,8 +59,7 @@ impl<A> SystemTrait<EngineEvent, A> for EventInterface {
                         pd.push(EngineEvent::MouseInput(b, s));
                     },
                     _ => (),
-                },
-                _ => (),
+                }
             }
         });
 
