@@ -14,6 +14,7 @@ use components::camera::Camera;
 use components::model::Model;
 use components::mesh::{Mesh, MeshError};
 use components::ui_state::UiState;
+use components::cursor::Cursor;
 use common::ui_element::UiElement;
 use common::ui_primitive::UiPrimitive;
 use common::text_rendering::layout_paragraph_cached;
@@ -130,6 +131,15 @@ impl UserInterface {
             .expect("Could not access the UiState")
     }
     fn handle_cursor_event(&self, entities: &mut Assembly, aux: &mut Singletons, position: &Point2<u32>) -> Result<(), UiError> {
+        let menu_active = entities.rs1::<UiState>()
+            .map(|(_, u)| u.menu_active)
+            .expect("Could not access the UiState");
+
+        if menu_active {
+            // Perform 2D raycasting only.
+        } else {
+        }
+
         Ok(())
     }
 }
@@ -138,7 +148,7 @@ impl SystemTrait<EngineEvent, Singletons> for UserInterface {
     /// The `UserInterface` depends on the presence of exactly one `UiState` and exactly one
     /// `Camera` component.
     fn verify_requirements(&self, entities: &Assembly) -> bool {
-        entities.count1::<UiState>() == 1 && entities.count1::<Camera>() == 1
+        entities.count1::<UiState>() == 1 && entities.count1::<Camera>() == 1 && entities.count1::<Cursor>() == 1
     }
     /// `UserInterface` subscribes to the `handle_event` and update calls.
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
