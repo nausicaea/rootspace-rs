@@ -42,7 +42,7 @@ impl DebugShell {
                 },
             }
         } else {
-            Ok(None)
+            Ok((None, None))
         }
     }
     /// Displays all known commands.
@@ -53,11 +53,11 @@ impl DebugShell {
                  \nreload-shaders\tReloads all OpenGl shaders in use by the engine.\
                  \nspeech-bubble\tSends a speech bubble event.\
                  \nexit\tShuts down the engine.");
-        Ok(None)
+        Ok((None, None))
     }
     /// Sends the reload-shaders event to the bus.
     fn reload_shaders(&self) -> ShellResult {
-        Ok(Some(EngineEvent::ReloadShaders))
+        Ok((None, Some(EngineEvent::ReloadShaders)))
     }
     /// Sends a speech-bubble event to the bus.
     fn speech_bubble(&self, args: &[String]) -> ShellResult {
@@ -88,17 +88,17 @@ impl DebugShell {
                 let text = m.value_of("text")
                     .ok_or_else(|| DebugShellError::MissingArgument(args[0].clone(), "text".into()))?;
 
-                Ok(Some(EngineEvent::SpeechBubble(target.into(), text.into(), lifetime)))
+                Ok((None, Some(EngineEvent::SpeechBubble(target.into(), text.into(), lifetime))))
             },
             Err(e) => {
                 println!("{}", e);
-                Ok(None)
+                Ok((None, None))
             },
         }
     }
     /// Sends the shutdown event to the bus to exit the engine.
     fn exit(&self) -> ShellResult {
-        Ok(Some(EngineEvent::Shutdown))
+        Ok((None, Some(EngineEvent::Shutdown)))
     }
 }
 
@@ -117,10 +117,10 @@ impl<A> SystemTrait<EngineEvent, A> for DebugShell {
     }
     /// Interprets a `ConsoleCommand` event as a command to the engine and executes the respective
     /// actions, while printing the output to the console.
-    fn handle_event(&mut self, _: &mut Assembly, _: &mut A, event: &EngineEvent) -> Option<EngineEvent> {
+    fn handle_event(&mut self, _: &mut Assembly, _: &mut A, event: &EngineEvent) -> (Option<EngineEvent>, Option<EngineEvent>) {
         match *event {
-            EngineEvent::ConsoleCommand(ref c) => self.interpret(c).unwrap_or_else(|e| {println!("{}", e); None}),
-            _ => None,
+            EngineEvent::ConsoleCommand(ref c) => self.interpret(c).unwrap_or_else(|e| {println!("{}", e); (None, None)}),
+            _ => (None, None),
         }
     }
 }
@@ -141,7 +141,7 @@ impl From<ParseIntError> for DebugShellError {
     }
 }
 
-type ShellResult = Result<Option<EngineEvent>, DebugShellError>;
+type ShellResult = Result<(Option<EngineEvent>, Option<EngineEvent>), DebugShellError>;
 
 /// Represents a basic shell command.
 pub trait CustomCommand {

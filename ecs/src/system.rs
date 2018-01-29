@@ -19,8 +19,9 @@ pub trait SystemTrait<E: EventTrait, A> {
         unimplemented!("Did you forget to implement the get_event_filter method for your system?");
     }
     /// Processes events received by the `World`, and in turn, by the engine. May optionally return
-    /// an event that will be handled in the next main loop iteration.
-    fn handle_event(&mut self, _entities: &mut Assembly, _aux: &mut A, _event: &E) -> Option<E> {
+    /// two events; the first of which will be dispatched immediately, while the second set will be
+    /// handled in the next main loop iteration.
+    fn handle_event(&mut self, _entities: &mut Assembly, _aux: &mut A, _event: &E) -> (Option<E>, Option<E>) {
         unimplemented!("Did you forget to implement the handle_event method for your system?");
     }
     /// Updates the game simulation. May optionally return two vectors of events; the first of

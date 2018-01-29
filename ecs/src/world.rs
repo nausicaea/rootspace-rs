@@ -120,18 +120,29 @@ impl<E: EventTrait, A: Default> World<E, A> {
     pub fn dispatch(&mut self, event: E) {
         self.event_queue.push_back(event);
     }
-    /// In its functioning analogous to `update` and `render`.
+    /// Processes the current event by iterating over all applicable systems (e.g. they subscribe
+    /// to the event handling call and also to the current event).
     fn dispatch_immediate(&mut self, event: &E) {
+        let mut priority_events = Vec::new();
         let mut events = Vec::new();
 
         for system in &mut self.systems {
             if LoopStage::HandleEvent.match_filter(system.get_loop_stage_filter()) && event.match_filter(system.get_event_filter()) {
-                if let Some(e) = system.handle_event(&mut self.assembly, &mut self.aux, event) {
+                let (pe, e) = system.handle_event(&mut self.assembly, &mut self.aux, event);
+
+                if let Some(pe) = pe {
+                    priority_events.push(pe);
+                }
+
+                if let Some(e) = e {
                     events.push(e);
                 }
             }
         }
 
+        for pe in priority_events {
+            self.dispatch_immediate(&pe);
+        }
         for e in events {
             self.dispatch(e);
         }

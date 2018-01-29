@@ -127,19 +127,19 @@ impl<A> SystemTrait<EngineEvent, A> for Renderer {
     /// Once the `Ready` event has been received, the `Renderer` completes its initialization and
     /// emits a `RendererReady` event. Upon receiving a `ResizeWindow` event, the `Camera`
     /// component is updated.
-    fn handle_event(&mut self, entities: &mut Assembly, _: &mut A, event: &EngineEvent) -> Option<EngineEvent> {
+    fn handle_event(&mut self, entities: &mut Assembly, _: &mut A, event: &EngineEvent) -> (Option<EngineEvent>, Option<EngineEvent>) {
         match *event {
             EngineEvent::Ready => {
                 self.ready = true;
-                Some(EngineEvent::RendererReady)
+                (None, Some(EngineEvent::RendererReady))
             },
             EngineEvent::ResizeWindow(w, h) => {
                 entities.ws1::<Camera>()
                     .map(|(_, c)| c.set_dimensions([w, h]))
                     .expect("Unable to update the projection matrices.");
-                None
+                (None, None)
             },
-            _ => None,
+            _ => (None, None),
         }
     }
     /// First updates the `SceneGraph` to receive accurate and current hierarchical model data.

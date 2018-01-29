@@ -22,8 +22,8 @@ impl<A> SystemTrait<EngineEvent, A> for CursorController {
     fn get_event_filter(&self) -> EngineEventFlag {
         EngineEventFlag::CURSOR_POSITION | EngineEventFlag::MOUSE_INPUT
     }
-    fn handle_event(&mut self, entities: &mut Assembly, _: &mut A, event: &EngineEvent) -> Option<EngineEvent> {
-        let mut resulting_event = None;
+    fn handle_event(&mut self, entities: &mut Assembly, _: &mut A, event: &EngineEvent) -> (Option<EngineEvent>, Option<EngineEvent>) {
+        let mut resulting_events = (None, None);
 
         match *event {
             EngineEvent::CursorPosition(position) => {
@@ -81,6 +81,6 @@ impl<A> SystemTrait<EngineEvent, A> for CursorController {
             _ => (),
         }
 
-        resulting_event
+        resulting_events
     }
 }

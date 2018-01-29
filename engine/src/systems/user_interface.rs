@@ -8,13 +8,11 @@ use ecs::{LoopStageFlag, SystemTrait, Assembly, EcsError};
 use event::{EngineEventFlag, EngineEvent};
 use singletons::Singletons;
 use singletons::factory::FactoryError;
-use singletons::physics::StatefulHit;
 use components::description::Description;
 use components::camera::Camera;
 use components::model::Model;
 use components::mesh::{Mesh, MeshError};
 use components::ui_state::UiState;
-use components::cursor::Cursor;
 use common::ui_element::UiElement;
 use common::ui_primitive::UiPrimitive;
 use common::text_rendering::layout_paragraph_cached;
@@ -130,7 +128,7 @@ impl UserInterface {
             })
             .expect("Could not access the UiState")
     }
-    fn handle_cursor_event(&self, entities: &mut Assembly, aux: &mut Singletons, position: &Point2<u32>) -> Result<(), UiError> {
+    fn handle_cursor_event(&self, entities: &mut Assembly, _aux: &mut Singletons, _position: &Point2<u32>) -> Result<(), UiError> {
         let menu_active = entities.rs1::<UiState>()
             .map(|(_, u)| u.menu_active)
             .expect("Could not access the UiState");
@@ -148,7 +146,7 @@ impl SystemTrait<EngineEvent, Singletons> for UserInterface {
     /// The `UserInterface` depends on the presence of exactly one `UiState` and exactly one
     /// `Camera` component.
     fn verify_requirements(&self, entities: &Assembly) -> bool {
-        entities.count1::<UiState>() == 1 && entities.count1::<Camera>() == 1 && entities.count1::<Cursor>() == 1
+        entities.count1::<UiState>() == 1 && entities.count1::<Camera>() == 1
     }
     /// `UserInterface` subscribes to the `handle_event` and update calls.
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
@@ -158,7 +156,7 @@ impl SystemTrait<EngineEvent, Singletons> for UserInterface {
     fn get_event_filter(&self) -> EngineEventFlag {
         EngineEventFlag::SPEECH_BUBBLE | EngineEventFlag::CURSOR_POSITION
     }
-    fn handle_event(&mut self, entities: &mut Assembly, aux: &mut Singletons, event: &EngineEvent) -> Option<EngineEvent> {
+    fn handle_event(&mut self, entities: &mut Assembly, aux: &mut Singletons, event: &EngineEvent) -> (Option<EngineEvent>, Option<EngineEvent>) {
         match *event {
             EngineEvent::SpeechBubble(ref t, ref c, l) => {
                 self.create_speech_bubble(entities, aux, t, c, l)
@@ -170,7 +168,7 @@ impl SystemTrait<EngineEvent, Singletons> for UserInterface {
             },
             _ => (),
         }
-        None
+        (None, None)
     }
     fn update(&mut self, entities: &mut Assembly, _: &mut Singletons, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {
         self.update_lifetimes(entities);

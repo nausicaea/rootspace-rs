@@ -26,8 +26,8 @@ impl<A> SystemTrait<EngineEvent, A> for EventMonitor {
         EngineEventFlag::ALL_EVENTS & !EngineEventFlag::CURSOR_POSITION
     }
     /// Issues a logging call (TRACE level) for each received event.
-    fn handle_event(&mut self, _: &mut Assembly, _: &mut A, event: &EngineEvent) -> Option<EngineEvent> {
+    fn handle_event(&mut self, _: &mut Assembly, _: &mut A, event: &EngineEvent) -> (Option<EngineEvent>, Option<EngineEvent>) {
         trace!("Received event '{:?}'", event);
-        None
+        (None, None)
     }
 }
