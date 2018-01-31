@@ -67,10 +67,10 @@ impl Renderer {
         entities.rs1::<Camera>()
             .map(|(_, c)| {
                 for node in aux.scene_graph.iter() {
-                    if let Ok(mesh) = entities.borrow_component::<Mesh>(&node.entity) {
-                        if let Ok(material) = entities.borrow_component::<Material>(&node.entity) {
+                    if let Ok(mesh) = entities.borrow_component::<Mesh>(&node.key) {
+                        if let Ok(material) = entities.borrow_component::<Material>(&node.key) {
                             let uniforms = Uniforms {
-                                pvm_matrix: c.matrix * node.component.matrix(),
+                                pvm_matrix: c.matrix * node.data.matrix(),
                             };
                             target.draw(&mesh.vertices, &mesh.indices, &material.shader, &uniforms, params)
                                 .expect("Unable to execute the draw call");
@@ -142,7 +142,11 @@ impl SystemTrait<EngineEvent, Singletons> for Renderer {
     /// defined in `UiState`.
     fn render(&mut self, entities: &Assembly, aux: &mut Singletons, _: &Duration, _: &Duration) -> Option<EngineEvent> {
         // Update the scene graph.
-        aux.scene_graph.update(entities, &|pc, cc| pc * cc)
+        aux.scene_graph.update(&|entity, parent_component| {
+                let current_component = entities.borrow_component(entity)
+                    .expect("The internal state of the scene graph is irreparably out of sync with the assembly");
+                parent_component * current_component
+            })
             .expect("Unable to update the scene graph");
 
         // Create the current frame.

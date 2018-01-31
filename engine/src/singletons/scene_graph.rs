@@ -1,178 +1,154 @@
 use std::collections::HashMap;
+use std::hash::Hash;
 use daggy::{Dag, NodeIndex, Walker};
 use daggy::petgraph::graph::{Node, DefaultIx};
-use ecs::{Entity, Assembly, ComponentTrait, EcsError};
 
-pub struct SceneGraph<C: ComponentTrait + Clone + Default> {
-    root_entity: Entity,
-    index: HashMap<Entity, NodeIndex>,
-    graph: Dag<SceneNode<C>, ()>,
+/// Given a set of identifying keys and corresponding data, `SceneGraph` allows users to establish
+/// hierarchical relationships between individual instances of the data type.
+pub struct SceneGraph<K: Clone + Default + Eq + Hash, V: Clone + Default> {
+    /// Holds the key of the root node.
+    root_key: K,
+    /// Provides an indexing relationship between keys and `NodeIndex` instances that in turn index
+    /// into the directed acyclic graph (`Dag`).
+    index: HashMap<K, NodeIndex>,
+    /// Holds the directed acyclic graph of `SceneNode`s.
+    graph: Dag<SceneNode<K, V>, ()>,
 }
 
-impl<C: ComponentTrait + Clone + Default> Default for SceneGraph<C> {
+impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Default for SceneGraph<K, V> {
+    /// Creates a default `SceneGraph` with just a root node.
     fn default() -> Self {
-        let root_node: SceneNode<C> = Default::default();
-        let root_entity = root_node.entity.clone();
+        let root_node: SceneNode<K, V> = Default::default();
+        let root_key = root_node.key.clone();
 
         let mut dag = Dag::new();
         let root_idx = dag.add_node(root_node);
 
         let mut index = HashMap::new();
-        index.insert(root_entity.clone(), root_idx);
+        index.insert(root_key.clone(), root_idx);
 
         SceneGraph {
-            root_entity: root_entity,
+            root_key: root_key,
             index: index,
             graph: dag,
         }
     }
 }
 
-impl<C: ComponentTrait + Clone + Default> SceneGraph<C> {
+impl<K: Clone + Default + Eq + Hash, V: Clone + Default> SceneGraph<K, V> {
     /// Creates a new `SceneGraph`.
     pub fn new() -> Self {
         Default::default()
     }
-    /// Deletes the `SceneNode` defined by the specified `Entity`.
-    pub fn remove(&mut self, entity: &Entity) -> Result<(), GraphError> {
-        if entity == &self.root_entity {
+    /// Deletes the `SceneNode` defined by the specified key.
+    pub fn remove(&mut self, key: &K) -> Result<(), GraphError> {
+        if key == &self.root_key {
             return Err(GraphError::CannotRemoveRootNode);
         }
 
-        let node_idx = self.get_index(entity)?;
+        let node_idx = self.get_index(key)?;
         self.graph.remove_node(node_idx);
         self.rebuild_index();
         Ok(())
     }
     /// Inserts a `SceneNode` as child of the root `SceneNode`.
-    pub fn insert(&mut self, child: Entity, data: C) -> Result<(), GraphError> {
-        let ent = self.root_entity.clone();
-        self.insert_child(&ent, child, data)
+    pub fn insert(&mut self, child: K, data: V) -> Result<(), GraphError> {
+        let parent = self.root_key.clone();
+        self.insert_child(&parent, child, data)
     }
-    /// Inserts a `SceneNode` as child of another `SceneNode` defined by an `Entity`.
-    pub fn insert_child(&mut self, parent: &Entity, child: Entity, data: C) -> Result<(), GraphError> {
+    /// Inserts a `SceneNode` as child of another `SceneNode` identified by its key.
+    pub fn insert_child(&mut self, parent: &K, child: K, data: V) -> Result<(), GraphError> {
         let parent_idx = self.get_index(parent)?;
         let child_node = SceneNode::new(child.clone(), data);
         let (_, child_idx) = self.graph.add_child(parent_idx, (), child_node);
         self.index.insert(child, child_idx);
         Ok(())
     }
-    /// Returns `true` if the specified `Entity` is represented within the `SceneGraph`.
-    pub fn has(&self, entity: &Entity) -> bool {
-        self.get_index(entity).is_ok()
+    /// Returns `true` if the specified key is represented within the `SceneGraph`.
+    pub fn has(&self, key: &K) -> bool {
+        self.index.contains_key(key)
     }
-    /// Recursively updates the entire `SceneGraph` given the `Assembly` and a component merger
-    /// closure. Refer to `SceneNode.update` for more information.
-    pub fn update<F>(&mut self, entities: &Assembly, merge_fn: &F) -> Result<(), GraphError> where for<'r> F: Fn(&'r C, &'r C) -> C {
+    /// Recursively updates the entire `SceneGraph`. Refer to `SceneNode.update` for more
+    /// information.
+    pub fn update<F>(&mut self, merge_fn: &F) -> Result<(), GraphError>
+            where for<'r> F: Fn(&'r K, &'r V) -> V {
+
         // Obtain the index of the root node.
-        let root_idx = self.get_index(&self.root_entity)?;
+        let root_idx = self.get_index(&self.root_key)?;
 
         // Recursively update all children of the root node. Never update the root node itself,
         // because it's invisible to the outside and should not be represented in the assembly.
-        update_recursive(&mut self.graph, root_idx, entities, merge_fn)
+        update_recursive(&mut self.graph, root_idx, merge_fn)
     }
-    /// Borrows the component from the `SceneNode` defined by the specified `Entity`.
-    pub fn borrow(&self, entity: &Entity) -> Result<&C, GraphError> {
-        let node_idx = self.get_index(entity)?;
+    /// Borrows the data from the `SceneNode` identified by the specified key.
+    pub fn borrow(&self, key: &K) -> Result<&V, GraphError> {
+        let node_idx = self.get_index(key)?;
         self.graph.node_weight(node_idx)
-            .map(|n| &n.component)
-            .ok_or_else(|| GraphError::EntityNotFound(entity.clone()))
+            .map(|n| &n.data)
+            .ok_or(GraphError::KeyNotFound)
     }
-    /// Mutably borrows the component from the `SceneNode` defined by the specified `Entity`.
-    pub fn borrow_mut(&mut self, entity: &Entity) -> Result<&mut C, GraphError> {
-        let node_idx = self.get_index(entity)?;
+    /// Mutably borrows the data from the `SceneNode` defined by the specified key.
+    pub fn borrow_mut(&mut self, key: &K) -> Result<&mut V, GraphError> {
+        let node_idx = self.get_index(key)?;
         self.graph.node_weight_mut(node_idx)
-            .map(|n| &mut n.component)
-            .ok_or_else(|| GraphError::EntityNotFound(entity.clone()))
+            .map(|n| &mut n.data)
+            .ok_or(GraphError::KeyNotFound)
     }
     /// Returns an iterator over all `SceneNode`s in the `SceneGraph`.
-    pub fn iter(&self) -> GraphIter<C> {
+    pub fn iter(&self) -> GraphIter<K, V> {
         GraphIter::new(self.graph.raw_nodes())
     }
-    /// Returns the `NodeIndex` for a particular `Entity`.
-    fn get_index(&self, entity: &Entity) -> Result<NodeIndex, GraphError> {
-        self.index.get(entity)
+    /// Returns the `NodeIndex` for a particular key.
+    fn get_index(&self, key: &K) -> Result<NodeIndex, GraphError> {
+        self.index.get(key)
             .cloned()
-            .ok_or_else(|| GraphError::EntityNotFound(entity.clone()))
+            .ok_or(GraphError::KeyNotFound)
     }
-    /// Rebuilds the `Entity`-`SceneNode` index from the underlying `Graph`.
+    /// Rebuilds the `Key`-`SceneNode` index from the underlying `Graph`.
     fn rebuild_index(&mut self) {
         self.index.clear();
         for idx in self.graph.graph().node_indices() {
             let node = self.graph.node_weight(idx).unwrap_or_else(|| unreachable!());
-            self.index.insert(node.entity.clone(), idx);
+            self.index.insert(node.key.clone(), idx);
         }
     }
 }
 
-fn update_single<C, F>(graph: &mut Dag<SceneNode<C>, ()>, node_idx: NodeIndex, parent: Option<&C>, entities: &Assembly, merge_fn: &F) -> Result<(), GraphError> where C: ComponentTrait + Clone + Default, for<'r> F: Fn(&'r C, &'r C) -> C {
-    // Obtain a mutable reference to the current node.
-    graph.node_weight_mut(node_idx)
-        .ok_or(GraphError::NodeNotFound)
-        .and_then(|n| n.update(entities, parent, merge_fn))
-}
-
-fn update_recursive<C, F>(graph: &mut Dag<SceneNode<C>, ()>, parent_idx: NodeIndex, entities: &Assembly, merge_fn: &F) -> Result<(), GraphError> where C: ComponentTrait + Clone + Default, for<'r> F: Fn(&'r C, &'r C) -> C {
-    // Obtain a reference to the parent component.
-    let parent = graph.node_weight(parent_idx)
-        .map(|n| n.component.clone())
-        .ok_or(GraphError::NodeNotFound)?;
-
-    // Update all children of the current node.
-    let mut child_walker = graph.children(parent_idx);
-    while let Some(idx) = child_walker.next_node(graph) {
-        // Update each child.
-        update_single(graph, idx, Some(&parent), entities, merge_fn)?;
-
-        // Update each child's children.
-        update_recursive(graph, idx, entities, merge_fn)?;
-    }
-
-    Ok(())
-}
-
-/// Each `SceneNode` contains an `Entity` and the corresponding topological component.
+/// Each `SceneNode` consists of an identifying key and the associated data.
 #[derive(Default, Clone)]
-pub struct SceneNode<C: ComponentTrait + Clone + Default> {
-    /// The `Entity` referenced by the current `SceneNode`.
-    pub entity: Entity,
-    /// The component of the above `Entity` that has a hierarchical or topological dependency.
-    pub component: C,
+pub struct SceneNode<K, V: Clone + Default> {
+    /// Provides access to the identifying key.
+    pub key: K,
+    /// Provides access to the hierarchical data.
+    pub data: V,
 }
 
-impl<C: ComponentTrait + Clone + Default> SceneNode<C> {
+impl<K, V: Clone + Default> SceneNode<K, V> {
     /// Creates a new `SceneNode`.
-    pub fn new(entity: Entity, component: C) -> Self {
+    pub fn new(key: K, data: V) -> Self {
         SceneNode {
-            entity: entity,
-            component: component,
+            key: key,
+            data: data,
         }
     }
-    /// Updates the topological component of the `SceneNode` with respect to the local component stored
-    /// in the `Assembly`, the parent `SceneNode`'s component, and a merge closure that returns a new
-    /// joint component given two input components of the same type. More specifically, the
-    /// `merge_fn` parameter requires a closure that receives a reference to the parent node's
-    /// topological component and a reference to the current node's local component, and must
-    /// provide a new topological component for the current node.
-    pub fn update<F>(&mut self, entities: &Assembly, parent_component: Option<&C>, merge_fn: &F) -> Result<(), GraphError> where for<'r> F: Fn(&'r C, &'r C) -> C {
-        let cc = entities.borrow_component::<C>(&self.entity)?;
-        self.component = match parent_component {
-            Some(pc) => merge_fn(pc, cc),
-            None => cc.clone(),
-        };
-        Ok(())
+    /// Given the parent node's data, update the current node's data with the supplied closure.
+    /// This allows users to establish hierarchical relationships between instances of a type.
+    /// As arguments, the closure will receive the current node's key and a reference to its parent
+    /// node's data.
+    pub fn update<F>(&mut self, parent_data: &V, merge_fn: &F) where for<'r> F: Fn(&'r K, &'r V) -> V {
+        self.data = merge_fn(&self.key, parent_data)
     }
 }
 
 /// Provides the ability to iterate over all `SceneNode`s stored within a `SceneGraph`.
-pub struct GraphIter<'a, C: ComponentTrait + Clone + Default> {
+pub struct GraphIter<'a, K: 'a, V: 'a + Clone + Default> {
     index: usize,
-    data: &'a [Node<SceneNode<C>, DefaultIx>],
+    data: &'a [Node<SceneNode<K, V>, DefaultIx>],
 }
 
-impl<'a, C: ComponentTrait + Clone + Default> GraphIter<'a, C> {
+impl<'a, K: 'a, V: 'a + Clone + Default> GraphIter<'a, K, V> {
     /// Creates a new `SceneGraph`.
-    pub fn new(data: &'a [Node<SceneNode<C>, DefaultIx>]) -> Self {
+    pub fn new(data: &'a [Node<SceneNode<K, V>, DefaultIx>]) -> Self {
         GraphIter {
             index: 0,
             data: data,
@@ -180,8 +156,8 @@ impl<'a, C: ComponentTrait + Clone + Default> GraphIter<'a, C> {
     }
 }
 
-impl<'a, C: ComponentTrait + Clone + Default> Iterator for GraphIter<'a, C> {
-    type Item = &'a SceneNode<C>;
+impl<'a, K: 'a, V: 'a + Clone + Default> Iterator for GraphIter<'a, K, V> {
+    type Item = &'a SceneNode<K, V>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.index < self.data.len() {
@@ -194,100 +170,46 @@ impl<'a, C: ComponentTrait + Clone + Default> Iterator for GraphIter<'a, C> {
     }
 }
 
+fn update_single<K, V, F>(graph: &mut Dag<SceneNode<K, V>, ()>, node_idx: NodeIndex, parent_data: &V, merge_fn: &F) -> Result<(), GraphError>
+        where V: Clone + Default,
+        for<'r> F: Fn(&'r K, &'r V) -> V {
+
+    // Obtain a mutable reference to the current node.
+    graph.node_weight_mut(node_idx)
+        .ok_or(GraphError::NodeNotFound)
+        .map(|n| n.update(parent_data, merge_fn))
+}
+
+fn update_recursive<K, V, F>(graph: &mut Dag<SceneNode<K, V>, ()>, parent_idx: NodeIndex, merge_fn: &F) -> Result<(), GraphError>
+        where V: Clone + Default,
+        for<'r> F: Fn(&'r K, &'r V) -> V {
+
+    // Obtain a reference to the parent data.
+    let parent_data = graph.node_weight(parent_idx)
+        .map(|n| n.data.clone())
+        .ok_or(GraphError::NodeNotFound)?;
+
+    // Update all children of the current node.
+    let mut child_walker = graph.children(parent_idx);
+    while let Some(idx) = child_walker.next_node(graph) {
+        // Update each child.
+        update_single(graph, idx, &parent_data, merge_fn)?;
+
+        // Update each child's children.
+        update_recursive(graph, idx, merge_fn)?;
+    }
+
+    Ok(())
+}
+
 #[derive(Debug, Fail)]
 pub enum GraphError {
-    #[fail(display = "The internal state of the scene graph is irreparably out of sync with the assembly: {}", _0)]
-    InconsistentState(#[cause] EcsError),
-    #[fail(display = "The entity '{:?}' was not found.", _0)]
-    EntityNotFound(Entity),
-    #[fail(display = "The entity '{:?}' was found more than once.", _0)]
-    MultipleEntitiesFound(Entity),
+    #[fail(display = "The key was not found.")]
+    KeyNotFound,
+    #[fail(display = "The key was found more than once.")]
+    MultipleKeysFound,
     #[fail(display = "The root node may not be removed.")]
     CannotRemoveRootNode,
     #[fail(display = "The specified node was not found.")]
     NodeNotFound,
-}
-
-impl From<EcsError> for GraphError {
-    fn from(value: EcsError) -> GraphError {
-        GraphError::InconsistentState(value)
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use std::ops::Add;
-    use super::*;
-
-    #[derive(Component, Default, Clone, Debug, PartialEq, Eq)]
-    struct TestComponent(u32);
-
-    impl<'a> Add<&'a TestComponent> for TestComponent {
-        type Output = TestComponent;
-
-        fn add(self, other: &'a TestComponent) -> Self::Output {
-            TestComponent(self.0 + other.0)
-        }
-    }
-
-    impl<'a> Add<Self> for &'a TestComponent {
-        type Output = TestComponent;
-
-        fn add(self, other: Self) -> Self::Output {
-            TestComponent(self.0 + other.0)
-        }
-    }
-
-    #[test]
-    fn test_scene_node() {
-        let mut assembly = Assembly::new();
-
-        let entity = assembly.create_entity();
-        let component = TestComponent(10);
-        let mut node = SceneNode::<TestComponent>::new(entity.clone(), component.clone());
-        assembly.add_component(&entity, component).unwrap();
-
-        node.update(&assembly, None, &|pc, cc| pc + cc).unwrap();
-    }
-
-    #[test]
-    fn test_scene_graph() {
-        let mut tree = SceneGraph::new();
-        let mut assembly = Assembly::new();
-
-        let entity_a = assembly.create_entity();
-        let component_a = TestComponent(1);
-        assembly.add_component(&entity_a, component_a.clone()).unwrap();
-
-        let entity_b = assembly.create_entity();
-        let component_b = TestComponent(10);
-        assembly.add_component(&entity_b, component_b.clone()).unwrap();
-
-        let entity_c = assembly.create_entity();
-        let component_c = TestComponent(20);
-        assembly.add_component(&entity_c, component_c.clone()).unwrap();
-
-        let entity_d = assembly.create_entity();
-        let component_d = TestComponent(100);
-        assembly.add_component(&entity_d, component_d.clone()).unwrap();
-
-        tree.insert(entity_a.clone(), component_a.clone()).unwrap();
-        tree.insert_child(&entity_a, entity_b.clone(), component_b.clone()).unwrap();
-        tree.insert_child(&entity_a, entity_c.clone(), component_c.clone()).unwrap();
-        tree.insert_child(&entity_b, entity_d.clone(), component_d.clone()).unwrap();
-
-        tree.update(&assembly, &|pc, cc| pc + cc).unwrap();
-
-        let result_a = tree.borrow(&entity_a);
-        assert!(result_a.is_ok() && *result_a.unwrap() == component_a);
-
-        let result_b = tree.borrow(&entity_b);
-        assert!(result_b.is_ok() && *result_b.unwrap() == &component_a + &component_b);
-
-        let result_c = tree.borrow(&entity_c);
-        assert!(result_c.is_ok() && *result_c.unwrap() == &component_a + &component_c);
-
-        let result_d = tree.borrow(&entity_d);
-        assert!(result_d.is_ok() && *result_d.unwrap() == &component_a + &component_b + &component_d);
-    }
 }
