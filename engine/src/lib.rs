@@ -48,5 +48,4 @@ pub use self::systems::event_interface::EventInterface;
 pub use self::systems::event_monitor::EventMonitor;
 pub use self::systems::renderer::Renderer;
 pub use self::systems::user_interface::UserInterface;
-pub use self::singletons::scene_graph::SceneNode;
 pub use self::orchestrator::Orchestrator;

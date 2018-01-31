@@ -6,7 +6,7 @@ use nalgebra;
 use nalgebra::{Point3, Vector3};
 use engine::{Orchestrator, EventMonitor, DebugConsole, DebugShell,
     Renderer, EventInterface, Model, Description, Mesh, UserInterface,
-    UiState, Common, SpeechBubble, Camera, SceneNode,
+    UiState, Common, SpeechBubble, Camera,
     BoundingVolume, Cursor, CursorController};
 
 pub fn run(resource_path: &Path, debugging: bool) {
@@ -90,7 +90,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let material = o.world.aux.factory.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
             let bounding_volume = BoundingVolume::from_mesh_aabb(&mesh).unwrap();
 
-            o.world.aux.scene_graph.insert(SceneNode::new(test_entity_a.clone(), model.clone())).unwrap();
+            o.world.aux.scene_graph.insert(test_entity_a.clone(), model.clone()).unwrap();
 
             o.world.add_component(&test_entity_a, d).unwrap();
             o.world.add_component(&test_entity_a, model).unwrap();
@@ -114,7 +114,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let material = o.world.aux.factory.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
             let bounding_volume = BoundingVolume::from_mesh_aabb(&mesh).unwrap();
 
-            o.world.aux.scene_graph.insert(SceneNode::new(test_entity_b.clone(), model.clone())).unwrap();
+            o.world.aux.scene_graph.insert(test_entity_b.clone(), model.clone()).unwrap();
 
             o.world.add_component(&test_entity_b, d).unwrap();
             o.world.add_component(&test_entity_b, model).unwrap();
@@ -138,7 +138,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let material = o.world.aux.factory.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
             let bounding_volume = BoundingVolume::from_mesh_aabb(&mesh).unwrap();
 
-            o.world.aux.scene_graph.insert(SceneNode::new(test_entity_c.clone(), model.clone())).unwrap();
+            o.world.aux.scene_graph.insert(test_entity_c.clone(), model.clone()).unwrap();
 
             o.world.add_component(&test_entity_c, d).unwrap();
             o.world.add_component(&test_entity_c, model).unwrap();

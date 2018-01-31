@@ -45,16 +45,16 @@ impl<C: ComponentTrait + Clone + Default> SceneGraph<C> {
         Ok(())
     }
     /// Inserts a `SceneNode` as child of the root `SceneNode`.
-    pub fn insert(&mut self, node: SceneNode<C>) -> Result<(), GraphError> {
+    pub fn insert(&mut self, child: Entity, data: C) -> Result<(), GraphError> {
         let ent = self.root_entity.clone();
-        self.insert_child(&ent, node)
+        self.insert_child(&ent, child, data)
     }
     /// Inserts a `SceneNode` as child of another `SceneNode` defined by an `Entity`.
-    pub fn insert_child(&mut self, entity: &Entity, node: SceneNode<C>) -> Result<(), GraphError> {
-        let node_idx = self.get_index(entity)?;
-        let new_entity = node.entity.clone();
-        let (_, nidx) = self.graph.add_child(node_idx, (), node);
-        self.index.insert(new_entity, nidx);
+    pub fn insert_child(&mut self, parent: &Entity, child: Entity, data: C) -> Result<(), GraphError> {
+        let parent_idx = self.get_index(parent)?;
+        let child_node = SceneNode::new(child.clone(), data);
+        let (_, child_idx) = self.graph.add_child(parent_idx, (), child_node);
+        self.index.insert(child, child_idx);
         Ok(())
     }
     /// Returns `true` if the specified `Entity` is represented within the `SceneGraph`.
@@ -252,33 +252,29 @@ mod test {
 
     #[test]
     fn test_scene_graph() {
+        let mut tree = SceneGraph::new();
         let mut assembly = Assembly::new();
 
         let entity_a = assembly.create_entity();
         let component_a = TestComponent(1);
         assembly.add_component(&entity_a, component_a.clone()).unwrap();
-        let node_a = SceneNode::<TestComponent>::new(entity_a.clone(), component_a.clone());
 
         let entity_b = assembly.create_entity();
         let component_b = TestComponent(10);
         assembly.add_component(&entity_b, component_b.clone()).unwrap();
-        let node_b = SceneNode::<TestComponent>::new(entity_b.clone(), component_b.clone());
 
         let entity_c = assembly.create_entity();
         let component_c = TestComponent(20);
         assembly.add_component(&entity_c, component_c.clone()).unwrap();
-        let node_c = SceneNode::<TestComponent>::new(entity_c.clone(), component_c.clone());
 
         let entity_d = assembly.create_entity();
         let component_d = TestComponent(100);
         assembly.add_component(&entity_d, component_d.clone()).unwrap();
-        let node_d = SceneNode::<TestComponent>::new(entity_d.clone(), component_d.clone());
 
-        let mut tree = SceneGraph::new(node_a);
-
-        tree.insert_child(&entity_a, node_b).unwrap();
-        tree.insert_child(&entity_a, node_c).unwrap();
-        tree.insert_child(&entity_b, node_d).unwrap();
+        tree.insert(entity_a.clone(), component_a.clone()).unwrap();
+        tree.insert_child(&entity_a, entity_b.clone(), component_b.clone()).unwrap();
+        tree.insert_child(&entity_a, entity_c.clone(), component_c.clone()).unwrap();
+        tree.insert_child(&entity_b, entity_d.clone(), component_d.clone()).unwrap();
 
         tree.update(&assembly, &|pc, cc| pc + cc).unwrap();
 
