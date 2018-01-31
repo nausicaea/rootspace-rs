@@ -26,7 +26,6 @@ extern crate ecs_derive;
 
 pub mod event;
 pub mod singletons;
-pub mod scene_graph;
 pub mod orchestrator;
 pub mod common;
 pub mod components;
@@ -49,5 +48,5 @@ pub use self::systems::event_interface::EventInterface;
 pub use self::systems::event_monitor::EventMonitor;
 pub use self::systems::renderer::Renderer;
 pub use self::systems::user_interface::UserInterface;
-pub use self::scene_graph::{SceneGraph, SceneNode};
+pub use self::singletons::scene_graph::SceneNode;
 pub use self::orchestrator::Orchestrator;

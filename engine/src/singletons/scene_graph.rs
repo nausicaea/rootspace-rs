@@ -3,98 +3,15 @@ use daggy::{Dag, NodeIndex, Walker};
 use daggy::petgraph::graph::{Node, DefaultIx};
 use ecs::{Entity, Assembly, ComponentTrait, EcsError};
 
-#[derive(Debug, Fail)]
-pub enum GraphError {
-    #[fail(display = "The internal state of the scene graph is irreparably out of sync with the assembly: {}", _0)]
-    InconsistentState(#[cause] EcsError),
-    #[fail(display = "The entity '{:?}' was not found.", _0)]
-    EntityNotFound(Entity),
-    #[fail(display = "The entity '{:?}' was found more than once.", _0)]
-    MultipleEntitiesFound(Entity),
-    #[fail(display = "The root node may not be removed.")]
-    CannotRemoveRootNode,
-    #[fail(display = "The specified node was not found.")]
-    NodeNotFound,
-}
-
-impl From<EcsError> for GraphError {
-    fn from(value: EcsError) -> GraphError {
-        GraphError::InconsistentState(value)
-    }
-}
-
-/// Each `SceneNode` contains an `Entity` and the corresponding topological component.
-#[derive(Clone)]
-pub struct SceneNode<C: ComponentTrait + Clone> {
-    /// The `Entity` referenced by the current `SceneNode`.
-    pub entity: Entity,
-    /// The component of the above `Entity` that has a hierarchical or topological dependency.
-    pub component: C,
-}
-
-impl<C: ComponentTrait + Clone> SceneNode<C> {
-    /// Creates a new `SceneNode`.
-    pub fn new(entity: Entity, component: C) -> Self {
-        SceneNode {
-            entity: entity,
-            component: component,
-        }
-    }
-    /// Updates the topological component of the `SceneNode` with respect to the local component stored
-    /// in the `Assembly`, the parent `SceneNode`'s component, and a merge closure that returns a new
-    /// joint component given two input components of the same type. More specifically, the
-    /// `merge_fn` parameter requires a closure that receives a reference to the parent node's
-    /// topological component and a reference to the current node's local component, and must
-    /// provide a new topological component for the current node.
-    pub fn update<F>(&mut self, entities: &Assembly, parent_component: Option<&C>, merge_fn: &F) -> Result<(), GraphError> where for<'r> F: Fn(&'r C, &'r C) -> C {
-        let cc = entities.borrow_component::<C>(&self.entity)?;
-        self.component = match parent_component {
-            Some(pc) => merge_fn(pc, cc),
-            None => cc.clone(),
-        };
-        Ok(())
-    }
-}
-
-/// Provides the ability to iterate over all `SceneNode`s stored within a `SceneGraph`.
-pub struct GraphIter<'a, C: ComponentTrait + Clone> {
-    index: usize,
-    data: &'a [Node<SceneNode<C>, DefaultIx>],
-}
-
-impl<'a, C: ComponentTrait + Clone> GraphIter<'a, C> {
-    /// Creates a new `SceneGraph`.
-    pub fn new(data: &'a [Node<SceneNode<C>, DefaultIx>]) -> Self {
-        GraphIter {
-            index: 0,
-            data: data,
-        }
-    }
-}
-
-impl<'a, C: ComponentTrait + Clone> Iterator for GraphIter<'a, C> {
-    type Item = &'a SceneNode<C>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.index < self.data.len() {
-            let idx = self.index;
-            self.index += 1;
-            Some(&self.data[idx].weight)
-        } else {
-            None
-        }
-    }
-}
-
-pub struct SceneGraph<C: ComponentTrait + Clone> {
+pub struct SceneGraph<C: ComponentTrait + Clone + Default> {
     root_entity: Entity,
     index: HashMap<Entity, NodeIndex>,
     graph: Dag<SceneNode<C>, ()>,
 }
 
-impl<C: ComponentTrait + Clone> SceneGraph<C> {
-    /// Creates a new `SceneGraph`.
-    pub fn new(root_node: SceneNode<C>) -> Self {
+impl<C: ComponentTrait + Clone + Default> Default for SceneGraph<C> {
+    fn default() -> Self {
+        let root_node: SceneNode<C> = Default::default();
         let root_entity = root_node.entity.clone();
 
         let mut dag = Dag::new();
@@ -108,6 +25,13 @@ impl<C: ComponentTrait + Clone> SceneGraph<C> {
             index: index,
             graph: dag,
         }
+    }
+}
+
+impl<C: ComponentTrait + Clone + Default> SceneGraph<C> {
+    /// Creates a new `SceneGraph`.
+    pub fn new() -> Self {
+        Default::default()
     }
     /// Deletes the `SceneNode` defined by the specified `Entity`.
     pub fn remove(&mut self, entity: &Entity) -> Result<(), GraphError> {
@@ -143,10 +67,8 @@ impl<C: ComponentTrait + Clone> SceneGraph<C> {
         // Obtain the index of the root node.
         let root_idx = self.get_index(&self.root_entity)?;
 
-        // Update the root node.
-        update_single(&mut self.graph, root_idx, None, entities, merge_fn)?;
-
-        // Recursively update all children.
+        // Recursively update all children of the root node. Never update the root node itself,
+        // because it's invisible to the outside and should not be represented in the assembly.
         update_recursive(&mut self.graph, root_idx, entities, merge_fn)
     }
     /// Borrows the component from the `SceneNode` defined by the specified `Entity`.
@@ -183,14 +105,14 @@ impl<C: ComponentTrait + Clone> SceneGraph<C> {
     }
 }
 
-fn update_single<C, F>(graph: &mut Dag<SceneNode<C>, ()>, node_idx: NodeIndex, parent: Option<&C>, entities: &Assembly, merge_fn: &F) -> Result<(), GraphError> where C: ComponentTrait + Clone, for<'r> F: Fn(&'r C, &'r C) -> C {
+fn update_single<C, F>(graph: &mut Dag<SceneNode<C>, ()>, node_idx: NodeIndex, parent: Option<&C>, entities: &Assembly, merge_fn: &F) -> Result<(), GraphError> where C: ComponentTrait + Clone + Default, for<'r> F: Fn(&'r C, &'r C) -> C {
     // Obtain a mutable reference to the current node.
     graph.node_weight_mut(node_idx)
         .ok_or(GraphError::NodeNotFound)
         .and_then(|n| n.update(entities, parent, merge_fn))
 }
 
-fn update_recursive<C, F>(graph: &mut Dag<SceneNode<C>, ()>, parent_idx: NodeIndex, entities: &Assembly, merge_fn: &F) -> Result<(), GraphError> where C: ComponentTrait + Clone, for<'r> F: Fn(&'r C, &'r C) -> C {
+fn update_recursive<C, F>(graph: &mut Dag<SceneNode<C>, ()>, parent_idx: NodeIndex, entities: &Assembly, merge_fn: &F) -> Result<(), GraphError> where C: ComponentTrait + Clone + Default, for<'r> F: Fn(&'r C, &'r C) -> C {
     // Obtain a reference to the parent component.
     let parent = graph.node_weight(parent_idx)
         .map(|n| n.component.clone())
@@ -209,15 +131,96 @@ fn update_recursive<C, F>(graph: &mut Dag<SceneNode<C>, ()>, parent_idx: NodeInd
     Ok(())
 }
 
+/// Each `SceneNode` contains an `Entity` and the corresponding topological component.
+#[derive(Default, Clone)]
+pub struct SceneNode<C: ComponentTrait + Clone + Default> {
+    /// The `Entity` referenced by the current `SceneNode`.
+    pub entity: Entity,
+    /// The component of the above `Entity` that has a hierarchical or topological dependency.
+    pub component: C,
+}
+
+impl<C: ComponentTrait + Clone + Default> SceneNode<C> {
+    /// Creates a new `SceneNode`.
+    pub fn new(entity: Entity, component: C) -> Self {
+        SceneNode {
+            entity: entity,
+            component: component,
+        }
+    }
+    /// Updates the topological component of the `SceneNode` with respect to the local component stored
+    /// in the `Assembly`, the parent `SceneNode`'s component, and a merge closure that returns a new
+    /// joint component given two input components of the same type. More specifically, the
+    /// `merge_fn` parameter requires a closure that receives a reference to the parent node's
+    /// topological component and a reference to the current node's local component, and must
+    /// provide a new topological component for the current node.
+    pub fn update<F>(&mut self, entities: &Assembly, parent_component: Option<&C>, merge_fn: &F) -> Result<(), GraphError> where for<'r> F: Fn(&'r C, &'r C) -> C {
+        let cc = entities.borrow_component::<C>(&self.entity)?;
+        self.component = match parent_component {
+            Some(pc) => merge_fn(pc, cc),
+            None => cc.clone(),
+        };
+        Ok(())
+    }
+}
+
+/// Provides the ability to iterate over all `SceneNode`s stored within a `SceneGraph`.
+pub struct GraphIter<'a, C: ComponentTrait + Clone + Default> {
+    index: usize,
+    data: &'a [Node<SceneNode<C>, DefaultIx>],
+}
+
+impl<'a, C: ComponentTrait + Clone + Default> GraphIter<'a, C> {
+    /// Creates a new `SceneGraph`.
+    pub fn new(data: &'a [Node<SceneNode<C>, DefaultIx>]) -> Self {
+        GraphIter {
+            index: 0,
+            data: data,
+        }
+    }
+}
+
+impl<'a, C: ComponentTrait + Clone + Default> Iterator for GraphIter<'a, C> {
+    type Item = &'a SceneNode<C>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.data.len() {
+            let idx = self.index;
+            self.index += 1;
+            Some(&self.data[idx].weight)
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Debug, Fail)]
+pub enum GraphError {
+    #[fail(display = "The internal state of the scene graph is irreparably out of sync with the assembly: {}", _0)]
+    InconsistentState(#[cause] EcsError),
+    #[fail(display = "The entity '{:?}' was not found.", _0)]
+    EntityNotFound(Entity),
+    #[fail(display = "The entity '{:?}' was found more than once.", _0)]
+    MultipleEntitiesFound(Entity),
+    #[fail(display = "The root node may not be removed.")]
+    CannotRemoveRootNode,
+    #[fail(display = "The specified node was not found.")]
+    NodeNotFound,
+}
+
+impl From<EcsError> for GraphError {
+    fn from(value: EcsError) -> GraphError {
+        GraphError::InconsistentState(value)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use std::ops::Add;
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Component, Default, Clone, Debug, PartialEq, Eq)]
     struct TestComponent(u32);
-
-    impl ComponentTrait for TestComponent {}
 
     impl<'a> Add<&'a TestComponent> for TestComponent {
         type Output = TestComponent;

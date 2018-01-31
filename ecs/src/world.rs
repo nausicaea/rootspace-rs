@@ -104,7 +104,7 @@ impl<E: EventTrait, A: Default> World<E, A> {
 
             for system in &mut self.systems {
                 if LoopStage::Render.match_filter(system.get_loop_stage_filter()) {
-                    if let Some(e) = system.render(&self.assembly, time, delta_time) {
+                    if let Some(e) = system.render(&self.assembly, &mut self.aux, time, delta_time) {
                         events.push(e);
                     }
                 }

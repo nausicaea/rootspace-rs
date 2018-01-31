@@ -6,9 +6,8 @@ use glium::backend::glutin::DisplayCreationError;
 use glium::glutin::{Api, GlRequest, GlProfile, EventsLoop, WindowBuilder, ContextBuilder};
 use ecs::{LoopStageFlag, SystemTrait, Assembly};
 use event::{EngineEventFlag, EngineEvent};
-use scene_graph::SceneGraph;
+use singletons::Singletons;
 use components::camera::Camera;
-use components::model::Model;
 use components::mesh::Mesh;
 use components::material::Material;
 use common::uniforms::Uniforms;
@@ -20,9 +19,6 @@ use common::ui_uniforms::UiUniforms;
 pub struct Renderer {
     /// Provides access to the `Display`.
     pub display: Display,
-    /// Provides access to the `SceneGraph` for `Entities` with a `Model` component (i.e. a
-    /// location in 3-space).
-    pub scene_graph: SceneGraph<Model>,
     ready: bool,
     clear_color: (f32, f32, f32, f32),
     draw_params: DrawParameters<'static>,
@@ -30,7 +26,7 @@ pub struct Renderer {
 
 impl Renderer {
     /// Creates a new instance of `Renderer`.
-    pub fn new(events_loop: &EventsLoop, scene_graph: SceneGraph<Model>, title: &str, dimensions: &[u32; 2], vsync: bool, msaa: u16, clear_color: &[f32; 4]) -> Result<Self, RendererError> {
+    pub fn new(events_loop: &EventsLoop, title: &str, dimensions: &[u32; 2], vsync: bool, msaa: u16, clear_color: &[f32; 4]) -> Result<Self, RendererError> {
         let window = WindowBuilder::new()
             .with_title(title)
             .with_dimensions(dimensions[0], dimensions[1]);
@@ -62,16 +58,15 @@ impl Renderer {
 
         Ok(Renderer {
             display: display,
-            scene_graph: scene_graph,
             ready: false,
             clear_color: (clear_color[0], clear_color[1], clear_color[2], clear_color[3]),
             draw_params: draw_params,
         })
     }
-    fn render_entities(&self, entities: &Assembly, target: &mut Frame, params: &DrawParameters) {
+    fn render_entities(&self, entities: &Assembly, aux: &Singletons, target: &mut Frame, params: &DrawParameters) {
         entities.rs1::<Camera>()
             .map(|(_, c)| {
-                for node in self.scene_graph.iter() {
+                for node in aux.scene_graph.iter() {
                     if let Ok(mesh) = entities.borrow_component::<Mesh>(&node.entity) {
                         if let Ok(material) = entities.borrow_component::<Material>(&node.entity) {
                             let uniforms = Uniforms {
@@ -106,7 +101,7 @@ impl Renderer {
     }
 }
 
-impl<A> SystemTrait<EngineEvent, A> for Renderer {
+impl SystemTrait<EngineEvent, Singletons> for Renderer {
     /// The `Renderer` depends on the presence of exactly one `Camera` component.
     fn verify_requirements(&self, entities: &Assembly) -> bool {
         entities.count1::<Camera>() == 1
@@ -127,7 +122,7 @@ impl<A> SystemTrait<EngineEvent, A> for Renderer {
     /// Once the `Ready` event has been received, the `Renderer` completes its initialization and
     /// emits a `RendererReady` event. Upon receiving a `ResizeWindow` event, the `Camera`
     /// component is updated.
-    fn handle_event(&mut self, entities: &mut Assembly, _: &mut A, event: &EngineEvent) -> (Option<EngineEvent>, Option<EngineEvent>) {
+    fn handle_event(&mut self, entities: &mut Assembly, _: &mut Singletons, event: &EngineEvent) -> (Option<EngineEvent>, Option<EngineEvent>) {
         match *event {
             EngineEvent::Ready => {
                 self.ready = true;
@@ -145,9 +140,9 @@ impl<A> SystemTrait<EngineEvent, A> for Renderer {
     /// First updates the `SceneGraph` to receive accurate and current hierarchical model data.
     /// Subsequently renders the `Entity`s to the frame, followed by the user interface state as
     /// defined in `UiState`.
-    fn render(&mut self, entities: &Assembly, _: &Duration, _: &Duration) -> Option<EngineEvent> {
+    fn render(&mut self, entities: &Assembly, aux: &mut Singletons, _: &Duration, _: &Duration) -> Option<EngineEvent> {
         // Update the scene graph.
-        self.scene_graph.update(entities, &|pc, cc| pc * cc)
+        aux.scene_graph.update(entities, &|pc, cc| pc * cc)
             .expect("Unable to update the scene graph");
 
         // Create the current frame.
@@ -155,7 +150,7 @@ impl<A> SystemTrait<EngineEvent, A> for Renderer {
         target.clear_color_and_depth(self.clear_color, 1.0);
 
         // Render all entities.
-        self.render_entities(entities, &mut target, &self.draw_params);
+        self.render_entities(entities, aux, &mut target, &self.draw_params);
 
         // Render the user interface.
         self.render_user_interface(entities, &mut target, &self.draw_params);

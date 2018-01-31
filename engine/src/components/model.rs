@@ -11,6 +11,14 @@ pub struct Model {
     inner: Affine3<f32>,
 }
 
+impl Default for Model {
+    fn default() -> Self {
+        Model {
+            inner: Affine3::identity(),
+        }
+    }
+}
+
 impl Model {
     /// Creates a new `Model` component from a translation and axis-angle vector.
     pub fn new(translation: Vector3<f32>, axisangle: Vector3<f32>, scale: Vector3<f32>) -> Self {

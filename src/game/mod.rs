@@ -6,7 +6,7 @@ use nalgebra;
 use nalgebra::{Point3, Vector3};
 use engine::{Orchestrator, EventMonitor, DebugConsole, DebugShell,
     Renderer, EventInterface, Model, Description, Mesh, UserInterface,
-    UiState, Common, SpeechBubble, SceneGraph, SceneNode, Camera,
+    UiState, Common, SpeechBubble, Camera, SceneNode,
     BoundingVolume, Cursor, CursorController};
 
 pub fn run(resource_path: &Path, debugging: bool) {
@@ -23,20 +23,10 @@ pub fn run(resource_path: &Path, debugging: bool) {
     // Create the engine instance and run it.
     let mut orchestrator = Orchestrator::new(resource_path, delta_time, max_frame_time, debugging);
     orchestrator.run(move |o| {
-        // Create the root entity.
-        let scene = o.world.create_entity();
-        let scene_description = Description::new("scene");
-        let scene_model = Model::identity();
-
         // Create the renderer (and dependencies).
-        let scene_graph = SceneGraph::new(SceneNode::new(scene.clone(), scene_model.clone()));
         let event_interface = EventInterface::new();
-        let mut renderer = Renderer::new(&event_interface.events_loop, scene_graph, &title, &dimensions, vsync, msaa, &clear_color)
+        let renderer = Renderer::new(&event_interface.events_loop, &title, &dimensions, vsync, msaa, &clear_color)
             .unwrap();
-
-        // Register the scene entity.
-        o.world.add_component(&scene, scene_description).unwrap();
-        o.world.add_component(&scene, scene_model).unwrap();
 
         // Assemble the camera entity.
         {
@@ -100,7 +90,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let material = o.world.aux.factory.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
             let bounding_volume = BoundingVolume::from_mesh_aabb(&mesh).unwrap();
 
-            renderer.scene_graph.insert(SceneNode::new(test_entity_a.clone(), model.clone())).unwrap();
+            o.world.aux.scene_graph.insert(SceneNode::new(test_entity_a.clone(), model.clone())).unwrap();
 
             o.world.add_component(&test_entity_a, d).unwrap();
             o.world.add_component(&test_entity_a, model).unwrap();
@@ -124,7 +114,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let material = o.world.aux.factory.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
             let bounding_volume = BoundingVolume::from_mesh_aabb(&mesh).unwrap();
 
-            renderer.scene_graph.insert(SceneNode::new(test_entity_b.clone(), model.clone())).unwrap();
+            o.world.aux.scene_graph.insert(SceneNode::new(test_entity_b.clone(), model.clone())).unwrap();
 
             o.world.add_component(&test_entity_b, d).unwrap();
             o.world.add_component(&test_entity_b, model).unwrap();
@@ -148,7 +138,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let material = o.world.aux.factory.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
             let bounding_volume = BoundingVolume::from_mesh_aabb(&mesh).unwrap();
 
-            renderer.scene_graph.insert(SceneNode::new(test_entity_c.clone(), model.clone())).unwrap();
+            o.world.aux.scene_graph.insert(SceneNode::new(test_entity_c.clone(), model.clone())).unwrap();
 
             o.world.add_component(&test_entity_c, d).unwrap();
             o.world.add_component(&test_entity_c, model).unwrap();
