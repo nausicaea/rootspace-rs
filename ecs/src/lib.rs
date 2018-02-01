@@ -12,6 +12,8 @@ extern crate failure_derive;
 #[macro_use]
 extern crate bitflags;
 
+#[macro_use]
+mod impl_macros;
 mod error;
 mod event;
 mod loop_stage;
