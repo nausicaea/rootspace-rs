@@ -1,7 +1,6 @@
 use std::time::{Instant, Duration};
 use glium::Display;
-use nalgebra;
-use nalgebra::{Point2, Point3, Vector2, Vector3};
+use nalgebra::{Point2, Point3, Vector2, Vector3, zero};
 use rusttype::gpu_cache::CacheWriteErr;
 use uuid::Uuid;
 use ecs::{LoopStageFlag, SystemTrait, Assembly, EcsError};
@@ -74,9 +73,9 @@ impl UserInterface {
         let text_center = Vector2::new(text_dims_ndc.x - rect_dims_ndc.x, rect_dims_ndc.y - text_dims_ndc.y) / 2.0 + Vector2::new(margin_left, -margin_top);
 
         // Create the model matrices from the above values.
-        let element_model = Model::new(Vector3::new(element_center.x, element_center.y, -0.98), nalgebra::zero(), Vector3::new(1.0, 1.0, 1.0));
-        let text_model = Model::new(Vector3::new(text_center.x, text_center.y, -0.01), nalgebra::zero(), Vector3::new(1.0, 1.0, 1.0));
-        let rect_model = Model::new(nalgebra::zero(), nalgebra::zero(), Vector3::new(rect_dims_ndc.x, rect_dims_ndc.y, 1.0));
+        let element_model = Model::new(Vector3::new(element_center.x, element_center.y, -0.98), zero(), Vector3::new(1.0, 1.0, 1.0));
+        let text_model = Model::new(Vector3::new(text_center.x, text_center.y, -0.01), zero(), Vector3::new(1.0, 1.0, 1.0));
+        let rect_model = Model::new(zero(), zero(), Vector3::new(rect_dims_ndc.x, rect_dims_ndc.y, 1.0));
 
         // Create the text mesh.
         let text_mesh = Mesh::new_text(&self.display, &px_dims, 0.0, &ui_state.font_cache_cpu, &glyphs, &text_dims_ndc.into())?;
