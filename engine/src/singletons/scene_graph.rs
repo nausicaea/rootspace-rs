@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::hash::Hash;
 use daggy::{Dag, NodeIndex, Walker};
 use daggy::petgraph::graph::{Node, DefaultIx};
+use daggy::petgraph::visit::Bfs;
 
 /// Given a set of identifying keys and corresponding data, `SceneGraph` allows users to establish
 /// hierarchical relationships between individual instances of the data type.
@@ -68,7 +69,7 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> SceneGraph<K, V> {
     pub fn has(&self, key: &K) -> bool {
         self.index.contains_key(key)
     }
-    /// Recursively updates the entire `SceneGraph`. Refer to `SceneNode.update` for more
+    /// Updates each node in breadth first search order. Refer to `SceneNode.update` for more
     /// information.
     pub fn update<F>(&mut self, merge_fn: &F) -> Result<(), GraphError>
             where for<'r> F: Fn(&'r K, &'r V) -> V {
@@ -76,9 +77,22 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> SceneGraph<K, V> {
         // Obtain the index of the root node.
         let root_idx = self.get_index(&self.root_key)?;
 
-        // Recursively update all children of the root node. Never update the root node itself,
-        // because it's invisible to the outside and should not be represented in the assembly.
-        update_recursive(&mut self.graph, root_idx, merge_fn)
+        // Traverse the tree in breadth-first search order and update each node.
+        let mut bfs = Bfs::new(self.graph.graph(), root_idx);
+        while let Some(nidx) = bfs.next(self.graph.graph()) {
+            let mut parents = self.graph.parents(nidx);
+            if let Some(parent_idx) = parents.next_node(&self.graph) {
+                let parent_data = self.graph.node_weight(parent_idx)
+                    .map(|n| n.data.clone())
+                    .ok_or(GraphError::NodeNotFound)?;
+
+                self.graph.node_weight_mut(nidx)
+                    .map(|n| n.update(&parent_data, merge_fn))
+                    .ok_or(GraphError::NodeNotFound)?;
+            }
+        }
+
+        Ok(())
     }
     /// Borrows the data from the `SceneNode` identified by the specified key.
     pub fn borrow(&self, key: &K) -> Result<&V, GraphError> {
@@ -168,38 +182,6 @@ impl<'a, K: 'a, V: 'a + Clone + Default> Iterator for GraphIter<'a, K, V> {
             None
         }
     }
-}
-
-fn update_single<K, V, F>(graph: &mut Dag<SceneNode<K, V>, ()>, node_idx: NodeIndex, parent_data: &V, merge_fn: &F) -> Result<(), GraphError>
-        where V: Clone + Default,
-        for<'r> F: Fn(&'r K, &'r V) -> V {
-
-    // Obtain a mutable reference to the current node.
-    graph.node_weight_mut(node_idx)
-        .ok_or(GraphError::NodeNotFound)
-        .map(|n| n.update(parent_data, merge_fn))
-}
-
-fn update_recursive<K, V, F>(graph: &mut Dag<SceneNode<K, V>, ()>, parent_idx: NodeIndex, merge_fn: &F) -> Result<(), GraphError>
-        where V: Clone + Default,
-        for<'r> F: Fn(&'r K, &'r V) -> V {
-
-    // Obtain a reference to the parent data.
-    let parent_data = graph.node_weight(parent_idx)
-        .map(|n| n.data.clone())
-        .ok_or(GraphError::NodeNotFound)?;
-
-    // Update all children of the current node.
-    let mut child_walker = graph.children(parent_idx);
-    while let Some(idx) = child_walker.next_node(graph) {
-        // Update each child.
-        update_single(graph, idx, &parent_data, merge_fn)?;
-
-        // Update each child's children.
-        update_recursive(graph, idx, merge_fn)?;
-    }
-
-    Ok(())
 }
 
 #[derive(Debug, Fail)]
