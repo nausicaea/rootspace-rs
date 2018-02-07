@@ -4,7 +4,7 @@ use glium;
 use glium::{Frame, Surface, Display, DrawParameters};
 use glium::backend::glutin::DisplayCreationError;
 use glium::glutin::{Api, GlRequest, GlProfile, EventsLoop, WindowBuilder, ContextBuilder};
-use ecs::{LoopStageFlag, SystemTrait, Assembly};
+use ecs::{LoopStageFlag, SystemTrait, Assembly, DispatchEvents};
 use event::{EngineEventFlag, EngineEvent};
 use singletons::Singletons;
 use components::camera::Camera;
@@ -122,11 +122,11 @@ impl SystemTrait<EngineEvent, Singletons> for Renderer {
     /// Once the `Ready` event has been received, the `Renderer` completes its initialization and
     /// emits a `RendererReady` event. Upon receiving a `ResizeWindow` event, the `Camera`
     /// component is updated.
-    fn handle_event(&mut self, entities: &mut Assembly, _: &mut Singletons, event: &EngineEvent) -> (Option<EngineEvent>, Option<EngineEvent>) {
+    fn handle_event(&mut self, entities: &mut Assembly, _: &mut Singletons, event: &EngineEvent) -> DispatchEvents<EngineEvent> {
         match *event {
             EngineEvent::Ready => {
                 self.ready = true;
-                (None, Some(EngineEvent::RendererReady))
+                (None, Some(vec![EngineEvent::RendererReady]))
             },
             EngineEvent::ResizeWindow(w, h) => {
                 entities.ws1::<Camera>()
@@ -140,7 +140,7 @@ impl SystemTrait<EngineEvent, Singletons> for Renderer {
     /// First updates the `SceneGraph` to receive accurate and current hierarchical model data.
     /// Subsequently renders the `Entity`s to the frame, followed by the user interface state as
     /// defined in `UiState`.
-    fn render(&mut self, entities: &Assembly, aux: &mut Singletons, _: &Duration, _: &Duration) -> Option<EngineEvent> {
+    fn render(&mut self, entities: &Assembly, aux: &mut Singletons, _: &Duration, _: &Duration) {
         // Update the scene graph.
         aux.scene_graph.update(&|entity, parent_component| {
                 let current_component = entities.borrow_component(entity)
@@ -161,7 +161,6 @@ impl SystemTrait<EngineEvent, Singletons> for Renderer {
 
         target.finish()
             .expect("Unable to finalize the current frame");
-        None
     }
 }
 

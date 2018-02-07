@@ -1,7 +1,7 @@
 use std::time::Duration;
 use nalgebra::Point2;
 use glium::glutin::{Event, WindowEvent, EventsLoop};
-use ecs::{SystemTrait, LoopStageFlag, Assembly};
+use ecs::{SystemTrait, LoopStageFlag, Assembly, DispatchEvents};
 use event::EngineEvent;
 
 /// The task of the `EventInterface` is to regularly poll for events from the operating system and
@@ -37,7 +37,7 @@ impl<A> SystemTrait<EngineEvent, A> for EventInterface {
         LoopStageFlag::UPDATE
     }
     /// Polls for operating system events and relays them to the ECS event queue.
-    fn update(&mut self, _: &mut Assembly, _: &mut A, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {
+    fn update(&mut self, _: &mut Assembly, _: &mut A, _: &Duration, _: &Duration) -> DispatchEvents<EngineEvent> {
         let mut pd = Vec::new();
         let mut d = Vec::new();
 
@@ -63,10 +63,16 @@ impl<A> SystemTrait<EngineEvent, A> for EventInterface {
             }
         });
 
-        if !(pd.is_empty() && d.is_empty()) {
-            Some((pd, d))
-        } else {
+        let pd = if pd.is_empty() {
             None
-        }
+        } else {
+            Some(pd)
+        };
+        let d = if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        };
+        (pd, d)
     }
 }

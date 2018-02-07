@@ -3,7 +3,7 @@ use std::string::FromUtf8Error;
 use std::sync::mpsc::{channel, Receiver, TryRecvError};
 use std::time::Duration;
 use std::thread::spawn;
-use ecs::{LoopStageFlag, SystemTrait, Assembly};
+use ecs::{LoopStageFlag, SystemTrait, Assembly, DispatchEvents};
 use event::EngineEvent;
 use common::text_manipulation::split_arguments;
 
@@ -84,9 +84,11 @@ impl<A> SystemTrait<EngineEvent, A> for DebugConsole {
     /// Attempts to retrieve data from the worker thread and emits a `ConsoleCommand` event once a
     /// full line of input has been received. Also performs argument splitting before emitting the
     /// event.
-    fn update(&mut self, _: &mut Assembly, _: &mut A, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {
-        self.try_read_line()
+    fn update(&mut self, _: &mut Assembly, _: &mut A, _: &Duration, _: &Duration) -> DispatchEvents<EngineEvent> {
+         let event = self.try_read_line()
             .map(|s| split_arguments(&s, self.escape_char, self.quote_char))
-            .map(|c| (Vec::new(), vec![EngineEvent::ConsoleCommand(c)]))
+            .map(|c| vec![EngineEvent::ConsoleCommand(c)]);
+
+         (None, event)
     }
 }

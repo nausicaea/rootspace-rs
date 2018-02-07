@@ -82,8 +82,12 @@ impl<E: EventTrait, A: Default> World<E, A> {
 
         for system in &mut self.systems {
             if LoopStage::Update.match_filter(system.get_loop_stage_filter()) {
-                if let Some((mut pe, mut e)) = system.update(&mut self.assembly, &mut self.aux, time, delta_time) {
+                let (pe, e) = system.update(&mut self.assembly, &mut self.aux, time, delta_time);
+
+                if let Some(mut pe) = pe {
                     priority_events.append(&mut pe);
+                }
+                if let Some(mut e) = e {
                     events.append(&mut e);
                 }
             }
@@ -100,18 +104,10 @@ impl<E: EventTrait, A: Default> World<E, A> {
     /// the render call.
     pub fn render(&mut self, time: &Duration, delta_time: &Duration) {
         if !self.rendering_suspended {
-            let mut events = Vec::new();
-
             for system in &mut self.systems {
                 if LoopStage::Render.match_filter(system.get_loop_stage_filter()) {
-                    if let Some(e) = system.render(&self.assembly, &mut self.aux, time, delta_time) {
-                        events.push(e);
-                    }
+                    system.render(&self.assembly, &mut self.aux, time, delta_time);
                 }
-            }
-
-            for e in events {
-                self.dispatch(e);
             }
         }
     }
@@ -129,12 +125,11 @@ impl<E: EventTrait, A: Default> World<E, A> {
             if LoopStage::HandleEvent.match_filter(system.get_loop_stage_filter()) && event.match_filter(system.get_event_filter()) {
                 let (pe, e) = system.handle_event(&mut self.assembly, &mut self.aux, event);
 
-                if let Some(pe) = pe {
-                    priority_events.push(pe);
+                if let Some(mut pe) = pe {
+                    priority_events.append(&mut pe);
                 }
-
-                if let Some(e) = e {
-                    events.push(e);
+                if let Some(mut e) = e {
+                    events.append(&mut e);
                 }
             }
         }

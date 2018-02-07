@@ -1,4 +1,4 @@
-use ecs::{LoopStageFlag, SystemTrait, Assembly};
+use ecs::{LoopStageFlag, SystemTrait, Assembly, DispatchEvents};
 use event::{EngineEventFlag, EngineEvent};
 
 /// Defines a system that logs all events on the bus to the console (log level TRACE).
@@ -26,7 +26,7 @@ impl<A> SystemTrait<EngineEvent, A> for EventMonitor {
         EngineEventFlag::ALL_EVENTS & !EngineEventFlag::CURSOR_POSITION
     }
     /// Issues a logging call (TRACE level) for each received event.
-    fn handle_event(&mut self, _: &mut Assembly, _: &mut A, event: &EngineEvent) -> (Option<EngineEvent>, Option<EngineEvent>) {
+    fn handle_event(&mut self, _: &mut Assembly, _: &mut A, event: &EngineEvent) -> DispatchEvents<EngineEvent> {
         trace!("Received event '{:?}'", event);
         (None, None)
     }

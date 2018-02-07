@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 use std::num::ParseIntError;
 use clap::{App, Arg, AppSettings};
-use ecs::{Assembly, LoopStageFlag, SystemTrait};
+use ecs::{Assembly, LoopStageFlag, SystemTrait, DispatchEvents};
 use event::{EngineEventFlag, EngineEvent};
 
 /// The `DebugShell` listens for `ConsoleCommand` events and interprets them as commands. The shell
@@ -57,7 +57,7 @@ impl DebugShell {
     }
     /// Sends the reload-shaders event to the bus.
     fn reload_shaders(&self) -> ShellResult {
-        Ok((None, Some(EngineEvent::ReloadShaders)))
+        Ok((None, Some(vec![EngineEvent::ReloadShaders])))
     }
     /// Sends a speech-bubble event to the bus.
     fn speech_bubble(&self, args: &[String]) -> ShellResult {
@@ -88,7 +88,7 @@ impl DebugShell {
                 let text = m.value_of("text")
                     .ok_or_else(|| DebugShellError::MissingArgument(args[0].clone(), "text".into()))?;
 
-                Ok((None, Some(EngineEvent::SpeechBubble(target.into(), text.into(), lifetime))))
+                Ok((None, Some(vec![EngineEvent::SpeechBubble(target.into(), text.into(), lifetime)])))
             },
             Err(e) => {
                 println!("{}", e);
@@ -98,7 +98,7 @@ impl DebugShell {
     }
     /// Sends the shutdown event to the bus to exit the engine.
     fn exit(&self) -> ShellResult {
-        Ok((None, Some(EngineEvent::Shutdown)))
+        Ok((None, Some(vec![EngineEvent::Shutdown])))
     }
 }
 
@@ -117,7 +117,7 @@ impl<A> SystemTrait<EngineEvent, A> for DebugShell {
     }
     /// Interprets a `ConsoleCommand` event as a command to the engine and executes the respective
     /// actions, while printing the output to the console.
-    fn handle_event(&mut self, _: &mut Assembly, _: &mut A, event: &EngineEvent) -> (Option<EngineEvent>, Option<EngineEvent>) {
+    fn handle_event(&mut self, _: &mut Assembly, _: &mut A, event: &EngineEvent) -> DispatchEvents<EngineEvent> {
         match *event {
             EngineEvent::ConsoleCommand(ref c) => self.interpret(c).unwrap_or_else(|e| {println!("{}", e); (None, None)}),
             _ => (None, None),
@@ -141,9 +141,9 @@ impl From<ParseIntError> for DebugShellError {
     }
 }
 
-type ShellResult = Result<(Option<EngineEvent>, Option<EngineEvent>), DebugShellError>;
+type ShellResult = Result<DispatchEvents<EngineEvent>, DebugShellError>;
 
-/// Represents a basic shell command.
+/// Represents a custom shell command.
 pub trait CustomCommand {
     /// Executes the command given a set of command line arguments. The first argument refers to
     /// the command name.

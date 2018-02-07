@@ -1,5 +1,5 @@
 use glium::glutin::ElementState;
-use ecs::{SystemTrait, LoopStageFlag, Assembly};
+use ecs::{SystemTrait, LoopStageFlag, Assembly, DispatchEvents};
 use event::{EngineEvent, EngineEventFlag};
 use components::cursor::{Cursor, FlankDirection};
 
@@ -31,7 +31,7 @@ impl<A> SystemTrait<EngineEvent, A> for CursorController {
     /// updated. Upon receiving a `MouseInput` event, the new button state is compared to the
     /// previous one and a `MouseInputFlank` event is dispatched upon state changes. This allows
     /// other systems to listen for state changes and not just for button press events.
-    fn handle_event(&mut self, entities: &mut Assembly, _: &mut A, event: &EngineEvent) -> (Option<EngineEvent>, Option<EngineEvent>) {
+    fn handle_event(&mut self, entities: &mut Assembly, _: &mut A, event: &EngineEvent) -> DispatchEvents<EngineEvent> {
         match *event {
             EngineEvent::CursorPosition(position) => {
                 // Update the cursor component's position.
@@ -53,10 +53,10 @@ impl<A> SystemTrait<EngineEvent, A> for CursorController {
                         let resulting_event = match *current_state {
                             ElementState::Pressed => match state {
                                 ElementState::Pressed => None,
-                                ElementState::Released => Some(EngineEvent::MouseInputFlank(button, FlankDirection::Up)),
+                                ElementState::Released => Some(vec![EngineEvent::MouseInputFlank(button, FlankDirection::Up)]),
                             },
                             ElementState::Released => match state {
-                                ElementState::Pressed => Some(EngineEvent::MouseInputFlank(button, FlankDirection::Down)),
+                                ElementState::Pressed => Some(vec![EngineEvent::MouseInputFlank(button, FlankDirection::Down)]),
                                 ElementState::Released => None,
                             },
                         };

@@ -3,7 +3,7 @@ use glium::Display;
 use nalgebra::{Point2, Point3, Vector2, Vector3, zero};
 use rusttype::gpu_cache::CacheWriteErr;
 use uuid::Uuid;
-use ecs::{LoopStageFlag, SystemTrait, Assembly, EcsError};
+use ecs::{LoopStageFlag, SystemTrait, Assembly, EcsError, DispatchEvents};
 use event::{EngineEventFlag, EngineEvent};
 use singletons::Singletons;
 use singletons::factory::FactoryError;
@@ -155,7 +155,7 @@ impl SystemTrait<EngineEvent, Singletons> for UserInterface {
     fn get_event_filter(&self) -> EngineEventFlag {
         EngineEventFlag::SPEECH_BUBBLE | EngineEventFlag::CURSOR_POSITION
     }
-    fn handle_event(&mut self, entities: &mut Assembly, aux: &mut Singletons, event: &EngineEvent) -> (Option<EngineEvent>, Option<EngineEvent>) {
+    fn handle_event(&mut self, entities: &mut Assembly, aux: &mut Singletons, event: &EngineEvent) -> DispatchEvents<EngineEvent> {
         match *event {
             EngineEvent::SpeechBubble(ref t, ref c, l) => {
                 self.create_speech_bubble(entities, aux, t, c, l)
@@ -169,9 +169,9 @@ impl SystemTrait<EngineEvent, Singletons> for UserInterface {
         }
         (None, None)
     }
-    fn update(&mut self, entities: &mut Assembly, _: &mut Singletons, _: &Duration, _: &Duration) -> Option<(Vec<EngineEvent>, Vec<EngineEvent>)> {
+    fn update(&mut self, entities: &mut Assembly, _: &mut Singletons, _: &Duration, _: &Duration) -> DispatchEvents<EngineEvent> {
         self.update_lifetimes(entities);
-        None
+        (None, None)
     }
 }
 
