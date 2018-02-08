@@ -1,5 +1,5 @@
 use alga::linear::Transformation;
-use ecs::{Entity, Assembly};
+use ecs::Assembly;
 use common::ray::{Ray, ObjectHit};
 use components::model::Model;
 use components::bounding_volume::BoundingVolume;
@@ -31,32 +31,4 @@ impl PhysicsController {
         }
         None
     }
-    /// Given the currently active target `Entity`, performs a ray intersection and determines
-    /// whether the same object is still active, whether a new object has been hit, or whether no
-    /// intersection was found.
-    pub fn stateful_raycast(&mut self, entities: &Assembly, ray: &Ray<f32>, current_target: &Option<Entity>) -> StatefulHit {
-        if let Some(hit) = self.raycast(entities, ray) {
-            if let Some(ref tgt) = *current_target {
-                if &hit.target != tgt {
-                    StatefulHit::NewHit(hit)
-                } else {
-                    StatefulHit::RepeatHit(hit)
-                }
-            } else {
-                StatefulHit::NewHit(hit)
-            }
-        } else {
-            StatefulHit::NoHit
-        }
-    }
-}
-
-/// Describes the states of a ray-object intersection given knowledge about previous intersections.
-pub enum StatefulHit {
-    /// No object was hit by the `Ray`.
-    NoHit,
-    /// A new object was hit by the `Ray`.
-    NewHit(ObjectHit<f32>),
-    /// The Same object was hit by the `Ray`, but the `ObjectHit` data have changed.
-    RepeatHit(ObjectHit<f32>),
 }
