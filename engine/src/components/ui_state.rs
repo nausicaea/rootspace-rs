@@ -7,6 +7,7 @@ use uuid::Uuid;
 use rusttype::gpu_cache::Cache;
 use glium::Display;
 use glium::texture::{Texture2d, RawImage2d, UncompressedFloatFormat, MipmapsOption, ClientFormat, TextureCreationError};
+use ecs::Entity;
 use common::ui_element::UiElement;
 use common::ui_styles::{Common, SpeechBubble};
 
@@ -27,6 +28,7 @@ pub struct UiState {
     pub speech_bubble: SpeechBubble,
     /// If set to `true`, a menu item currently shadows the 3D world.
     pub menu_active: bool,
+    pub current_target: Option<Entity>,
 }
 
 impl UiState {
@@ -53,6 +55,7 @@ impl UiState {
             common: common,
             speech_bubble: speech_bubble,
             menu_active: false,
+            current_target: None,
         })
     }
 }

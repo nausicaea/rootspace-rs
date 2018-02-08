@@ -1,9 +1,9 @@
 use std::time::{Instant, Duration};
 use glium::Display;
-use nalgebra::{Point2, Point3, Vector2, Vector3, zero};
+use nalgebra::{Point3, Vector2, Vector3, zero};
 use rusttype::gpu_cache::CacheWriteErr;
 use uuid::Uuid;
-use ecs::{LoopStageFlag, SystemTrait, Assembly, EcsError, DispatchEvents};
+use ecs::{Entity, LoopStageFlag, SystemTrait, Assembly, EcsError, DispatchEvents};
 use event::{EngineEventFlag, EngineEvent};
 use singletons::Singletons;
 use singletons::factory::FactoryError;
@@ -125,19 +125,17 @@ impl UserInterface {
                         });
                 }
             })
-            .expect("Could not access the UiState")
+            .expect("Could not access the UiState component")
     }
-    fn handle_cursor_event(&self, entities: &mut Assembly, _aux: &mut Singletons, _position: &Point2<u32>) -> Result<(), UiError> {
-        let menu_active = entities.rs1::<UiState>()
-            .map(|(_, u)| u.menu_active)
-            .expect("Could not access the UiState");
-
-        if menu_active {
-            // Perform 2D raycasting only.
-        } else {
-        }
-
-        Ok(())
+    fn create_tooltip(&self, entities: &mut Assembly, target: &Entity) {
+        entities.ws1::<UiState>()
+            .map(|(_, u)| u.current_target = Some(target.clone()))
+            .expect("Could not access the UiState component")
+    }
+    fn destroy_tooltip(&self, entities: &mut Assembly) {
+        entities.ws1::<UiState>()
+            .map(|(_, u)| u.current_target = None)
+            .expect("Could not access the UiState component")
     }
 }
 
@@ -161,9 +159,41 @@ impl SystemTrait<EngineEvent, Singletons> for UserInterface {
                 self.create_speech_bubble(entities, aux, t, c, l)
                     .unwrap_or_else(|e| warn!("Could not create a speech bubble: {}", e))
             },
-            EngineEvent::CursorPosition(p) => {
-                self.handle_cursor_event(entities, aux, &p)
-                    .unwrap_or_else(|e| warn!("Could not handle cursor movement: {}", e))
+            EngineEvent::CursorPosition(position) => {
+                let (menu_active, current_target) = entities.rs1::<UiState>()
+                    .map(|(_, u)| (u.menu_active, u.current_target.clone()))
+                    .expect("Could not access the UiState component");
+
+                if menu_active {
+                    // Perform 2D raycasting.
+                    unimplemented!();
+                } else {
+                    // Perform 3D raycasting.
+                    let cursor_ray = entities.rs1::<Camera>()
+                        .map(|(_, c)| c.screen_point_to_ray(&position).expect("Could not translate the mouse coordinates to a ray"))
+                        .expect("Could not access the Camera component");
+
+                    if let Some(hit) = aux.physics.raycast(entities, &cursor_ray) {
+                        if let Some(tgt) = current_target {
+                            if hit.target != tgt {
+                                // A new object was hit (two objects probably intersect from the
+                                // pov of the camera).
+                                trace!("Destroy the current tooltip element.");
+                                self.destroy_tooltip(entities);
+                                trace!("Create a tooltip element.");
+                                self.create_tooltip(entities, &hit.target);
+                            }
+                        } else {
+                            // A new object was hit, where none was hit before.
+                            self.create_tooltip(entities, &hit.target);
+                        }
+                    } else {
+                        if let Some(tgt) = current_target {
+                            // The current object was exited.
+                            self.destroy_tooltip(entities);
+                        }
+                    }
+                }
             },
             _ => (),
         }
