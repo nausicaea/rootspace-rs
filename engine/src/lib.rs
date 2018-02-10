@@ -32,7 +32,7 @@ pub mod components;
 pub mod systems;
 
 pub use self::event::EngineEvent;
-pub use self::common::ui_styles::{Common, SpeechBubble};
+pub use self::common::ui_styles::{Common, SpeechBubble, Tooltip};
 pub use self::components::bounding_volume::BoundingVolume;
 pub use self::components::camera::Camera;
 pub use self::components::cursor::Cursor;
@@ -40,6 +40,7 @@ pub use self::components::description::Description;
 pub use self::components::material::Material;
 pub use self::components::mesh::Mesh;
 pub use self::components::model::Model;
+pub use self::components::tooltip::TooltipData;
 pub use self::components::ui_state::UiState;
 pub use self::systems::cursor_controller::CursorController;
 pub use self::systems::debug_console::DebugConsole;

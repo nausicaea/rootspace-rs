@@ -9,7 +9,7 @@ use glium::Display;
 use glium::texture::{Texture2d, RawImage2d, UncompressedFloatFormat, MipmapsOption, ClientFormat, TextureCreationError};
 use ecs::Entity;
 use common::ui_element::UiElement;
-use common::ui_styles::{Common, SpeechBubble};
+use common::ui_styles::{Common, SpeechBubble, Tooltip};
 
 /// The `UiState` component encodes information about the user interface.
 #[derive(Component)]
@@ -26,14 +26,19 @@ pub struct UiState {
     pub common: Common,
     /// Provides access to speech-bubble style settings.
     pub speech_bubble: SpeechBubble,
+    /// Provides access to tooltip style settings.
+    pub tooltip: Tooltip,
     /// If set to `true`, a menu item currently shadows the 3D world.
     pub menu_active: bool,
+    /// Holds the entity currently selected by the cursor.
     pub current_target: Option<Entity>,
+    /// Holds the currently active tooltip. There may only be one tooltip at a time.
+    pub current_tooltip: Option<Uuid>,
 }
 
 impl UiState {
     /// Creates a new `UiState` component.
-    pub fn new(display: &Display, dimensions: &[u32; 2], hi_dpi_factor: f32, common: Common, speech_bubble: SpeechBubble) -> Result<Self, TextureCreationError> {
+    pub fn new(display: &Display, dimensions: &[u32; 2], hi_dpi_factor: f32, common: Common, speech_bubble: SpeechBubble, tooltip: Tooltip) -> Result<Self, TextureCreationError> {
         let cache_width = dimensions[0] * hi_dpi_factor as u32;
         let cache_height = dimensions[1] * hi_dpi_factor as u32;
         let scale_tolerance = 0.1;
@@ -54,8 +59,10 @@ impl UiState {
             font_cache_gpu: gpu_cache,
             common: common,
             speech_bubble: speech_bubble,
+            tooltip: tooltip,
             menu_active: false,
             current_target: None,
+            current_tooltip: None,
         })
     }
 }

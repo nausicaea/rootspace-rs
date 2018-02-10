@@ -3,6 +3,7 @@
 //! should be encoded within components.
 
 pub mod description;
+pub mod tooltip;
 pub mod camera;
 pub mod model;
 pub mod material;

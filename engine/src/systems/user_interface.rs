@@ -11,6 +11,7 @@ use components::description::Description;
 use components::camera::Camera;
 use components::model::Model;
 use components::mesh::{Mesh, MeshError};
+use components::tooltip::TooltipData;
 use components::ui_state::UiState;
 use common::ui_element::UiElement;
 use common::ui_primitive::UiPrimitive;
@@ -38,7 +39,7 @@ impl UserInterface {
                 let a = m.decompose();
                 Point3::from_coordinates(a.translation.vector)
             })
-            .map_err(|e| UiError::EntityNotFound(target.into(), e))?;
+            .map_err(|e| UiError::EntityNameNotFound(target.into(), e))?;
 
         // Project the entity position to normalized device coordinates (this requires the camera
         // entity).
@@ -106,6 +107,93 @@ impl UserInterface {
 
         Ok(())
     }
+    fn create_tooltip(&self, entities: &mut Assembly, aux: &mut Singletons, target: &Entity) -> Result<(), UiError> {
+        if let Ok(tooltip_text) = entities.borrow_component::<TooltipData>(target).map(|t| t.text.to_owned()) {
+            // Attempt to determine the location of the entity.
+            let entity_pos_world = entities.borrow_component::<Model>(target)
+                .map(|m| {
+                    let a = m.decompose();
+                    Point3::from_coordinates(a.translation.vector)
+                })
+                .map_err(|e| UiError::ComponentNotFound("Model".into(), target.clone(), e))?;
+
+            // Project the entity position to normalized device coordinates (this requires the camera
+            // entity).
+            let (entity_pos_ndc, px_dims, dimensions) = entities.rs1::<Camera>()
+                .map(|(_, c)| (c.world_point_to_ndc(&entity_pos_world), c.dimensions, Vector2::new(c.dimensions[0] as f32, c.dimensions[1] as f32)))
+                .expect("Could not access the Camera component");
+
+            // Obtain a mutable reference to the `UiState`.
+            let (_, ui_state) = entities.ws1::<UiState>()
+                .expect("Could not access the UiState component");
+
+            // Layout the glyphs based on the textual `content`.
+            let (glyphs, text_dims_px) = layout_paragraph_cached(&mut ui_state.font_cache_cpu,
+                                                                 &ui_state.font_cache_gpu,
+                                                                 &ui_state.common.font,
+                                                                 ui_state.common.font_scale,
+                                                                 ui_state.tooltip.width,
+                                                                 &tooltip_text)?;
+
+            // Calculate positions and dimensions of the involved primitives: Text and Rect.
+            let margin_left = ui_state.tooltip.margin_left as f32 / dimensions.x;
+            let margin_right = ui_state.tooltip.margin_right as f32 / dimensions.x;
+            let margin_top = ui_state.tooltip.margin_top as f32 / dimensions.y;
+            let margin_bottom = ui_state.tooltip.margin_bottom as f32 / dimensions.y;
+            let relative_offset = ui_state.tooltip.relative_position_offset;
+
+            let text_dims_ndc = Vector2::new(text_dims_px[0] as f32, text_dims_px[1] as f32)
+                .component_div(&dimensions);
+            let rect_dims_ndc = text_dims_ndc + Vector2::new(margin_left + margin_right, margin_top + margin_bottom);
+
+            let element_center = Vector2::new(entity_pos_ndc.x, entity_pos_ndc.y) + relative_offset.component_mul(&rect_dims_ndc);
+            let text_center = Vector2::new(text_dims_ndc.x - rect_dims_ndc.x, rect_dims_ndc.y - text_dims_ndc.y) / 2.0 + Vector2::new(margin_left, -margin_top);
+
+            // Create the model matrices from the above values.
+            let element_model = Model::new(Vector3::new(element_center.x, element_center.y, -0.98), zero(), Vector3::new(1.0, 1.0, 1.0));
+            let text_model = Model::new(Vector3::new(text_center.x, text_center.y, -0.01), zero(), Vector3::new(1.0, 1.0, 1.0));
+            let rect_model = Model::new(zero(), zero(), Vector3::new(rect_dims_ndc.x, rect_dims_ndc.y, 1.0));
+
+            // Create the text mesh.
+            let text_mesh = Mesh::new_text(&self.display, &px_dims, 0.0, &ui_state.font_cache_cpu, &glyphs, &text_dims_ndc.into())?;
+
+            // Create the speech-bubble rectangle mesh.
+            let rect_mesh = Mesh::new_quad(&self.display, 0.0)?;
+
+            // Create the primitive materials.
+            let text_material = aux.factory.new_material(&self.display,
+                                              &ui_state.tooltip.text_vertex_shader,
+                                              &ui_state.tooltip.text_fragment_shader, None, None,
+                                              None)?;
+
+            let rect_material = aux.factory.new_material(&self.display,
+                                              &ui_state.tooltip.rect_vertex_shader,
+                                              &ui_state.tooltip.rect_fragment_shader, None,
+                                              Some(&ui_state.tooltip.rect_diffuse_texture),
+                                              None)?;
+
+            // Create the primitives.
+            let rect = UiPrimitive::new(rect_model, rect_mesh, rect_material);
+            let text = UiPrimitive::new(text_model, text_mesh, text_material);
+
+            // Create and register the element.
+            let id = Uuid::new_v4();
+            ui_state.elements.insert(id, UiElement::new(element_model, vec![rect, text]));
+            ui_state.current_tooltip = Some(id);
+        }
+
+        Ok(())
+    }
+    fn destroy_tooltip(&self, entities: &mut Assembly) {
+        entities.ws1::<UiState>()
+            .map(|(_, u)| {
+                if let Some(ref id) = u.current_tooltip {
+                    u.elements.remove(id);
+                }
+                u.current_tooltip = None;
+            })
+            .expect("Could not access the UiState component")
+    }
     /// Checks the lifetimes of the registered `UiElement`s and removes those with expired
     /// lifetimes.
     fn update_lifetimes(&self, entities: &mut Assembly) {
@@ -125,16 +213,6 @@ impl UserInterface {
                         });
                 }
             })
-            .expect("Could not access the UiState component")
-    }
-    fn create_tooltip(&self, entities: &mut Assembly, target: &Entity) {
-        entities.ws1::<UiState>()
-            .map(|(_, u)| u.current_target = Some(target.clone()))
-            .expect("Could not access the UiState component")
-    }
-    fn destroy_tooltip(&self, entities: &mut Assembly) {
-        entities.ws1::<UiState>()
-            .map(|(_, u)| u.current_target = None)
             .expect("Could not access the UiState component")
     }
 }
@@ -178,20 +256,27 @@ impl SystemTrait<EngineEvent, Singletons> for UserInterface {
                             if hit.target != tgt {
                                 // A new object was hit (two objects probably intersect from the
                                 // pov of the camera).
-                                trace!("Destroy the current tooltip element.");
                                 self.destroy_tooltip(entities);
-                                trace!("Create a tooltip element.");
-                                self.create_tooltip(entities, &hit.target);
+                                self.create_tooltip(entities, aux, &hit.target)
+                                    .unwrap_or_else(|e| warn!("Unable to create a tooltip: {}", e));
+                                entities.ws1::<UiState>()
+                                    .map(|(_, u)| u.current_target = Some(hit.target.clone()))
+                                    .expect("Could not access the UiState component");
                             }
                         } else {
                             // A new object was hit, where none was hit before.
-                            self.create_tooltip(entities, &hit.target);
+                            self.create_tooltip(entities, aux, &hit.target)
+                                .unwrap_or_else(|e| warn!("Unable to create a tooltip: {}", e));
+                            entities.ws1::<UiState>()
+                                .map(|(_, u)| u.current_target = Some(hit.target.clone()))
+                                .expect("Could not access the UiState component");
                         }
-                    } else {
-                        if let Some(tgt) = current_target {
-                            // The current object was exited.
-                            self.destroy_tooltip(entities);
-                        }
+                    } else if current_target.is_some() {
+                        // The current object was exited.
+                        self.destroy_tooltip(entities);
+                        entities.ws1::<UiState>()
+                            .map(|(_, u)| u.current_target = None)
+                            .expect("Could not access the UiState component");
                     }
                 }
             },
@@ -216,8 +301,10 @@ pub enum UiError {
     FactError(#[cause] FactoryError),
     #[fail(display = "{}", _0)]
     MeshCreationError(#[cause] MeshError),
-    #[fail(display = "Unable to uniquely identify the entity '{}'", _0)]
-    EntityNotFound(String, #[cause] EcsError),
+    #[fail(display = "Unable to uniquely identify the entity name '{}'", _0)]
+    EntityNameNotFound(String, #[cause] EcsError),
+    #[fail(display = "The entity {1} has no component '{0}'", _0, _1)]
+    ComponentNotFound(String, Entity, #[cause] EcsError),
 }
 
 impl From<EcsError> for UiError {

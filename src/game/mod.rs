@@ -6,7 +6,7 @@ use nalgebra;
 use nalgebra::{Point3, Vector3};
 use engine::{Orchestrator, EventMonitor, DebugConsole, DebugShell,
     Renderer, EventInterface, Model, Description, Mesh, UserInterface,
-    UiState, Common, SpeechBubble, Camera,
+    UiState, Common, SpeechBubble, Camera, Tooltip, TooltipData,
     BoundingVolume, Cursor, CursorController};
 
 pub fn run(resource_path: &Path, debugging: bool) {
@@ -56,10 +56,12 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let rfs = o.resource_path.join("shaders").join("rect-fragment.glsl");
             let rdt = o.resource_path.join("textures").join("speech-bubble.png");
             let speech_bubble = SpeechBubble::new(&tvs, &tfs, &rvs, &rfs, &rdt);
+            let rdt = o.resource_path.join("textures").join("tooltip.png");
+            let tooltip = Tooltip::new(&tvs, &tfs, &rvs, &rfs, &rdt);
 
             let canvas = o.world.create_entity();
             let d = Description::new("canvas");
-            let u = UiState::new(&renderer.display, &dimensions, hi_dpi_factor, common, speech_bubble).unwrap();
+            let u = UiState::new(&renderer.display, &dimensions, hi_dpi_factor, common, speech_bubble, tooltip).unwrap();
 
             o.world.add_component(&canvas, d).unwrap();
             o.world.add_component(&canvas, u).unwrap();
@@ -85,6 +87,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
 
             let test_entity_a = o.world.create_entity();
             let d = Description::new("test-entity-a");
+            let tooltip = TooltipData::new("Hi, I'm a quad!");
             let model = Model::new(position, axisangle, scale);
             let mesh = Mesh::new_quad(&renderer.display, 0.0).unwrap();
             let material = o.world.aux.factory.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
@@ -93,6 +96,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             o.world.aux.scene_graph.insert(test_entity_a.clone(), model.clone()).unwrap();
 
             o.world.add_component(&test_entity_a, d).unwrap();
+            o.world.add_component(&test_entity_a, tooltip).unwrap();
             o.world.add_component(&test_entity_a, model).unwrap();
             o.world.add_component(&test_entity_a, mesh).unwrap();
             o.world.add_component(&test_entity_a, material).unwrap();
@@ -109,6 +113,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
 
             let test_entity_b = o.world.create_entity();
             let d = Description::new("test-entity-b");
+            let tooltip = TooltipData::new("Hi, I'm a cube!");
             let model = Model::new(position, axisangle, scale);
             let mesh = Mesh::new_cube(&renderer.display).unwrap();
             let material = o.world.aux.factory.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
@@ -117,6 +122,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             o.world.aux.scene_graph.insert(test_entity_b.clone(), model.clone()).unwrap();
 
             o.world.add_component(&test_entity_b, d).unwrap();
+            o.world.add_component(&test_entity_b, tooltip).unwrap();
             o.world.add_component(&test_entity_b, model).unwrap();
             o.world.add_component(&test_entity_b, mesh).unwrap();
             o.world.add_component(&test_entity_b, material).unwrap();
