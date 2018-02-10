@@ -30,4 +30,3 @@ pub fn load_image_file(file_path: &Path) -> Result<RawImage2d<u8>, image::ImageE
 
     Ok(RawImage2d::from_raw_rgba_reversed(&rgba_img.into_raw(), dimensions))
 }
-
