@@ -4,10 +4,9 @@ use std::path::Path;
 use std::time::Duration;
 use nalgebra;
 use nalgebra::{Point3, Vector3};
-use engine::{Orchestrator, EventMonitor, DebugConsole, DebugShell,
-    Renderer, EventInterface, Model, Description, Mesh, UserInterface,
-    UiState, Common, SpeechBubble, Camera, Tooltip, TooltipData,
-    BoundingVolume, Cursor, CursorController};
+use engine::{Orchestrator, EventMonitor, DebugConsole, DebugShell, Renderer, EventInterface, Model,
+    Description, Mesh, UserInterface, UiState, Common, SpeechBubble, Camera, Tooltip, TooltipData,
+    ShaderGroup, TextureGroup, BoundingVolume, Cursor, CursorController};
 
 pub fn run(resource_path: &Path, debugging: bool) {
     // The following variables set up the state of the engine.
@@ -55,9 +54,13 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let rvs = o.resource_path.join("shaders").join("rect-vertex.glsl");
             let rfs = o.resource_path.join("shaders").join("rect-fragment.glsl");
             let rdt = o.resource_path.join("textures").join("speech-bubble.png");
-            let speech_bubble = SpeechBubble::new(&tvs, &tfs, &rvs, &rfs, &rdt);
+            let text_shaders = ShaderGroup::new(&tvs, &tfs, None).unwrap();
+            let rect_shaders = ShaderGroup::new(&rvs, &rfs, None).unwrap();
+            let rect_textures = TextureGroup::new(Some(&rdt), None).unwrap();
+            let speech_bubble = SpeechBubble::new(text_shaders.clone(), rect_shaders.clone(), rect_textures);
             let rdt = o.resource_path.join("textures").join("tooltip.png");
-            let tooltip = Tooltip::new(&tvs, &tfs, &rvs, &rfs, &rdt);
+            let rect_textures = TextureGroup::new(Some(&rdt), None).unwrap();
+            let tooltip = Tooltip::new(text_shaders, rect_shaders, rect_textures);
 
             let canvas = o.world.create_entity();
             let d = Description::new("canvas");
@@ -84,13 +87,15 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let scale = Vector3::new(1.0, 1.0, 1.0);
             let vs = o.resource_path.join("shaders").join("test-vertex.glsl");
             let fs = o.resource_path.join("shaders").join("test-fragment.glsl");
+            let shaders = ShaderGroup::new(&vs, &fs, None).unwrap();
+            let textures = TextureGroup::empty();
 
             let test_entity_a = o.world.create_entity();
             let d = Description::new("test-entity-a");
             let tooltip = TooltipData::new("Hi, I'm a quad!");
             let model = Model::new(position, axisangle, scale);
             let mesh = Mesh::new_quad(&renderer.display, 0.0).unwrap();
-            let material = o.world.aux.factory.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
+            let material = o.world.aux.factory.new_material(&renderer.display, &shaders, &textures).unwrap();
             let bounding_volume = BoundingVolume::from_mesh_aabb(&mesh).unwrap();
 
             o.world.aux.scene_graph.insert(test_entity_a.clone(), model.clone()).unwrap();
@@ -110,13 +115,15 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let scale = Vector3::new(1.0, 1.0, 1.0);
             let vs = o.resource_path.join("shaders").join("test-vertex.glsl");
             let fs = o.resource_path.join("shaders").join("test-fragment.glsl");
+            let shaders = ShaderGroup::new(&vs, &fs, None).unwrap();
+            let textures = TextureGroup::empty();
 
             let test_entity_b = o.world.create_entity();
             let d = Description::new("test-entity-b");
             let tooltip = TooltipData::new("Hi, I'm a cube!");
             let model = Model::new(position, axisangle, scale);
             let mesh = Mesh::new_cube(&renderer.display).unwrap();
-            let material = o.world.aux.factory.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
+            let material = o.world.aux.factory.new_material(&renderer.display, &shaders, &textures).unwrap();
             let bounding_volume = BoundingVolume::from_mesh_aabb(&mesh).unwrap();
 
             o.world.aux.scene_graph.insert(test_entity_b.clone(), model.clone()).unwrap();
@@ -136,12 +143,14 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let scale = Vector3::new(1.0, 1.0, 1.0);
             let vs = o.resource_path.join("shaders").join("test-vertex.glsl");
             let fs = o.resource_path.join("shaders").join("test-fragment.glsl");
+            let shaders = ShaderGroup::new(&vs, &fs, None).unwrap();
+            let textures = TextureGroup::empty();
 
             let test_entity_c = o.world.create_entity();
             let d = Description::new("test-entity-c");
             let model = Model::new(position, axisangle, scale);
             let mesh = Mesh::new_cube(&renderer.display).unwrap();
-            let material = o.world.aux.factory.new_material(&renderer.display, &vs, &fs, None, None, None).unwrap();
+            let material = o.world.aux.factory.new_material(&renderer.display, &shaders, &textures).unwrap();
             let bounding_volume = BoundingVolume::from_mesh_aabb(&mesh).unwrap();
 
             o.world.aux.scene_graph.insert(test_entity_c.clone(), model.clone()).unwrap();

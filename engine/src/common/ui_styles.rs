@@ -1,8 +1,8 @@
-use std::path::{PathBuf, Path};
-use std::io::Error;
+use std::path::Path;
 use rusttype::{FontCollection, Font};
 use nalgebra::Vector2;
-use common::file_manipulation::load_binary_file;
+use common::file_manipulation::{load_binary_file, verify_accessible_file, FileError as RootFileError};
+use common::resource_group::{ShaderGroup, TextureGroup};
 
 pub struct Common {
     pub font: Font<'static>,
@@ -11,6 +11,7 @@ pub struct Common {
 
 impl Common {
     pub fn new(font_path: &Path, font_scale: f32) -> Result<Self, UiStylesError> {
+        verify_accessible_file(font_path)?;
         let font_data = load_binary_file(font_path)?;
         let collection = FontCollection::from_bytes(font_data);
 
@@ -28,15 +29,13 @@ pub struct SpeechBubble {
     pub margin_top: u32,
     pub margin_bottom: u32,
     pub relative_position_offset: Vector2<f32>,
-    pub text_vertex_shader: PathBuf,
-    pub text_fragment_shader: PathBuf,
-    pub rect_vertex_shader: PathBuf,
-    pub rect_fragment_shader: PathBuf,
-    pub rect_diffuse_texture: PathBuf,
+    pub text_shaders: ShaderGroup,
+    pub rect_shaders: ShaderGroup,
+    pub rect_textures: TextureGroup,
 }
 
 impl SpeechBubble {
-    pub fn new(text_vs: &Path, text_fs: &Path, rect_vs: &Path, rect_fs: &Path, rect_difftex: &Path) -> Self {
+    pub fn new(text_shaders: ShaderGroup, rect_shaders: ShaderGroup, rect_textures: TextureGroup) -> Self {
         SpeechBubble {
             width: 100,
             margin_left: 5,
@@ -44,11 +43,9 @@ impl SpeechBubble {
             margin_top: 5,
             margin_bottom: 50,
             relative_position_offset: Vector2::new(-0.5, 0.5),
-            text_vertex_shader: text_vs.to_owned(),
-            text_fragment_shader: text_fs.to_owned(),
-            rect_vertex_shader: rect_vs.to_owned(),
-            rect_fragment_shader: rect_fs.to_owned(),
-            rect_diffuse_texture: rect_difftex.to_owned(),
+            text_shaders: text_shaders,
+            rect_shaders: rect_shaders,
+            rect_textures: rect_textures,
         }
     }
 }
@@ -60,15 +57,13 @@ pub struct Tooltip {
     pub margin_top: u32,
     pub margin_bottom: u32,
     pub relative_position_offset: Vector2<f32>,
-    pub text_vertex_shader: PathBuf,
-    pub text_fragment_shader: PathBuf,
-    pub rect_vertex_shader: PathBuf,
-    pub rect_fragment_shader: PathBuf,
-    pub rect_diffuse_texture: PathBuf,
+    pub text_shaders: ShaderGroup,
+    pub rect_shaders: ShaderGroup,
+    pub rect_textures: TextureGroup
 }
 
 impl Tooltip {
-    pub fn new(text_vs: &Path, text_fs: &Path, rect_vs: &Path, rect_fs: &Path, rect_difftex: &Path) -> Self {
+    pub fn new(text_shaders: ShaderGroup, rect_shaders: ShaderGroup, rect_textures: TextureGroup) -> Self {
         Tooltip {
             width: 100,
             margin_left: 5,
@@ -76,11 +71,9 @@ impl Tooltip {
             margin_top: 5,
             margin_bottom: 50,
             relative_position_offset: Vector2::new(-0.5, 0.5),
-            text_vertex_shader: text_vs.to_owned(),
-            text_fragment_shader: text_fs.to_owned(),
-            rect_vertex_shader: rect_vs.to_owned(),
-            rect_fragment_shader: rect_fs.to_owned(),
-            rect_diffuse_texture: rect_difftex.to_owned(),
+            text_shaders: text_shaders,
+            rect_shaders: rect_shaders,
+            rect_textures: rect_textures,
         }
     }
 }
@@ -88,13 +81,13 @@ impl Tooltip {
 #[derive(Debug, Fail)]
 pub enum UiStylesError {
     #[fail(display = "{}", _0)]
-    IoError(#[cause] Error),
+    FileError(#[cause] RootFileError),
     #[fail(display = "Could not convert the FontCollection to a single Font.")]
     FontError,
 }
 
-impl From<Error> for UiStylesError {
-    fn from(value: Error) -> Self {
-        UiStylesError::IoError(value)
+impl From<RootFileError> for UiStylesError {
+    fn from(value: RootFileError) -> Self {
+        UiStylesError::FileError(value)
     }
 }

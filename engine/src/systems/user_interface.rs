@@ -13,6 +13,7 @@ use components::model::Model;
 use components::mesh::{Mesh, MeshError};
 use components::tooltip::TooltipData;
 use components::ui_state::UiState;
+use common::resource_group::TextureGroup;
 use common::ui_element::UiElement;
 use common::ui_primitive::UiPrimitive;
 use common::text_rendering::layout_paragraph_cached;
@@ -66,47 +67,34 @@ impl UserInterface {
         let margin_bottom = ui_state.speech_bubble.margin_bottom as f32 / dimensions.y;
         let relative_offset = ui_state.speech_bubble.relative_position_offset;
 
-        let text_dims_ndc = Vector2::new(text_dims_px[0] as f32, text_dims_px[1] as f32)
-            .component_div(&dimensions);
-        let rect_dims_ndc = text_dims_ndc + Vector2::new(margin_left + margin_right, margin_top + margin_bottom);
-
-        let element_center = Vector2::new(entity_pos_ndc.x, entity_pos_ndc.y) + relative_offset.component_mul(&rect_dims_ndc);
-        let text_center = Vector2::new(text_dims_ndc.x - rect_dims_ndc.x, rect_dims_ndc.y - text_dims_ndc.y) / 2.0 + Vector2::new(margin_left, -margin_top);
+        let margin_sum = Vector2::new(margin_left + margin_right, margin_top + margin_bottom);
 
         // Create the model matrices from the above values.
-        let element_model = Model::new(Vector3::new(element_center.x, element_center.y, -0.98), zero(), Vector3::new(1.0, 1.0, 1.0));
+        let text_dims_ndc = Vector2::new(text_dims_px[0] as f32, text_dims_px[1] as f32).component_div(&dimensions);
+        let text_center = Vector2::new(-margin_sum.x, margin_sum.y) / 2.0 + Vector2::new(margin_left, -margin_top);
         let text_model = Model::new(Vector3::new(text_center.x, text_center.y, -0.01), zero(), Vector3::new(1.0, 1.0, 1.0));
-        let rect_model = Model::new(zero(), zero(), Vector3::new(rect_dims_ndc.x, rect_dims_ndc.y, 1.0));
-
-        // Create the text mesh.
         let text_mesh = Mesh::new_text(&self.display, &px_dims, 0.0, &ui_state.font_cache_cpu, &glyphs, &text_dims_ndc.into())?;
-
-        // Create the speech-bubble rectangle mesh.
-        let rect_mesh = Mesh::new_quad(&self.display, 0.0)?;
-
-        // Create the primitive materials.
-        let text_material = aux.factory.new_material(&self.display,
-                                          &ui_state.speech_bubble.text_vertex_shader,
-                                          &ui_state.speech_bubble.text_fragment_shader, None, None,
-                                          None)?;
-
-        let rect_material = aux.factory.new_material(&self.display,
-                                          &ui_state.speech_bubble.rect_vertex_shader,
-                                          &ui_state.speech_bubble.rect_fragment_shader, None,
-                                          Some(&ui_state.speech_bubble.rect_diffuse_texture),
-                                          None)?;
-
-        // Create the primitives.
-        let rect = UiPrimitive::new(rect_model, rect_mesh, rect_material);
+        let text_material = aux.factory.new_material(&self.display, &ui_state.speech_bubble.text_shaders, &TextureGroup::empty())?;
         let text = UiPrimitive::new(text_model, text_mesh, text_material);
+
+        let rect_dims_ndc = text_dims_ndc + margin_sum;
+        let rect_model = Model::new(zero(), zero(), Vector3::new(rect_dims_ndc.x, rect_dims_ndc.y, 1.0));
+        let rect_mesh = Mesh::new_quad(&self.display, 0.0)?;
+        let rect_material = aux.factory.new_material(&self.display, &ui_state.speech_bubble.rect_shaders, &ui_state.speech_bubble.rect_textures)?;
+        let rect = UiPrimitive::new(rect_model, rect_mesh, rect_material);
+
+        let element_center = Vector2::new(entity_pos_ndc.x, entity_pos_ndc.y) + relative_offset.component_mul(&rect_dims_ndc);
+        let element_model = Model::new(Vector3::new(element_center.x, element_center.y, -0.98), zero(), Vector3::new(1.0, 1.0, 1.0));
+        let element = UiElement::new(element_model, vec![rect, text]);
 
         // Create and register the element.
         let id = Uuid::new_v4();
-        ui_state.elements.insert(id, UiElement::new(element_model, vec![rect, text]));
+        ui_state.elements.insert(id, element);
         ui_state.lifetimes.insert(id, (Instant::now(), Duration::new(lifetime, 0)));
 
         Ok(())
     }
+    /// Creates a new tooltip, if the supplied target has a `TooltipData` component.
     fn create_tooltip(&self, entities: &mut Assembly, aux: &mut Singletons, target: &Entity) -> Result<(), UiError> {
         if let Ok(tooltip_text) = entities.borrow_component::<TooltipData>(target).map(|t| t.text.to_owned()) {
             // Attempt to determine the location of the entity.
@@ -140,50 +128,38 @@ impl UserInterface {
             let margin_right = ui_state.tooltip.margin_right as f32 / dimensions.x;
             let margin_top = ui_state.tooltip.margin_top as f32 / dimensions.y;
             let margin_bottom = ui_state.tooltip.margin_bottom as f32 / dimensions.y;
-            let relative_offset = ui_state.tooltip.relative_position_offset;
 
-            let text_dims_ndc = Vector2::new(text_dims_px[0] as f32, text_dims_px[1] as f32)
-                .component_div(&dimensions);
-            let rect_dims_ndc = text_dims_ndc + Vector2::new(margin_left + margin_right, margin_top + margin_bottom);
-
-            let element_center = Vector2::new(entity_pos_ndc.x, entity_pos_ndc.y) + relative_offset.component_mul(&rect_dims_ndc);
-            let text_center = Vector2::new(text_dims_ndc.x - rect_dims_ndc.x, rect_dims_ndc.y - text_dims_ndc.y) / 2.0 + Vector2::new(margin_left, -margin_top);
+            let margin_sum = Vector2::new(margin_left + margin_right, margin_top + margin_bottom);
 
             // Create the model matrices from the above values.
-            let element_model = Model::new(Vector3::new(element_center.x, element_center.y, -0.98), zero(), Vector3::new(1.0, 1.0, 1.0));
+            let text_dims_ndc = Vector2::new(text_dims_px[0] as f32, text_dims_px[1] as f32).component_div(&dimensions);
+            let text_center = Vector2::new(-margin_sum.x, margin_sum.y) / 2.0 + Vector2::new(margin_left, -margin_top);
             let text_model = Model::new(Vector3::new(text_center.x, text_center.y, -0.01), zero(), Vector3::new(1.0, 1.0, 1.0));
-            let rect_model = Model::new(zero(), zero(), Vector3::new(rect_dims_ndc.x, rect_dims_ndc.y, 1.0));
-
-            // Create the text mesh.
             let text_mesh = Mesh::new_text(&self.display, &px_dims, 0.0, &ui_state.font_cache_cpu, &glyphs, &text_dims_ndc.into())?;
-
-            // Create the speech-bubble rectangle mesh.
-            let rect_mesh = Mesh::new_quad(&self.display, 0.0)?;
-
-            // Create the primitive materials.
-            let text_material = aux.factory.new_material(&self.display,
-                                              &ui_state.tooltip.text_vertex_shader,
-                                              &ui_state.tooltip.text_fragment_shader, None, None,
-                                              None)?;
-
-            let rect_material = aux.factory.new_material(&self.display,
-                                              &ui_state.tooltip.rect_vertex_shader,
-                                              &ui_state.tooltip.rect_fragment_shader, None,
-                                              Some(&ui_state.tooltip.rect_diffuse_texture),
-                                              None)?;
-
-            // Create the primitives.
-            let rect = UiPrimitive::new(rect_model, rect_mesh, rect_material);
+            let text_material = aux.factory.new_material(&self.display, &ui_state.tooltip.text_shaders, &TextureGroup::empty())?;
             let text = UiPrimitive::new(text_model, text_mesh, text_material);
+
+            let rect_dims_ndc = text_dims_ndc + margin_sum;
+            let rect_center = Vector3::new(0.0, 0.0, 0.0);
+            let rect_model = Model::new(rect_center, zero(), Vector3::new(rect_dims_ndc.x, rect_dims_ndc.y, 1.0));
+            let rect_mesh = Mesh::new_quad(&self.display, 0.0)?;
+            let rect_material = aux.factory.new_material(&self.display, &ui_state.tooltip.rect_shaders, &ui_state.tooltip.rect_textures)?;
+            let rect = UiPrimitive::new(rect_model, rect_mesh, rect_material);
+
+            let relative_offset = ui_state.tooltip.relative_position_offset;
+            let element_center = Vector2::new(entity_pos_ndc.x, entity_pos_ndc.y) + relative_offset.component_mul(&rect_dims_ndc);
+            let element_model = Model::new(Vector3::new(element_center.x, element_center.y, -0.98), zero(), Vector3::new(1.0, 1.0, 1.0));
+            let element = UiElement::new(element_model, vec![rect, text]);
 
             // Create and register the element.
             let id = Uuid::new_v4();
-            ui_state.elements.insert(id, UiElement::new(element_model, vec![rect, text]));
+            ui_state.elements.insert(id, element);
             ui_state.current_tooltip = Some(id);
         }
 
         Ok(())
     }
+    /// Removes the current tooltip (if any) from the `UiElement` registry.
     fn destroy_tooltip(&self, entities: &mut Assembly) {
         entities.ws1::<UiState>()
             .map(|(_, u)| {

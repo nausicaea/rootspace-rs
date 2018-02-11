@@ -1,7 +1,7 @@
 use std::collections::hash_map::{HashMap, DefaultHasher};
 use std::hash::{Hash, Hasher};
-use std::path::Path;
 use glium::Display;
+use common::resource_group::{ShaderGroup, TextureGroup};
 use components::material::{Material, MaterialError};
 
 /// `ComponentFactory` provides a way to create components and cache them for reuse later. Due to
@@ -21,24 +21,21 @@ impl ComponentFactory {
     }
     /// Creates a new `Material` component or returns a cached instance with the specified
     /// parameters.
-    pub fn new_material(&mut self, display: &Display, vs: &Path, fs: &Path, gs: Option<&Path>, dt: Option<&Path>, nt: Option<&Path>) -> Result<Material, FactoryError> {
-        let hash = self.calculate_material_hash(vs, fs, gs, dt, nt);
+    pub fn new_material(&mut self, display: &Display, shaders: &ShaderGroup, textures: &TextureGroup) -> Result<Material, FactoryError> {
+        let hash = self.calculate_material_hash(shaders, textures);
 
         if self.materials.contains_key(&hash) {
             Ok(self.materials.get(&hash).unwrap_or_else(|| unreachable!()).clone())
         } else {
-            let material = Material::new(display, vs, fs, gs, dt, nt)?;
+            let material = Material::new(display, shaders.clone(), textures.clone())?;
             self.materials.insert(hash, material.clone());
             Ok(material)
         }
     }
-    fn calculate_material_hash(&self, vs: &Path, fs: &Path, gs: Option<&Path>, dt: Option<&Path>, nt: Option<&Path>) -> u64 {
+    fn calculate_material_hash(&self, shaders: &ShaderGroup, textures: &TextureGroup) -> u64 {
         let mut s = DefaultHasher::new();
-        vs.hash(&mut s);
-        fs.hash(&mut s);
-        gs.hash(&mut s);
-        dt.hash(&mut s);
-        nt.hash(&mut s);
+        shaders.hash(&mut s);
+        textures.hash(&mut s);
         s.finish()
     }
 }

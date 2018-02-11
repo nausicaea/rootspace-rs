@@ -33,6 +33,7 @@ pub mod systems;
 
 pub use self::event::EngineEvent;
 pub use self::common::ui_styles::{Common, SpeechBubble, Tooltip};
+pub use self::common::resource_group::{ShaderGroup, TextureGroup};
 pub use self::components::bounding_volume::BoundingVolume;
 pub use self::components::camera::Camera;
 pub use self::components::cursor::Cursor;
