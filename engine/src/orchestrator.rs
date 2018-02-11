@@ -5,30 +5,31 @@ use std::time::{Instant, Duration};
 use ecs::World;
 use event::EngineEvent;
 use singletons::Singletons;
+use common::file_manipulation::{verify_accessible_file, FileError};
 
 /// The `Orchestrator` owns the `World` and manages time (and the game loop).
 pub struct Orchestrator {
-    /// Specifies the path to the resource tree.
-    pub resource_path: PathBuf,
-    /// Specifies the fixed time interval of the simulation.
-    pub delta_time: Duration,
-    /// Specifies the maximum duration of a single frame.
-    pub max_frame_time: Duration,
-    /// If `true`, activate debugging functionality.
-    pub debug: bool,
     /// Holds an instance of the `World`.
     pub world: World<EngineEvent, Singletons>,
+    /// If `true`, activate debugging functionality.
+    pub debug: bool,
+    /// Specifies the path to the resource tree.
+    resource_path: PathBuf,
+    /// Specifies the fixed time interval of the simulation.
+    delta_time: Duration,
+    /// Specifies the maximum duration of a single frame.
+    max_frame_time: Duration,
 }
 
 impl Orchestrator {
     /// Creates a new instance of the `Orchestrator`.
     pub fn new(rp: &Path, delta_time: Duration, max_frame_time: Duration, debug: bool) -> Self {
         Orchestrator {
+            world: Default::default(),
+            debug: debug,
             resource_path: rp.to_owned(),
             delta_time: delta_time,
             max_frame_time: max_frame_time,
-            debug: debug,
-            world: Default::default(),
         }
     }
     /// Initializes state and starts the game loop. Using the supplied closure, the state of the
@@ -37,6 +38,12 @@ impl Orchestrator {
         init(self);
         self.world.dispatch(EngineEvent::Ready);
         self.main_loop();
+    }
+    /// Attempts to retrieve a file path from the resource tree.
+    pub fn get_file(&self, category: &str, filename: &str) -> Result<PathBuf, FileError> {
+        let path = self.resource_path.join(category).join(filename);
+        verify_accessible_file(&path)?;
+        Ok(path)
     }
     /// Runs the actual game loop. This loop uses a fixed time-step method to ensure that
     /// `World::update` is called at a fixed interval, always. After a cycle of update calls,

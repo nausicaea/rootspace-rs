@@ -46,19 +46,19 @@ pub fn run(resource_path: &Path, debugging: bool) {
 
         // Assemble the UI canvas.
         {
-            let font_path = o.resource_path.join("fonts").join("SourceCodePro-Regular.ttf");
+            let font_path = o.get_file("fonts", "SourceCodePro-Regular.ttf").unwrap();
             let font_scale = 24.0;
             let common = Common::new(&font_path, font_scale).unwrap();
-            let tvs = o.resource_path.join("shaders").join("text-vertex.glsl");
-            let tfs = o.resource_path.join("shaders").join("text-fragment.glsl");
-            let rvs = o.resource_path.join("shaders").join("rect-vertex.glsl");
-            let rfs = o.resource_path.join("shaders").join("rect-fragment.glsl");
-            let rdt = o.resource_path.join("textures").join("speech-bubble.png");
+            let tvs = o.get_file("shaders", "text-vertex.glsl").unwrap();
+            let tfs = o.get_file("shaders", "text-fragment.glsl").unwrap();
+            let rvs = o.get_file("shaders", "rect-vertex.glsl").unwrap();
+            let rfs = o.get_file("shaders", "rect-fragment.glsl").unwrap();
+            let rdt = o.get_file("textures", "speech-bubble.png").unwrap();
             let text_shaders = ShaderGroup::new(&tvs, &tfs, None).unwrap();
             let rect_shaders = ShaderGroup::new(&rvs, &rfs, None).unwrap();
             let rect_textures = TextureGroup::new(Some(&rdt), None).unwrap();
             let speech_bubble = SpeechBubble::new(text_shaders.clone(), rect_shaders.clone(), rect_textures);
-            let rdt = o.resource_path.join("textures").join("tooltip.png");
+            let rdt = o.get_file("textures", "tooltip.png").unwrap();
             let rect_textures = TextureGroup::new(Some(&rdt), None).unwrap();
             let tooltip = Tooltip::new(text_shaders, rect_shaders, rect_textures);
 
@@ -85,8 +85,8 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let position = Vector3::new(0.0, 0.0, -10.0);
             let axisangle = nalgebra::zero();
             let scale = Vector3::new(1.0, 1.0, 1.0);
-            let vs = o.resource_path.join("shaders").join("test-vertex.glsl");
-            let fs = o.resource_path.join("shaders").join("test-fragment.glsl");
+            let vs = o.get_file("shaders", "test-vertex.glsl").unwrap();
+            let fs = o.get_file("shaders", "test-fragment.glsl").unwrap();
             let shaders = ShaderGroup::new(&vs, &fs, None).unwrap();
             let textures = TextureGroup::empty();
 
@@ -113,8 +113,8 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let position = Vector3::new(-2.0, 1.0, -7.0);
             let axisangle = Vector3::new(0.0, f32::consts::PI / 4.0, 0.0);
             let scale = Vector3::new(1.0, 1.0, 1.0);
-            let vs = o.resource_path.join("shaders").join("test-vertex.glsl");
-            let fs = o.resource_path.join("shaders").join("test-fragment.glsl");
+            let vs = o.get_file("shaders", "test-vertex.glsl").unwrap();
+            let fs = o.get_file("shaders", "test-fragment.glsl").unwrap();
             let shaders = ShaderGroup::new(&vs, &fs, None).unwrap();
             let textures = TextureGroup::empty();
 
@@ -141,8 +141,8 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let position = Vector3::new(1.0, -1.5, -5.0);
             let axisangle = Vector3::new(1.0, 1.0, 1.0) * f32::consts::PI / 4.0;
             let scale = Vector3::new(1.0, 1.0, 1.0);
-            let vs = o.resource_path.join("shaders").join("test-vertex.glsl");
-            let fs = o.resource_path.join("shaders").join("test-fragment.glsl");
+            let vs = o.get_file("shaders", "test-vertex.glsl").unwrap();
+            let fs = o.get_file("shaders", "test-fragment.glsl").unwrap();
             let shaders = ShaderGroup::new(&vs, &fs, None).unwrap();
             let textures = TextureGroup::empty();
 
