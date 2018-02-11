@@ -26,14 +26,14 @@ impl Mesh {
         })
     }
     /// Creates a new unit square.
-    pub fn new_quad(display: &Display, z_value: f32) -> Result<Self, MeshError> {
+    pub fn new_quad(display: &Display) -> Result<Self, MeshError> {
         // Specifies the half of the width of the square.
         let hw = 0.5;
         let vertices = [
-            Vertex::new([-hw, hw, z_value], [0.0, 1.0], [0.0, 0.0, 1.0]),
-            Vertex::new([-hw, -hw, z_value], [0.0, 0.0], [0.0, 0.0, 1.0]),
-            Vertex::new([hw, -hw, z_value], [1.0, 0.0], [0.0, 0.0, 1.0]),
-            Vertex::new([hw, hw, z_value], [1.0, 1.0], [0.0, 0.0, 1.0]),
+            Vertex::new([-hw, hw, 0.0], [0.0, 1.0], [0.0, 0.0, 1.0]),
+            Vertex::new([-hw, -hw, 0.0], [0.0, 0.0], [0.0, 0.0, 1.0]),
+            Vertex::new([hw, -hw, 0.0], [1.0, 0.0], [0.0, 0.0, 1.0]),
+            Vertex::new([hw, hw, 0.0], [1.0, 1.0], [0.0, 0.0, 1.0]),
         ];
         let indices = [0, 1, 2, 2, 3, 0];
 
