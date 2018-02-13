@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::{Read, Error};
 use std::path::Path;
 use image;
-use glium::texture::RawImage2d;
+use glium::texture::{Texture2d, RawImage2d};
 
 /// Reads the specified file into a string. This function assumes that the specified path points to
 /// an accessible file.
@@ -34,6 +34,16 @@ pub fn load_image_file(file_path: &Path) -> Result<RawImage2d<u8>, FileError> {
     Ok(RawImage2d::from_raw_rgba_reversed(&rgba_img.into_raw(), dimensions))
 }
 
+/// Given a texture and a path, saves the texture data as image to a file.
+pub fn save_texture(tex: &Texture2d, path: &Path) -> Result<(), FileError> {
+    let img = tex.read::<RawImage2d<u8>>();
+    let img_buf = image::ImageBuffer::<image::Rgba<u8>, _>::from_raw(img.width, img.height, img.data)
+        .ok_or(FileError::CannotCreateImageFromRaw)?;
+    img_buf.save(path)?;
+
+    Ok(())
+}
+
 /// Verifies that the specified path is a file, and that it is accessible by the user (i.e. it
 /// exists and the current user has access permissions).
 pub fn verify_accessible_file(path: &Path) -> Result<(), FileError> {
@@ -52,6 +62,8 @@ pub enum FileError {
     FileNotFound(String),
     #[fail(display = "Not a file: '{}'", _0)]
     NotAFile(String),
+    #[fail(display = "Failed to create an image buffer from the raw texture data.")]
+    CannotCreateImageFromRaw,
     #[fail(display = "{}", _0)]
     IoError(#[cause] Error),
     #[fail(display = "{}", _0)]

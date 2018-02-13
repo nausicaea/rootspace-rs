@@ -6,8 +6,11 @@ in vec2 f_tex_coord;
 
 out vec4 color;
 
+const vec3 text_color = vec3(1.0, 1.0, 1.0);
+
 void main() {
-    float alpha_channel = texture(font_cache, f_tex_coord).r;
-    vec3 color_channel = vec3(1.0 - alpha_channel);
-    color = vec4(color_channel, alpha_channel);
+    vec4 text_data = texture(font_cache, f_tex_coord);
+    float alpha = text_data.r;
+    float color_factor = text_data.a;
+    color = vec4(text_color * color_factor * alpha, alpha);
 }

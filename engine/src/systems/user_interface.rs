@@ -1,5 +1,8 @@
 use std::time::{Instant, Duration};
 use glium::Display;
+use std::path::Path;
+use image;
+use glium::texture::RawImage2d;
 use nalgebra::{Point3, Vector2};
 use uuid::Uuid;
 use ecs::{Entity, LoopStageFlag, SystemTrait, Assembly, EcsError, DispatchEvents};
