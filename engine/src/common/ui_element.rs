@@ -45,7 +45,7 @@ impl UiElement {
         let rect = UiPrimitive::create_rectangle(display, factory, rect_center, rect_dims_ndc,
                                                  rect_shaders, rect_textures)?;
         let text = UiPrimitive::create_text(display, &screen_dimensions, factory, &cache.cpu, &glyphs,
-                                            text_center, &text_dims_ndc, text_shaders)?;
+                                            text_center, &text_dims_ndc, text_shaders, font.color)?;
 
         Ok(UiElement::new(element_model, vec![rect, text]))
     }

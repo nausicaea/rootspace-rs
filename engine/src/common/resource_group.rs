@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 use glium::Display;
 use glium::texture::{Texture2d, RawImage2d, ClientFormat, UncompressedFloatFormat, MipmapsOption,
     TextureCreationError as RootTextureCreationError};
+use nalgebra::Vector3;
 use rusttype::{FontCollection, Font};
 use rusttype::gpu_cache::Cache;
 use common::file_manipulation::{load_binary_file, verify_accessible_file, FileError as RootFileError};
@@ -14,6 +15,7 @@ pub struct FontGroup {
     pub path: PathBuf,
     /// Determines the scale used for the font.
     pub scale: f32,
+    pub color: Vector3<f32>,
     /// Holds the actual font object.
     pub font: Font<'static>,
 }
@@ -21,7 +23,7 @@ pub struct FontGroup {
 impl FontGroup {
     /// Creates a new `FontGroup` while ensuring that the supplied font file is accessible. Also
     /// loads the font from the file.
-    pub fn new(path: &Path, scale: f32) -> Result<Self, ResourceError> {
+    pub fn new(path: &Path, scale: f32, color: Vector3<f32>) -> Result<Self, ResourceError> {
         verify_accessible_file(path)?;
         let font_data = load_binary_file(path)?;
         let collection = FontCollection::from_bytes(font_data);
@@ -31,6 +33,7 @@ impl FontGroup {
         Ok(FontGroup {
             path: path.into(),
             scale: scale,
+            color: color,
             font: font,
         })
     }
