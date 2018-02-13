@@ -87,7 +87,7 @@ impl Renderer {
                     for p in &e.primitives {
                         let uniforms = UiUniforms {
                             pvm_matrix: e.model.matrix() * p.model.matrix(),
-                            font_cache: &u.font_cache_gpu,
+                            font_cache: &u.font_cache.gpu,
                             diff_tex: p.material.diff_tex.as_ref().map(|dt| dt.borrow()),
                             norm_tex: p.material.norm_tex.as_ref().map(|nt| nt.borrow()),
                         };

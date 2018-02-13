@@ -49,7 +49,7 @@ pub fn layout_paragraph<'a>(font: &Font<'a>, scale: f32, width: u32, text: &str)
 }
 
 /// Layouts a paragraph of text using the GPU cache.
-pub fn layout_paragraph_cached<'a>(cache: &mut Cache<'a>, cache_tex: &Texture2d, font: &Font<'a>, scale: f32, width: u32, text: &str) -> Result<(Vec<PositionedGlyph<'a>>, [u32; 2]), CacheWriteErr> {
+pub fn layout_paragraph_cached<'a>(cache: &mut Cache<'a>, cache_tex: &Texture2d, font: &Font<'a>, scale: f32, width: u32, text: &str) -> Result<(Vec<PositionedGlyph<'a>>, [u32; 2]), TextRenderError> {
     let (glyphs, text_dims) = layout_paragraph(font, scale, width, text);
 
     enqueue_glyphs(cache, &glyphs);
@@ -67,7 +67,7 @@ fn enqueue_glyphs<'a>(cache: &mut Cache<'a>, glyphs: &[PositionedGlyph<'a>]) {
 }
 
 /// Given an up-to-date font cache (CPU side), updates the specified texture (e.g. the GPU side).
-fn update_cache(cache: &mut Cache, cache_tex: &Texture2d) -> Result<(), CacheWriteErr> {
+fn update_cache(cache: &mut Cache, cache_tex: &Texture2d) -> Result<(), TextRenderError> {
     cache.cache_queued(|rect, data| {
         cache_tex.main_level().write(Rect {
             left: rect.min.x,
@@ -80,5 +80,24 @@ fn update_cache(cache: &mut Cache, cache_tex: &Texture2d) -> Result<(), CacheWri
             height: rect.height(),
             format: ClientFormat::U8
         });
-    })
+    })?;
+
+    Ok(())
+}
+
+#[derive(Debug, Fail)]
+pub enum TextRenderError {
+    #[fail(display = "At least one of the queued glyphs is too big to fit into the cache, even if all other glyphs are removed")]
+    GlyphTooLarge,
+    #[fail(display = "Not all of the requested glyphs can fit into the cache, even if the cache is completely cleared before the attempt")]
+    NoRoomForWholeQueue,
+}
+
+impl From<CacheWriteErr> for TextRenderError {
+    fn from(value: CacheWriteErr) -> Self {
+        match value {
+            CacheWriteErr::GlyphTooLarge => TextRenderError::GlyphTooLarge,
+            CacheWriteErr::NoRoomForWholeQueue => TextRenderError::NoRoomForWholeQueue,
+        }
+    }
 }

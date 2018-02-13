@@ -1,5 +1,67 @@
+use std::borrow::Cow;
 use std::path::{Path, PathBuf};
-use common::file_manipulation::{verify_accessible_file, FileError};
+use glium::Display;
+use glium::texture::{Texture2d, RawImage2d, ClientFormat, UncompressedFloatFormat, MipmapsOption,
+    TextureCreationError as RootTextureCreationError};
+use rusttype::{FontCollection, Font};
+use rusttype::gpu_cache::Cache;
+use common::file_manipulation::{load_binary_file, verify_accessible_file, FileError as RootFileError};
+
+/// Encapsulates font data as a path to the font, the font scale and the font itself.
+#[derive(Clone)]
+pub struct FontGroup {
+    /// Holds the path to the font file.
+    pub path: PathBuf,
+    /// Determines the scale used for the font.
+    pub scale: f32,
+    /// Holds the actual font object.
+    pub font: Font<'static>,
+}
+
+impl FontGroup {
+    /// Creates a new `FontGroup` while ensuring that the supplied font file is accessible. Also
+    /// loads the font from the file.
+    pub fn new(path: &Path, scale: f32) -> Result<Self, ResourceError> {
+        verify_accessible_file(path)?;
+        let font_data = load_binary_file(path)?;
+        let collection = FontCollection::from_bytes(font_data);
+        let font = collection.into_font()
+            .ok_or(ResourceError::FontError)?;
+
+        Ok(FontGroup {
+            path: path.into(),
+            scale: scale,
+            font: font,
+        })
+    }
+}
+
+pub struct FontCacheGroup {
+    pub cpu: Cache<'static>,
+    pub gpu: Texture2d,
+}
+
+impl FontCacheGroup {
+    pub fn new(display: &Display, dimensions: &[u32; 2], hi_dpi_factor: u32) -> Result<Self, ResourceError> {
+        let cache_width = dimensions[0] * hi_dpi_factor;
+        let cache_height = dimensions[1] * hi_dpi_factor;
+        let scale_tolerance = 0.1;
+        let position_tolerance = 0.1;
+        let cpu_cache = Cache::new(cache_width, cache_height, scale_tolerance, position_tolerance);
+        let raw_tex = RawImage2d {
+            data: Cow::Owned(vec![128u8; cache_width as usize * cache_height as usize]),
+            width: cache_width,
+            height: cache_height,
+            format: ClientFormat::U8
+        };
+        let gpu_cache = Texture2d::with_format(display, raw_tex, UncompressedFloatFormat::U8, MipmapsOption::NoMipmap)?;
+
+        Ok(FontCacheGroup {
+            cpu: cpu_cache,
+            gpu: gpu_cache,
+        })
+    }
+}
 
 /// Encapsulates a group of shaders as a set of paths to the individual shader source files.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -15,7 +77,7 @@ pub struct ShaderGroup {
 impl ShaderGroup {
     /// Creates a new `ShaderGroup` while ensuring the existence of the specified shader source
     /// files.
-    pub fn new(vertex: &Path, fragment: &Path, geometry: Option<&Path>) -> Result<Self, FileError> {
+    pub fn new(vertex: &Path, fragment: &Path, geometry: Option<&Path>) -> Result<Self, ResourceError> {
         verify_accessible_file(vertex)?;
         verify_accessible_file(fragment)?;
         if let Some(geom) = geometry {
@@ -41,7 +103,7 @@ pub struct TextureGroup {
 
 impl TextureGroup {
     /// Creates a new `TextureGroup` while ensuring the existence of the specified texture files.
-    pub fn new(diffuse: Option<&Path>, normal: Option<&Path>) -> Result<Self, FileError> {
+    pub fn new(diffuse: Option<&Path>, normal: Option<&Path>) -> Result<Self, ResourceError> {
         if let Some(diff) = diffuse {
             verify_accessible_file(diff)?;
         }
@@ -60,5 +122,27 @@ impl TextureGroup {
             diffuse: None,
             normal: None,
         }
+    }
+}
+
+#[derive(Debug, Fail)]
+pub enum ResourceError {
+    #[fail(display = "{}", _0)]
+    FileError(#[cause] RootFileError),
+    #[fail(display = "{}", _0)]
+    TextureCreationError(#[cause] RootTextureCreationError),
+    #[fail(display = "Could not convert the FontCollection to a single Font.")]
+    FontError,
+}
+
+impl From<RootFileError> for ResourceError {
+    fn from(value: RootFileError) -> Self {
+        ResourceError::FileError(value)
+    }
+}
+
+impl From<RootTextureCreationError> for ResourceError {
+    fn from(value: RootTextureCreationError) -> Self {
+        ResourceError::TextureCreationError(value)
     }
 }

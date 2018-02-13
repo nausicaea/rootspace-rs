@@ -5,8 +5,8 @@ use std::time::Duration;
 use nalgebra;
 use nalgebra::{Point3, Vector3};
 use engine::{Orchestrator, EventMonitor, DebugConsole, DebugShell, Renderer, EventInterface, Model,
-    Description, Mesh, UserInterface, UiState, Common, SpeechBubble, Camera, Tooltip, TooltipData,
-    ShaderGroup, TextureGroup, BoundingVolume, Cursor, CursorController};
+    Description, Mesh, UserInterface, UiState, SpeechBubble, Camera, Tooltip, TooltipData,
+    ShaderGroup, TextureGroup, BoundingVolume, Cursor, CursorController, FontGroup};
 
 pub fn run(resource_path: &Path, debugging: bool) {
     // The following variables set up the state of the engine.
@@ -48,23 +48,24 @@ pub fn run(resource_path: &Path, debugging: bool) {
         {
             let font_path = o.get_file("fonts", "SourceCodePro-Regular.ttf").unwrap();
             let font_scale = 24.0;
-            let common = Common::new(&font_path, font_scale).unwrap();
             let tvs = o.get_file("shaders", "text-vertex.glsl").unwrap();
             let tfs = o.get_file("shaders", "text-fragment.glsl").unwrap();
             let rvs = o.get_file("shaders", "rect-vertex.glsl").unwrap();
             let rfs = o.get_file("shaders", "rect-fragment.glsl").unwrap();
             let rdt = o.get_file("textures", "speech-bubble.png").unwrap();
+            let font_group = FontGroup::new(&font_path, font_scale).unwrap();
             let text_shaders = ShaderGroup::new(&tvs, &tfs, None).unwrap();
             let rect_shaders = ShaderGroup::new(&rvs, &rfs, None).unwrap();
             let rect_textures = TextureGroup::new(Some(&rdt), None).unwrap();
-            let speech_bubble = SpeechBubble::new(text_shaders.clone(), rect_shaders.clone(), rect_textures);
+            let speech_bubble = SpeechBubble::new(font_group, text_shaders.clone(), rect_shaders.clone(), rect_textures);
             let rdt = o.get_file("textures", "tooltip.png").unwrap();
             let rect_textures = TextureGroup::new(Some(&rdt), None).unwrap();
-            let tooltip = Tooltip::new(text_shaders, rect_shaders, rect_textures);
+            let font_group = FontGroup::new(&font_path, font_scale).unwrap();
+            let tooltip = Tooltip::new(font_group, text_shaders, rect_shaders, rect_textures);
 
             let canvas = o.world.create_entity();
             let d = Description::new("canvas");
-            let u = UiState::new(&renderer.display, &dimensions, hi_dpi_factor, common, speech_bubble, tooltip).unwrap();
+            let u = UiState::new(&renderer.display, &dimensions, hi_dpi_factor, speech_bubble, tooltip).unwrap();
 
             o.world.add_component(&canvas, d).unwrap();
             o.world.add_component(&canvas, u).unwrap();
@@ -94,7 +95,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let d = Description::new("test-entity-a");
             let tooltip = TooltipData::new("Hi, I'm a quad!");
             let model = Model::new(position, axisangle, scale);
-            let mesh = Mesh::new_quad(&renderer.display, 0.0).unwrap();
+            let mesh = Mesh::new_quad(&renderer.display).unwrap();
             let material = o.world.aux.factory.new_material(&renderer.display, &shaders, &textures).unwrap();
             let bounding_volume = BoundingVolume::from_mesh_aabb(&mesh).unwrap();
 

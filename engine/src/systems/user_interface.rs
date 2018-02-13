@@ -1,7 +1,6 @@
 use std::time::{Instant, Duration};
 use glium::Display;
-use nalgebra::{Point3, Vector2, Vector3, zero};
-use rusttype::gpu_cache::CacheWriteErr;
+use nalgebra::{Point3, Vector2};
 use uuid::Uuid;
 use ecs::{Entity, LoopStageFlag, SystemTrait, Assembly, EcsError, DispatchEvents};
 use event::{EngineEventFlag, EngineEvent};
@@ -10,13 +9,11 @@ use singletons::factory::FactoryError;
 use components::description::Description;
 use components::camera::Camera;
 use components::model::Model;
-use components::mesh::{Mesh, MeshError};
+use components::mesh::MeshError;
 use components::tooltip::TooltipData;
 use components::ui_state::UiState;
-use common::resource_group::TextureGroup;
-use common::ui_element::UiElement;
-use common::ui_primitive::UiPrimitive;
-use common::text_rendering::layout_paragraph_cached;
+use common::ui_element::{UiElement, UiElementError as RootUiElementError};
+use common::ui_primitive::{UiPrimitiveError as RootUiPrimitiveError};
 
 /// The `UserInterface` is responsible for managing the state associated with the user interface.
 /// It also processes events that relate to the UI.
@@ -44,48 +41,26 @@ impl UserInterface {
 
         // Project the entity position to normalized device coordinates (this requires the camera
         // entity).
-        let (entity_pos_ndc, px_dims, dimensions) = entities.rs1::<Camera>()
-            .map(|(_, c)| (c.world_point_to_ndc(&entity_pos_world), c.dimensions, Vector2::new(c.dimensions[0] as f32, c.dimensions[1] as f32)))
+        let (entity_pos_ndc, dimensions) = entities.rs1::<Camera>()
+            .map(|(_, c)| (c.world_point_to_ndc(&entity_pos_world), Vector2::from(c.dimensions)))
             .expect("Could not access the Camera component");
 
         // Obtain a mutable reference to the `UiState`.
         let (_, ui_state) = entities.ws1::<UiState>()
             .expect("Could not access the UiState component");
 
-        // Layout the glyphs based on the textual `content`.
-        let (glyphs, text_dims_px) = layout_paragraph_cached(&mut ui_state.font_cache_cpu,
-                                                             &ui_state.font_cache_gpu,
-                                                             &ui_state.common.font,
-                                                             ui_state.common.font_scale,
-                                                             ui_state.speech_bubble.width,
-                                                             content)?;
-
-        // Calculate positions and dimensions of the involved primitives: Text and Rect.
-        let margin_left = ui_state.speech_bubble.margin_left as f32 / dimensions.x;
-        let margin_right = ui_state.speech_bubble.margin_right as f32 / dimensions.x;
-        let margin_top = ui_state.speech_bubble.margin_top as f32 / dimensions.y;
-        let margin_bottom = ui_state.speech_bubble.margin_bottom as f32 / dimensions.y;
-        let relative_offset = ui_state.speech_bubble.relative_position_offset;
-
-        let margin_sum = Vector2::new(margin_left + margin_right, margin_top + margin_bottom);
-
-        // Create the model matrices from the above values.
-        let text_dims_ndc = Vector2::new(text_dims_px[0] as f32, text_dims_px[1] as f32).component_div(&dimensions);
-        let text_center = Vector2::new(-margin_sum.x, margin_sum.y) / 2.0 + Vector2::new(margin_left, -margin_top);
-        let text_model = Model::new(Vector3::new(text_center.x, text_center.y, -0.01), zero(), Vector3::new(1.0, 1.0, 1.0));
-        let text_mesh = Mesh::new_text(&self.display, &px_dims, 0.0, &ui_state.font_cache_cpu, &glyphs, &text_dims_ndc.into())?;
-        let text_material = aux.factory.new_material(&self.display, &ui_state.speech_bubble.text_shaders, &TextureGroup::empty())?;
-        let text = UiPrimitive::new(text_model, text_mesh, text_material);
-
-        let rect_dims_ndc = text_dims_ndc + margin_sum;
-        let rect_model = Model::new(zero(), zero(), Vector3::new(rect_dims_ndc.x, rect_dims_ndc.y, 1.0));
-        let rect_mesh = Mesh::new_quad(&self.display, 0.0)?;
-        let rect_material = aux.factory.new_material(&self.display, &ui_state.speech_bubble.rect_shaders, &ui_state.speech_bubble.rect_textures)?;
-        let rect = UiPrimitive::new(rect_model, rect_mesh, rect_material);
-
-        let element_center = Vector2::new(entity_pos_ndc.x, entity_pos_ndc.y) + relative_offset.component_mul(&rect_dims_ndc);
-        let element_model = Model::new(Vector3::new(element_center.x, element_center.y, -0.98), zero(), Vector3::new(1.0, 1.0, 1.0));
-        let element = UiElement::new(element_model, vec![rect, text]);
+        // Create the text box
+        let element = UiElement::create_textbox(&self.display, &mut aux.factory,
+                                                &mut ui_state.font_cache,
+                                                &ui_state.speech_bubble.margin,
+                                                &ui_state.speech_bubble.font,
+                                                &ui_state.speech_bubble.rect_shaders,
+                                                &ui_state.speech_bubble.rect_textures,
+                                                &ui_state.speech_bubble.text_shaders,
+                                                &entity_pos_ndc.coords,
+                                                &ui_state.speech_bubble.relative_position_offset,
+                                                &dimensions, ui_state.speech_bubble.text_width,
+                                                &content)?;
 
         // Create and register the element.
         let id = Uuid::new_v4();
@@ -107,49 +82,26 @@ impl UserInterface {
 
             // Project the entity position to normalized device coordinates (this requires the camera
             // entity).
-            let (entity_pos_ndc, px_dims, dimensions) = entities.rs1::<Camera>()
-                .map(|(_, c)| (c.world_point_to_ndc(&entity_pos_world), c.dimensions, Vector2::new(c.dimensions[0] as f32, c.dimensions[1] as f32)))
+            let (entity_pos_ndc, dimensions) = entities.rs1::<Camera>()
+                .map(|(_, c)| (c.world_point_to_ndc(&entity_pos_world), Vector2::from(c.dimensions)))
                 .expect("Could not access the Camera component");
 
             // Obtain a mutable reference to the `UiState`.
             let (_, ui_state) = entities.ws1::<UiState>()
                 .expect("Could not access the UiState component");
 
-            // Layout the glyphs based on the textual `content`.
-            let (glyphs, text_dims_px) = layout_paragraph_cached(&mut ui_state.font_cache_cpu,
-                                                                 &ui_state.font_cache_gpu,
-                                                                 &ui_state.common.font,
-                                                                 ui_state.common.font_scale,
-                                                                 ui_state.tooltip.width,
-                                                                 &tooltip_text)?;
-
-            // Calculate positions and dimensions of the involved primitives: Text and Rect.
-            let margin_left = ui_state.tooltip.margin_left as f32 / dimensions.x;
-            let margin_right = ui_state.tooltip.margin_right as f32 / dimensions.x;
-            let margin_top = ui_state.tooltip.margin_top as f32 / dimensions.y;
-            let margin_bottom = ui_state.tooltip.margin_bottom as f32 / dimensions.y;
-
-            let margin_sum = Vector2::new(margin_left + margin_right, margin_top + margin_bottom);
-
-            // Create the model matrices from the above values.
-            let text_dims_ndc = Vector2::new(text_dims_px[0] as f32, text_dims_px[1] as f32).component_div(&dimensions);
-            let text_center = Vector2::new(-margin_sum.x, margin_sum.y) / 2.0 + Vector2::new(margin_left, -margin_top);
-            let text_model = Model::new(Vector3::new(text_center.x, text_center.y, -0.01), zero(), Vector3::new(1.0, 1.0, 1.0));
-            let text_mesh = Mesh::new_text(&self.display, &px_dims, 0.0, &ui_state.font_cache_cpu, &glyphs, &text_dims_ndc.into())?;
-            let text_material = aux.factory.new_material(&self.display, &ui_state.tooltip.text_shaders, &TextureGroup::empty())?;
-            let text = UiPrimitive::new(text_model, text_mesh, text_material);
-
-            let rect_dims_ndc = text_dims_ndc + margin_sum;
-            let rect_center = Vector3::new(0.0, 0.0, 0.0);
-            let rect_model = Model::new(rect_center, zero(), Vector3::new(rect_dims_ndc.x, rect_dims_ndc.y, 1.0));
-            let rect_mesh = Mesh::new_quad(&self.display, 0.0)?;
-            let rect_material = aux.factory.new_material(&self.display, &ui_state.tooltip.rect_shaders, &ui_state.tooltip.rect_textures)?;
-            let rect = UiPrimitive::new(rect_model, rect_mesh, rect_material);
-
-            let relative_offset = ui_state.tooltip.relative_position_offset;
-            let element_center = Vector2::new(entity_pos_ndc.x, entity_pos_ndc.y) + relative_offset.component_mul(&rect_dims_ndc);
-            let element_model = Model::new(Vector3::new(element_center.x, element_center.y, -0.98), zero(), Vector3::new(1.0, 1.0, 1.0));
-            let element = UiElement::new(element_model, vec![rect, text]);
+            // Create the text box
+            let element = UiElement::create_textbox(&self.display, &mut aux.factory,
+                                                    &mut ui_state.font_cache,
+                                                    &ui_state.tooltip.margin,
+                                                    &ui_state.tooltip.font,
+                                                    &ui_state.tooltip.rect_shaders,
+                                                    &ui_state.tooltip.rect_textures,
+                                                    &ui_state.tooltip.text_shaders,
+                                                    &entity_pos_ndc.coords,
+                                                    &ui_state.tooltip.relative_position_offset,
+                                                    &dimensions, ui_state.tooltip.text_width,
+                                                    &tooltip_text)?;
 
             // Create and register the element.
             let id = Uuid::new_v4();
@@ -269,38 +221,25 @@ impl SystemTrait<EngineEvent, Singletons> for UserInterface {
 /// Operations of the `UserInterface` may fail. `UiError` describes those errors.
 #[derive(Debug, Fail)]
 pub enum UiError {
-    #[fail(display = "{}", _0)]
-    AssemblyError(#[cause] EcsError),
-    #[fail(display = "{}", _0)]
-    CacheError(String),
-    #[fail(display = "{}", _0)]
-    FactError(#[cause] FactoryError),
-    #[fail(display = "{}", _0)]
-    MeshCreationError(#[cause] MeshError),
     #[fail(display = "Unable to uniquely identify the entity name '{}'", _0)]
     EntityNameNotFound(String, #[cause] EcsError),
     #[fail(display = "The entity {1} has no component '{0}'", _0, _1)]
     ComponentNotFound(String, Entity, #[cause] EcsError),
+    #[fail(display = "{}", _0)]
+    UiPrimitiveError(#[cause] RootUiPrimitiveError),
+    #[fail(display = "{}", _0)]
+    UiElementError(#[cause] RootUiElementError),
+    #[fail(display = "{}", _0)]
+    AssemblyError(#[cause] EcsError),
+    #[fail(display = "{}", _0)]
+    FactError(#[cause] FactoryError),
+    #[fail(display = "{}", _0)]
+    MeshCreationError(#[cause] MeshError),
 }
 
 impl From<EcsError> for UiError {
     fn from(value: EcsError) -> Self {
         UiError::AssemblyError(value)
-    }
-}
-
-impl From<CacheWriteErr> for UiError {
-    fn from(value: CacheWriteErr) -> Self {
-        use rusttype::gpu_cache::CacheWriteErr::*;
-        use self::UiError::*;
-
-        match value {
-            GlyphTooLarge => CacheError("At least one of the queued glyphs is too big to fit into
-                                        the cache, even if all other glyphs are removed".into()),
-            NoRoomForWholeQueue => CacheError("Not all of the requested glyphs can fit into the
-                                              cache, even if the cache is completely cleared before
-                                              the attempt".into()),
-        }
     }
 }
 
@@ -310,8 +249,8 @@ impl From<FactoryError> for UiError {
     }
 }
 
-impl From<MeshError> for UiError {
-    fn from(value: MeshError) -> Self {
-        UiError::MeshCreationError(value)
+impl From<RootUiElementError> for UiError {
+    fn from(value: RootUiElementError) -> Self {
+        UiError::UiElementError(value)
     }
 }

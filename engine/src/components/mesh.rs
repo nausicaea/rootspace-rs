@@ -5,6 +5,7 @@ use glium::vertex;
 use glium::index;
 use rusttype::{PositionedGlyph, point, vector, Rect};
 use rusttype::gpu_cache::Cache;
+use nalgebra::Vector2;
 use common::vertex::Vertex;
 
 /// The `Mesh` encapsulates a vertex and an index buffer. In concert, they specify all vertices of
@@ -87,18 +88,18 @@ impl Mesh {
         Self::new(display, &vertices, &indices, index::PrimitiveType::TrianglesList)
     }
     /// Creates a series of textured rectangles each with a glyph as texture.
-    pub fn new_text(display: &Display, screen_dims: &[u32; 2], z_value: f32, cache: &Cache, glyphs: &[PositionedGlyph], text_dims: &[f32; 2]) -> Result<Self, MeshError> {
+    pub fn new_text(display: &Display, screen_dims: &Vector2<u32>, z_value: f32, cache: &Cache, glyphs: &[PositionedGlyph], text_dims: &Vector2<f32>) -> Result<Self, MeshError> {
         let mut vertices = Vec::new();
         let mut indices = Vec::new();
 
-        let origin = point(-text_dims[0] / 2.0, text_dims[1] / 2.0);
+        let origin = point(-text_dims.x / 2.0, text_dims.y / 2.0);
 
         let mut quad_counter = 0;
         glyphs.iter().for_each(|g| {
             if let Ok(Some((uv_rect, screen_rect))) = cache.rect_for(0, g) {
                 let ndc_rect = Rect {
-                    min: origin + vector(screen_rect.min.x as f32 / screen_dims[0] as f32, -screen_rect.min.y as f32 / screen_dims[1] as f32),
-                    max: origin + vector(screen_rect.max.x as f32 / screen_dims[0] as f32, -screen_rect.max.y as f32 / screen_dims[1] as f32),
+                    min: origin + vector(screen_rect.min.x as f32 / screen_dims.x as f32, -screen_rect.min.y as f32 / screen_dims.y as f32),
+                    max: origin + vector(screen_rect.max.x as f32 / screen_dims.x as f32, -screen_rect.max.y as f32 / screen_dims.y as f32),
                 };
 
                 vertices.push(Vertex::new([ndc_rect.min.x, ndc_rect.max.y, z_value], [uv_rect.min.x, uv_rect.max.y], [0.0, 0.0, 1.0]));

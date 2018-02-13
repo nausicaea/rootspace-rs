@@ -1,6 +1,7 @@
 pub mod ray;
 pub mod affine_transform;
 pub mod resource_group;
+pub mod layout_group;
 pub mod file_manipulation;
 pub mod text_rendering;
 pub mod text_manipulation;
