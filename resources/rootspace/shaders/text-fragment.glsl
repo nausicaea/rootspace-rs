@@ -6,7 +6,7 @@ in vec2 f_tex_coord;
 
 out vec4 color;
 
-const vec3 text_color = vec3(1.0, 1.0, 1.0);
+const vec3 text_color = vec3(0.0, 0.0, 0.0);
 
 void main() {
     vec4 text_data = texture(font_cache, f_tex_coord);
