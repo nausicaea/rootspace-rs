@@ -20,7 +20,7 @@ nalgebra = {version = "^0.14.0", features = ["serde-serialize"]}
 image = "^0.18.0"
 uuid = {version = "^0.5.1", features = ["v4", "serde"]}
 unicode-normalization = "^0.1.5"
-rusttype = "^0.3.0"
+rusttype = {version = "^0.4.0", features = ["gpu_cache"]}
 daggy = "^0.5.0"
 ecs = {path = "../ecs"}
 ecs-derive = {path = "../ecs-derive"}
