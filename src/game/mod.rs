@@ -48,7 +48,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
         {
             let font_path = o.get_file("fonts", "SourceCodePro-Regular.ttf").unwrap();
             let font_scale = 24.0;
-            let font_color = Vector3::new(0.4, 0.3, 0.2);
+            let font_color = Vector3::new(0.0, 0.0, 0.0);
             let tvs = o.get_file("shaders", "text-vertex.glsl").unwrap();
             let tfs = o.get_file("shaders", "text-fragment.glsl").unwrap();
             let rvs = o.get_file("shaders", "rect-vertex.glsl").unwrap();
