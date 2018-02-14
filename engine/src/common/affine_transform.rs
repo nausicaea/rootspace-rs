@@ -6,7 +6,7 @@ use alga::linear::ProjectiveTransformation;
 /// (equivalent to Isometry but with translational, rotational, and non-uniform scaling
 /// components). `AffineTransform` implements this instead. `Affine3` instances can be converted to
 /// and from `AffineTransform`, assuming they contain no shear component.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct AffineTransform<N> where N: Scalar + Real {
     /// Holds the translational component of the TRS matrix.
     pub translation: Translation3<N>,

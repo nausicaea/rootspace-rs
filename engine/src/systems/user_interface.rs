@@ -33,10 +33,7 @@ impl UserInterface {
     fn create_speech_bubble(&self, entities: &mut Assembly, aux: &mut Singletons, target: &str, content: &str, lifetime: u64) -> Result<(), UiError> {
         // Attempt to find the entity named in `target` and retreive its world position.
         let entity_pos_world = entities.rsf2::<_, Description, Model>(|&(_, d, _)| d.name == target)
-            .map(|(_, _, m)| {
-                let a = m.decompose();
-                Point3::from_coordinates(a.translation.vector)
-            })
+            .map(|(_, _, m)| Point3::from_coordinates(*m.translation()))
             .map_err(|e| UiError::EntityNameNotFound(target.into(), e))?;
 
         // Project the entity position to normalized device coordinates (this requires the camera
@@ -74,10 +71,7 @@ impl UserInterface {
         if let Ok(tooltip_text) = entities.borrow_component::<TooltipData>(target).map(|t| t.text.to_owned()) {
             // Attempt to determine the location of the entity.
             let entity_pos_world = entities.borrow_component::<Model>(target)
-                .map(|m| {
-                    let a = m.decompose();
-                    Point3::from_coordinates(a.translation.vector)
-                })
+                .map(|m| Point3::from_coordinates(*m.translation()))
                 .map_err(|e| UiError::ComponentNotFound("Model".into(), target.clone(), e))?;
 
             // Project the entity position to normalized device coordinates (this requires the camera
