@@ -44,6 +44,7 @@ pub use self::components::model::Model;
 pub use self::components::tooltip::TooltipData;
 pub use self::components::ui_state::UiState;
 pub use self::systems::cursor_controller::CursorController;
+pub use self::systems::debug_mover::DebugMover;
 pub use self::systems::debug_console::DebugConsole;
 pub use self::systems::debug_shell::DebugShell;
 pub use self::systems::event_interface::EventInterface;

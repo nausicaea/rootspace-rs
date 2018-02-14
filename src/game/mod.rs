@@ -6,11 +6,11 @@ use nalgebra;
 use nalgebra::{Point3, Vector3};
 use engine::{Orchestrator, EventMonitor, DebugConsole, DebugShell, Renderer, EventInterface, Model,
     Description, Mesh, UserInterface, UiState, SpeechBubble, Camera, Tooltip, TooltipData,
-    ShaderGroup, TextureGroup, BoundingVolume, Cursor, CursorController, FontGroup};
+    ShaderGroup, TextureGroup, BoundingVolume, Cursor, CursorController, FontGroup, DebugMover};
 
 pub fn run(resource_path: &Path, debugging: bool) {
     // The following variables set up the state of the engine.
-    let delta_time = Duration::from_millis(100);
+    let delta_time = Duration::from_millis(50);
     let max_frame_time = Duration::from_millis(250);
     let title = String::from("Rootspace");
     let dimensions = [1024, 768];
@@ -167,6 +167,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
         // Add systems to the world.
         if o.debug {
             o.world.add_system(EventMonitor::new()).unwrap();
+            o.world.add_system(DebugMover::new("test-entity-c")).unwrap();
             o.world.add_system(DebugConsole::new(io::stdin())).unwrap();
             o.world.add_system(DebugShell::new()).unwrap();
         }
