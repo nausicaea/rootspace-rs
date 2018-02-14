@@ -21,7 +21,8 @@ impl Default for Model {
 }
 
 impl Model {
-    /// Creates a new `Model` component from a translation and axis-angle vector.
+    /// Creates a new `Model` component from a translation, axis-angle vector, and non-uniform
+    /// scale.
     pub fn new(translation: Vector3<f32>, axisangle: Vector3<f32>, scale: Vector3<f32>) -> Self {
         let isometry = Isometry3::new(translation, axisangle);
         let scale_matrix = Affine3::from_matrix_unchecked(Matrix4::new(scale.x, 0.0, 0.0, 0.0,
