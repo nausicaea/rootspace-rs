@@ -150,6 +150,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
 
             let test_entity_c = o.world.create_entity();
             let d = Description::new("test-entity-c");
+            let tooltip = TooltipData::new("Hi, I'm a moving cube!");
             let model = Model::new(position, axisangle, scale);
             let mesh = Mesh::new_cube(&renderer.display).unwrap();
             let material = o.world.aux.factory.new_material(&renderer.display, &shaders, &textures).unwrap();
@@ -158,6 +159,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             o.world.aux.scene_graph.insert(test_entity_c.clone(), model.clone()).unwrap();
 
             o.world.add_component(&test_entity_c, d).unwrap();
+            o.world.add_component(&test_entity_c, tooltip).unwrap();
             o.world.add_component(&test_entity_c, model).unwrap();
             o.world.add_component(&test_entity_c, mesh).unwrap();
             o.world.add_component(&test_entity_c, material).unwrap();
