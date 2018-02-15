@@ -24,6 +24,7 @@ pub struct Mesh {
     pub vertices: VertexBuffer<Vertex>,
     /// Holds the index buffer object.
     pub indices: IndexBuffer<u16>,
+    /// Holds the vertex buffer type
     pub buffer_type: BufferType,
 }
 
@@ -43,7 +44,7 @@ impl Mesh {
             buffer_type: buffer_type,
         })
     }
-    /// Creates a new unit square.
+    /// Creates a new unit square with a static vertex buffer.
     pub fn new_quad(display: &Display) -> Result<Self, MeshError> {
         // Specifies the half of the width of the square.
         let hw = 0.5;
@@ -57,7 +58,7 @@ impl Mesh {
 
         Self::new(display, &vertices, &indices, index::PrimitiveType::TrianglesList, BufferType::Static)
     }
-    /// Creates a new unit cube.
+    /// Creates a new unit cube with a static vertex buffer.
     pub fn new_cube(display: &Display) -> Result<Self, MeshError> {
         // Specifies half of the width of the cube.
         let hw = 0.5;
@@ -104,7 +105,8 @@ impl Mesh {
 
         Self::new(display, &vertices, &indices, index::PrimitiveType::TrianglesList, BufferType::Static)
     }
-    /// Creates a series of textured rectangles each with a glyph as texture.
+    /// Creates a series of textured rectangles each with a glyph as texture with a dynamic vertex
+    /// buffer.
     pub fn new_text(display: &Display, screen_dims: &Vector2<u32>, z_value: f32, cache: &Cache, glyphs: &[PositionedGlyph], text_dims: &Vector2<f32>) -> Result<Self, MeshError> {
         let mut vertices = Vec::new();
         let mut indices = Vec::new();
