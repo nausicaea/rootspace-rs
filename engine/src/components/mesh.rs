@@ -114,11 +114,8 @@ impl Mesh {
 
         Self::new(display, &vertices, &indices, index::PrimitiveType::TrianglesList, BufferType::Static)
     }
-    /// Creates a series of textured rectangles each with a glyph as texture with dynamic buffers.
-    pub fn new_text(display: &Display, cache: &Cache, screen_dims: &Vector2<f32>, text_dims: &Vector2<f32>, glyphs: &[PositionedGlyph]) -> Result<Self, MeshError> {
-        let (vertices, indices, primitive_type) = generate_vertices(cache, screen_dims.as_ref(), text_dims.as_ref(), glyphs);
+    pub fn update(&mut self, vertices: &[Vertex], indices: &[u16]) {
 
-        Self::new(display, &vertices, &indices, primitive_type, BufferType::Dynamic)
     }
 }
 
