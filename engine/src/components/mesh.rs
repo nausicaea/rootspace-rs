@@ -9,6 +9,7 @@ use nalgebra::Vector2;
 use common::vertex::Vertex;
 use common::text_rendering::generate_vertices;
 
+/// Determines the type of buffer used by the `Mesh`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BufferType {
     Static,
@@ -39,13 +40,20 @@ impl Mesh {
             BufferType::Immutable => VertexBuffer::immutable(display, vertices),
         }?;
 
+        let indices = match buffer_type {
+            BufferType::Static => IndexBuffer::new(display, primitive, indices),
+            BufferType::Dynamic => IndexBuffer::dynamic(display, primitive, indices),
+            BufferType::Persistent => IndexBuffer::persistent(display, primitive, indices),
+            BufferType::Immutable => IndexBuffer::immutable(display, primitive, indices),
+        }?;
+
         Ok(Mesh {
             vertices: vertices,
-            indices: IndexBuffer::new(display, primitive, indices)?,
+            indices: indices,
             buffer_type: buffer_type,
         })
     }
-    /// Creates a new unit square with a static vertex buffer.
+    /// Creates a new unit square with static buffers.
     pub fn new_quad(display: &Display) -> Result<Self, MeshError> {
         // Specifies the half of the width of the square.
         let hw = 0.5;
@@ -59,7 +67,7 @@ impl Mesh {
 
         Self::new(display, &vertices, &indices, index::PrimitiveType::TrianglesList, BufferType::Static)
     }
-    /// Creates a new unit cube with a static vertex buffer.
+    /// Creates a new unit cube with static buffers.
     pub fn new_cube(display: &Display) -> Result<Self, MeshError> {
         // Specifies half of the width of the cube.
         let hw = 0.5;
@@ -106,8 +114,7 @@ impl Mesh {
 
         Self::new(display, &vertices, &indices, index::PrimitiveType::TrianglesList, BufferType::Static)
     }
-    /// Creates a series of textured rectangles each with a glyph as texture with a dynamic vertex
-    /// buffer.
+    /// Creates a series of textured rectangles each with a glyph as texture with dynamic buffers.
     pub fn new_text(display: &Display, cache: &Cache, screen_dims: &Vector2<f32>, text_dims: &Vector2<f32>, glyphs: &[PositionedGlyph]) -> Result<Self, MeshError> {
         let (vertices, indices, primitive_type) = generate_vertices(cache, screen_dims.as_ref(), text_dims.as_ref(), glyphs);
 
