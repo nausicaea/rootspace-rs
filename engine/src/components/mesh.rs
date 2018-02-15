@@ -8,6 +8,14 @@ use rusttype::gpu_cache::Cache;
 use nalgebra::Vector2;
 use common::vertex::Vertex;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum BufferType {
+    Static,
+    Dynamic,
+    Persistent,
+    Immutable,
+}
+
 /// The `Mesh` encapsulates a vertex and an index buffer. In concert, they specify all vertices of
 /// a 3D object.
 #[derive(Component)]
@@ -16,14 +24,23 @@ pub struct Mesh {
     pub vertices: VertexBuffer<Vertex>,
     /// Holds the index buffer object.
     pub indices: IndexBuffer<u16>,
+    pub buffer_type: BufferType,
 }
 
 impl Mesh {
     /// Creates a new `Mesh` component.
-    pub fn new(display: &Display, vertices: &[Vertex], indices: &[u16], primitive: index::PrimitiveType) -> Result<Self, MeshError> {
+    pub fn new(display: &Display, vertices: &[Vertex], indices: &[u16], primitive: index::PrimitiveType, buffer_type: BufferType) -> Result<Self, MeshError> {
+        let vertices = match buffer_type {
+            BufferType::Static => VertexBuffer::new(display, vertices),
+            BufferType::Dynamic => VertexBuffer::dynamic(display, vertices),
+            BufferType::Persistent => VertexBuffer::persistent(display, vertices),
+            BufferType::Immutable => VertexBuffer::immutable(display, vertices),
+        }?;
+
         Ok(Mesh {
-            vertices: VertexBuffer::new(display, vertices)?,
+            vertices: vertices,
             indices: IndexBuffer::new(display, primitive, indices)?,
+            buffer_type: buffer_type,
         })
     }
     /// Creates a new unit square.
@@ -38,7 +55,7 @@ impl Mesh {
         ];
         let indices = [0, 1, 2, 2, 3, 0];
 
-        Self::new(display, &vertices, &indices, index::PrimitiveType::TrianglesList)
+        Self::new(display, &vertices, &indices, index::PrimitiveType::TrianglesList, BufferType::Static)
     }
     /// Creates a new unit cube.
     pub fn new_cube(display: &Display) -> Result<Self, MeshError> {
@@ -85,7 +102,7 @@ impl Mesh {
             20, 21, 22, 22, 23, 20,
         ];
 
-        Self::new(display, &vertices, &indices, index::PrimitiveType::TrianglesList)
+        Self::new(display, &vertices, &indices, index::PrimitiveType::TrianglesList, BufferType::Static)
     }
     /// Creates a series of textured rectangles each with a glyph as texture.
     pub fn new_text(display: &Display, screen_dims: &Vector2<u32>, z_value: f32, cache: &Cache, glyphs: &[PositionedGlyph], text_dims: &Vector2<f32>) -> Result<Self, MeshError> {
@@ -118,7 +135,7 @@ impl Mesh {
             }
         });
 
-        Self::new(display, &vertices, &indices, index::PrimitiveType::TrianglesList)
+        Self::new(display, &vertices, &indices, index::PrimitiveType::TrianglesList, BufferType::Dynamic)
     }
 }
 
