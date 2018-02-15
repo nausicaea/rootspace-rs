@@ -3,10 +3,11 @@
 use glium::{Display, VertexBuffer, IndexBuffer};
 use glium::vertex;
 use glium::index;
-use rusttype::{PositionedGlyph, point, vector, Rect};
+use rusttype::PositionedGlyph;
 use rusttype::gpu_cache::Cache;
 use nalgebra::Vector2;
 use common::vertex::Vertex;
+use common::text_rendering::generate_vertices;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BufferType {
@@ -107,37 +108,10 @@ impl Mesh {
     }
     /// Creates a series of textured rectangles each with a glyph as texture with a dynamic vertex
     /// buffer.
-    pub fn new_text(display: &Display, screen_dims: &Vector2<u32>, z_value: f32, cache: &Cache, glyphs: &[PositionedGlyph], text_dims: &Vector2<f32>) -> Result<Self, MeshError> {
-        let mut vertices = Vec::new();
-        let mut indices = Vec::new();
+    pub fn new_text(display: &Display, cache: &Cache, screen_dims: &Vector2<f32>, text_dims: &Vector2<f32>, glyphs: &[PositionedGlyph]) -> Result<Self, MeshError> {
+        let (vertices, indices, primitive_type) = generate_vertices(cache, screen_dims.as_ref(), text_dims.as_ref(), glyphs);
 
-        let origin = point(-text_dims.x / 2.0, text_dims.y / 2.0);
-
-        let mut quad_counter = 0;
-        glyphs.iter().for_each(|g| {
-            if let Ok(Some((uv_rect, screen_rect))) = cache.rect_for(0, g) {
-                let ndc_rect = Rect {
-                    min: origin + vector(screen_rect.min.x as f32 / screen_dims.x as f32, -screen_rect.min.y as f32 / screen_dims.y as f32),
-                    max: origin + vector(screen_rect.max.x as f32 / screen_dims.x as f32, -screen_rect.max.y as f32 / screen_dims.y as f32),
-                };
-
-                vertices.push(Vertex::new([ndc_rect.min.x, ndc_rect.max.y, z_value], [uv_rect.min.x, uv_rect.max.y], [0.0, 0.0, 1.0]));
-                vertices.push(Vertex::new([ndc_rect.min.x, ndc_rect.min.y, z_value], [uv_rect.min.x, uv_rect.min.y], [0.0, 0.0, 1.0]));
-                vertices.push(Vertex::new([ndc_rect.max.x, ndc_rect.min.y, z_value], [uv_rect.max.x, uv_rect.min.y], [0.0, 0.0, 1.0]));
-                vertices.push(Vertex::new([ndc_rect.max.x, ndc_rect.max.y, z_value], [uv_rect.max.x, uv_rect.max.y], [0.0, 0.0, 1.0]));
-
-                let stride = quad_counter * 4;
-                indices.push(stride);
-                indices.push(stride + 1);
-                indices.push(stride + 2);
-                indices.push(stride + 2);
-                indices.push(stride + 3);
-                indices.push(stride);
-                quad_counter += 1;
-            }
-        });
-
-        Self::new(display, &vertices, &indices, index::PrimitiveType::TrianglesList, BufferType::Dynamic)
+        Self::new(display, &vertices, &indices, primitive_type, BufferType::Dynamic)
     }
 }
 

@@ -34,9 +34,9 @@ impl UiPrimitive {
 
         Ok(UiPrimitive::new(rect_model, rect_mesh, rect_material, Vector3::new(0.0, 0.0, 0.0)))
     }
-    pub fn create_text(display: &Display, screen_dims: &Vector2<u32>, factory: &mut ComponentFactory, font_cache: &Cache, glyphs: &[PositionedGlyph], center: Vector3<f32>, dims: &Vector2<f32>, shaders: &ShaderGroup, text_color: Vector3<f32>) -> PrimResult {
+    pub fn create_text(display: &Display, factory: &mut ComponentFactory, font_cache: &Cache, screen_dims: &Vector2<f32>, center: Vector3<f32>, dims: &Vector2<f32>, glyphs: &[PositionedGlyph], shaders: &ShaderGroup, text_color: Vector3<f32>) -> PrimResult {
         let text_model = Model::new(center, zero(), Vector3::new(1.0, 1.0, 1.0));
-        let text_mesh = Mesh::new_text(display, screen_dims, 0.0, font_cache, glyphs, dims)?;
+        let text_mesh = Mesh::new_text(display, font_cache, screen_dims, dims, glyphs)?;
         let text_material = factory.new_material(display, shaders, &TextureGroup::empty())?;
 
         Ok(UiPrimitive::new(text_model, text_mesh, text_material, text_color))

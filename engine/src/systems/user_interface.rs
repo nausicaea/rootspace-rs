@@ -39,7 +39,7 @@ impl UserInterface {
         // Project the entity position to normalized device coordinates (this requires the camera
         // entity).
         let (entity_pos_ndc, dimensions) = entities.rs1::<Camera>()
-            .map(|(_, c)| (c.world_point_to_ndc(&entity_pos_world), Vector2::from(c.dimensions)))
+            .map(|(_, c)| (c.world_point_to_ndc(&entity_pos_world), Vector2::new(c.dimensions[0] as f32, c.dimensions[1] as f32)))
             .expect("Could not access the Camera component");
 
         // Obtain a mutable reference to the `UiState`.
@@ -77,7 +77,7 @@ impl UserInterface {
             // Project the entity position to normalized device coordinates (this requires the camera
             // entity).
             let (entity_pos_ndc, dimensions) = entities.rs1::<Camera>()
-                .map(|(_, c)| (c.world_point_to_ndc(&entity_pos_world), Vector2::from(c.dimensions)))
+                .map(|(_, c)| (c.world_point_to_ndc(&entity_pos_world), Vector2::new(c.dimensions[0] as f32, c.dimensions[1] as f32)))
                 .expect("Could not access the Camera component");
 
             // Obtain a mutable reference to the `UiState`.

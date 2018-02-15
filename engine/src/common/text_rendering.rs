@@ -1,9 +1,11 @@
 use std::borrow::Cow;
 use glium::Rect;
 use glium::texture::{Texture2d, ClientFormat, RawImage2d};
-use rusttype::{PositionedGlyph, Font, Scale, point};
+use glium::index::PrimitiveType;
+use rusttype::{PositionedGlyph, Font, Scale, point, vector, Rect as RusttypeRect};
 use rusttype::gpu_cache::{Cache, CacheWriteErr};
 use unicode_normalization::UnicodeNormalization;
+use common::vertex::Vertex;
 
 /// Given a string of text, font parameters and a text width, generates a set of positioned glyphs.
 /// TODO: Write a better word-wrapping algorithm based on [StackOverflow](https://stackoverflow.com/a/857770)
@@ -57,6 +59,41 @@ pub fn layout_paragraph_cached<'a>(cache: &mut Cache<'a>, cache_tex: &Texture2d,
     update_cache(cache, cache_tex)?;
 
     Ok((glyphs, text_dims))
+}
+
+/// Given a set of glyphs, generates the vertices where every glyph is represented as a textured
+/// rectangle.
+pub fn generate_vertices(cache: &Cache, screen_dims: &[f32; 2], text_dims: &[f32; 2], glyphs: &[PositionedGlyph]) -> (Vec<Vertex>, Vec<u16>, PrimitiveType) {
+    let mut vertices = Vec::new();
+    let mut indices = Vec::new();
+
+    let origin = point(-text_dims[0] / 2.0, text_dims[1] / 2.0);
+
+    let mut quad_counter = 0;
+    glyphs.iter().for_each(|g| {
+        if let Ok(Some((uv_rect, screen_rect))) = cache.rect_for(0, g) {
+            let ndc_rect = RusttypeRect {
+                min: origin + vector(screen_rect.min.x as f32 / screen_dims[0], -screen_rect.min.y as f32 / screen_dims[1]),
+                max: origin + vector(screen_rect.max.x as f32 / screen_dims[0], -screen_rect.max.y as f32 / screen_dims[1]),
+            };
+
+            vertices.push(Vertex::new([ndc_rect.min.x, ndc_rect.max.y, 0.0], [uv_rect.min.x, uv_rect.max.y], [0.0, 0.0, 1.0]));
+            vertices.push(Vertex::new([ndc_rect.min.x, ndc_rect.min.y, 0.0], [uv_rect.min.x, uv_rect.min.y], [0.0, 0.0, 1.0]));
+            vertices.push(Vertex::new([ndc_rect.max.x, ndc_rect.min.y, 0.0], [uv_rect.max.x, uv_rect.min.y], [0.0, 0.0, 1.0]));
+            vertices.push(Vertex::new([ndc_rect.max.x, ndc_rect.max.y, 0.0], [uv_rect.max.x, uv_rect.max.y], [0.0, 0.0, 1.0]));
+
+            let stride = quad_counter * 4;
+            indices.push(stride);
+            indices.push(stride + 1);
+            indices.push(stride + 2);
+            indices.push(stride + 2);
+            indices.push(stride + 3);
+            indices.push(stride);
+            quad_counter += 1;
+        }
+    });
+
+    (vertices, indices, PrimitiveType::TrianglesList)
 }
 
 /// Updates the font cache based on the supplied glyphs.

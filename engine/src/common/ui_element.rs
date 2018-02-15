@@ -1,5 +1,5 @@
 use glium::Display;
-use nalgebra::{Vector3, Vector2, convert, zero};
+use nalgebra::{Vector3, Vector2, zero};
 use common::layout_group::MarginGroup;
 use common::resource_group::{FontGroup, FontCacheGroup, ShaderGroup, TextureGroup};
 use common::text_rendering::{layout_paragraph_cached, TextRenderError as RootTextRenderError};
@@ -21,17 +21,16 @@ impl UiElement {
             primitives: primitives,
         }
     }
-    pub fn create_textbox(display: &Display, factory: &mut ComponentFactory, cache: &mut FontCacheGroup, margin: &MarginGroup, font: &FontGroup, rect_shaders: &ShaderGroup, rect_textures: &TextureGroup, text_shaders: &ShaderGroup, position: &Vector3<f32>, offset: &Vector2<f32>, screen_dimensions: &Vector2<u32>, text_width: u32, text: &str) -> Result<Self, UiElementError> {
+    pub fn create_textbox(display: &Display, factory: &mut ComponentFactory, cache: &mut FontCacheGroup, margin: &MarginGroup, font: &FontGroup, rect_shaders: &ShaderGroup, rect_textures: &TextureGroup, text_shaders: &ShaderGroup, position: &Vector3<f32>, offset: &Vector2<f32>, screen_dimensions: &Vector2<f32>, text_width: u32, text: &str) -> Result<Self, UiElementError> {
         // Layout the glyphs based on the textual `content`.
         let (glyphs, text_dims_px) = layout_paragraph_cached(&mut cache.cpu, & cache.gpu, &font.font,
                                                              font.scale, text_width, text)?;
 
         // Calculate positions and dimensions of the involved primitives: Text and Rect.
-        let dims: Vector2<f32> = convert(*screen_dimensions);
-        let margin = margin.screen_to_ndc(&dims);
+        let margin = margin.screen_to_ndc(screen_dimensions);
         let margin_sum = Vector2::new(margin.left + margin.right, margin.top + margin.bottom);
 
-        let text_dims_ndc = Vector2::new(text_dims_px[0] as f32, text_dims_px[1] as f32).component_div(&dims);
+        let text_dims_ndc = Vector2::new(text_dims_px[0] as f32, text_dims_px[1] as f32).component_div(screen_dimensions);
         let text_center = Vector2::new(-margin_sum.x, margin_sum.y) / 2.0 + Vector2::new(margin.left, -margin.top);
         let text_center = Vector3::new(text_center.x, text_center.y, -0.01);
 
@@ -44,8 +43,8 @@ impl UiElement {
         let element_model = Model::new(element_center, zero(), Vector3::new(1.0, 1.0, 1.0));
         let rect = UiPrimitive::create_rectangle(display, factory, rect_center, rect_dims_ndc,
                                                  rect_shaders, rect_textures)?;
-        let text = UiPrimitive::create_text(display, &screen_dimensions, factory, &cache.cpu, &glyphs,
-                                            text_center, &text_dims_ndc, text_shaders, font.color)?;
+        let text = UiPrimitive::create_text(display, factory, &cache.cpu, screen_dimensions,
+                                            text_center, &text_dims_ndc, &glyphs, text_shaders, font.color)?;
 
         Ok(UiElement::new(element_model, vec![rect, text]))
     }
