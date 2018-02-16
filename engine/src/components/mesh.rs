@@ -1,33 +1,22 @@
 ///! The `mesh` module provides access to `Mesh`.
 
+use std::fmt::{Display as FmtDisplay, Formatter, Result as FmtResult};
+use std::mem::size_of;
 use glium::{Display, VertexBuffer, IndexBuffer};
 use glium::vertex;
 use glium::index;
-use rusttype::PositionedGlyph;
-use rusttype::gpu_cache::Cache;
-use nalgebra::Vector2;
 use common::vertex::Vertex;
-use common::text_rendering::generate_vertices;
-
-/// Determines the type of buffer used by the `Mesh`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum BufferType {
-    Static,
-    Dynamic,
-    Persistent,
-    Immutable,
-}
 
 /// The `Mesh` encapsulates a vertex and an index buffer. In concert, they specify all vertices of
 /// a 3D object.
 #[derive(Component)]
 pub struct Mesh {
+    /// Holds the vertex buffer type
+    pub buffer_type: BufferType,
     /// Holds the vertex buffer object.
     pub vertices: VertexBuffer<Vertex>,
     /// Holds the index buffer object.
     pub indices: IndexBuffer<u16>,
-    /// Holds the vertex buffer type
-    pub buffer_type: BufferType,
 }
 
 impl Mesh {
@@ -48,9 +37,9 @@ impl Mesh {
         }?;
 
         Ok(Mesh {
+            buffer_type: buffer_type,
             vertices: vertices,
             indices: indices,
-            buffer_type: buffer_type,
         })
     }
     /// Creates a new unit square with static buffers.
@@ -115,7 +104,42 @@ impl Mesh {
         Self::new(display, &vertices, &indices, index::PrimitiveType::TrianglesList, BufferType::Static)
     }
     pub fn update(&mut self, vertices: &[Vertex], indices: &[u16]) {
+        if self.buffer_type != BufferType::Dynamic {
+            warn!("Updating a {} buffer. This is slow. You should be using a {} buffer instead.", self.buffer_type, BufferType::Dynamic);
+        }
 
+        let vert_size = size_of::<Vertex>() * vertices.len();
+        let vert_buf_size = self.vertices.get_size();
+        let idx_size = size_of::<u16>() * indices.len();
+        let idx_buf_size = self.indices.get_size();
+
+        trace!("Vertices: {}b vs {}b, Indices: {}b vs {}b", vert_size, vert_buf_size, idx_size, idx_buf_size);
+
+        if vert_size <= vert_buf_size {
+            // Update the old buffer.
+        } else {
+            // Create a new, larger buffer.
+        }
+    }
+}
+
+/// Determines the type of buffer used by the `Mesh`.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum BufferType {
+    Static,
+    Dynamic,
+    Persistent,
+    Immutable,
+}
+
+impl FmtDisplay for BufferType {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        match *self {
+            BufferType::Static => write!(f, "static"),
+            BufferType::Dynamic => write!(f, "dynamic"),
+            BufferType::Persistent => write!(f, "persistent"),
+            BufferType::Immutable => write!(f, "immutable"),
+        }
     }
 }
 

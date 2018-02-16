@@ -3,8 +3,9 @@ use nalgebra::{Vector2, Vector3, zero};
 use rusttype::PositionedGlyph;
 use rusttype::gpu_cache::Cache;
 use common::resource_group::{ShaderGroup, TextureGroup};
+use common::text_rendering::generate_vertices;
 use components::model::Model;
-use components::mesh::{Mesh, MeshError as RootMeshError};
+use components::mesh::{Mesh, MeshError as RootMeshError, BufferType};
 use components::material::Material;
 use singletons::factory::{ComponentFactory, FactoryError as RootFactoryError};
 
@@ -36,7 +37,8 @@ impl UiPrimitive {
     }
     pub fn create_text(display: &Display, factory: &mut ComponentFactory, font_cache: &Cache, screen_dims: &Vector2<f32>, center: Vector3<f32>, dims: &Vector2<f32>, glyphs: &[PositionedGlyph], shaders: &ShaderGroup, text_color: Vector3<f32>) -> PrimResult {
         let text_model = Model::new(center, zero(), Vector3::new(1.0, 1.0, 1.0));
-        let text_mesh = Mesh::new_text(display, font_cache, screen_dims, dims, glyphs)?;
+        let (vertices, indices, primitive) = generate_vertices(font_cache, screen_dims.as_ref(), dims.as_ref(), glyphs);
+        let text_mesh = Mesh::new(display, &vertices, &indices, primitive, BufferType::Dynamic)?;
         let text_material = factory.new_material(display, shaders, &TextureGroup::empty())?;
 
         Ok(UiPrimitive::new(text_model, text_mesh, text_material, text_color))
