@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::time::{Instant, Duration};
 use glium::Display;
 use nalgebra::{Point3, Vector2};
@@ -13,6 +14,8 @@ use components::ui_state::UiState;
 
 pub struct SpeechBubbleController {
     display: Display,
+    /// Each `UiElement` may have a lifetime, after which it is destroyed.
+    lifetimes: HashMap<Uuid, (Instant, Duration)>,
 }
 
 impl SpeechBubbleController {
@@ -20,10 +23,11 @@ impl SpeechBubbleController {
     pub fn new(display: &Display) -> Self {
         SpeechBubbleController {
             display: display.clone(),
+            lifetimes: HashMap::new(),
         }
     }
     /// Creates a new speech-bubble `UiElement` and attaches it to the `UiState`.
-    fn create_speech_bubble(&self, entities: &mut Assembly, aux: &mut Singletons, target: &str, content: &str, lifetime: u64) -> Result<(), SpeechBubbleError> {
+    fn create_speech_bubble(&mut self, entities: &mut Assembly, aux: &mut Singletons, target: &str, content: &str, lifetime: u64) -> Result<(), SpeechBubbleError> {
         // Attempt to find the entity named in `target` and retreive its world position.
         let entity_pos_world = entities.rsf2::<_, Description, Model>(|&(_, d, _)| d.name == target)
             .map(|(_, _, m)| Point3::from_coordinates(*m.translation()))
@@ -55,30 +59,30 @@ impl SpeechBubbleController {
         // Create and register the element.
         let id = Uuid::new_v4();
         ui_state.elements.insert(id, element);
-        ui_state.lifetimes.insert(id, (Instant::now(), Duration::new(lifetime, 0)));
+        self.lifetimes.insert(id, (Instant::now(), Duration::new(lifetime, 0)));
 
         Ok(())
     }
     /// Checks the lifetimes of the registered `UiElement`s and removes those with expired
     /// lifetimes.
-    fn update_lifetimes(&self, entities: &mut Assembly) {
-        entities.ws1::<UiState>()
-            .map(|(_, u)| {
-                if !u.lifetimes.is_empty() {
-                    let to_delete = u.lifetimes.iter()
-                        .filter(|&(_, l)| l.0.elapsed() >= l.1)
-                        .map(|(i, _)| i)
-                        .cloned()
-                        .collect::<Vec<_>>();
+    fn update_lifetimes(&mut self, entities: &mut Assembly) {
+        if !self.lifetimes.is_empty() {
+            let to_delete = self.lifetimes.iter()
+                .filter(|&(_, l)| l.0.elapsed() >= l.1)
+                .map(|(i, _)| i)
+                .cloned()
+                .collect::<Vec<_>>();
 
+            entities.ws1::<UiState>()
+                .map(|(_, u)| {
                     to_delete.iter()
                         .for_each(|i| {
                             u.elements.remove(i);
-                            u.lifetimes.remove(i);
+                            self.lifetimes.remove(i);
                         });
-                }
-            })
-            .expect("Could not access the UiState component")
+                })
+                .expect("Could not access the UiState component")
+        }
     }
 }
 

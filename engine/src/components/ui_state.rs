@@ -1,7 +1,6 @@
 //! The `ui_state` provides access to the `UiState` component.
 
 use std::collections::HashMap;
-use std::time::{Instant, Duration};
 use uuid::Uuid;
 use glium::Display;
 use ecs::Entity;
@@ -14,8 +13,6 @@ use common::ui_styles::{SpeechBubble, Tooltip};
 pub struct UiState {
     /// Holds all user interface elements, so-called `UiElement`s, indexed by a `Uuid`.
     pub elements: HashMap<Uuid, UiElement>,
-    /// Each `UiElement` may have a lifetime, after which it is destroyed.
-    pub lifetimes: HashMap<Uuid, (Instant, Duration)>,
     /// Provides access to the font fache.
     pub font_cache: FontCacheGroup,
     /// Provides access to speech-bubble style settings.
@@ -37,7 +34,6 @@ impl UiState {
 
         Ok(UiState {
             elements: Default::default(),
-            lifetimes: Default::default(),
             font_cache: cache,
             speech_bubble: speech_bubble,
             tooltip: tooltip,
