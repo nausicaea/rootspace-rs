@@ -50,5 +50,6 @@ pub use self::systems::debug_shell::DebugShell;
 pub use self::systems::event_interface::EventInterface;
 pub use self::systems::event_monitor::EventMonitor;
 pub use self::systems::renderer::Renderer;
-pub use self::systems::user_interface::UserInterface;
+pub use self::systems::tooltip_controller::TooltipController;
+pub use self::systems::speech_bubble_controller::SpeechBubbleController;
 pub use self::orchestrator::Orchestrator;

@@ -5,7 +5,7 @@ use std::time::Duration;
 use nalgebra;
 use nalgebra::{Point3, Vector3};
 use engine::{Orchestrator, EventMonitor, DebugConsole, DebugShell, Renderer, EventInterface, Model,
-    Description, Mesh, UserInterface, UiState, SpeechBubble, Camera, Tooltip, TooltipData,
+    Description, Mesh, SpeechBubbleController, TooltipController, UiState, SpeechBubble, Camera, Tooltip, TooltipData,
     ShaderGroup, TextureGroup, BoundingVolume, Cursor, CursorController, FontGroup, DebugMover};
 
 pub fn run(resource_path: &Path, debugging: bool) {
@@ -174,7 +174,8 @@ pub fn run(resource_path: &Path, debugging: bool) {
             o.world.add_system(DebugShell::new()).unwrap();
         }
         o.world.add_system(CursorController::new()).unwrap();
-        o.world.add_system(UserInterface::new(&renderer.display)).unwrap();
+        o.world.add_system(TooltipController::new(&renderer.display)).unwrap();
+        o.world.add_system(SpeechBubbleController::new(&renderer.display)).unwrap();
         o.world.add_system(renderer).unwrap();
         o.world.add_system(event_interface).unwrap();
     });

@@ -5,4 +5,5 @@ pub mod debug_shell;
 pub mod event_monitor;
 pub mod event_interface;
 pub mod renderer;
-pub mod user_interface;
+pub mod tooltip_controller;
+pub mod speech_bubble_controller;
