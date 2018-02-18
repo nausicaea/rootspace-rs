@@ -3,7 +3,6 @@
 use std::collections::HashMap;
 use uuid::Uuid;
 use glium::Display;
-use ecs::Entity;
 use common::resource_group::{FontCacheGroup, ResourceError};
 use common::ui_element::UiElement;
 use common::ui_styles::{SpeechBubble, Tooltip};
@@ -21,10 +20,6 @@ pub struct UiState {
     pub tooltip: Tooltip,
     /// If set to `true`, a menu item currently shadows the 3D world.
     pub menu_active: bool,
-    /// Holds the entity currently selected by the cursor.
-    pub current_target: Option<Entity>,
-    /// Holds the currently active tooltip. There may only be one tooltip at a time.
-    pub current_tooltip: Option<Uuid>,
 }
 
 impl UiState {
@@ -38,8 +33,6 @@ impl UiState {
             speech_bubble: speech_bubble,
             tooltip: tooltip,
             menu_active: false,
-            current_target: None,
-            current_tooltip: None,
         })
     }
 }

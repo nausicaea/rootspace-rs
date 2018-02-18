@@ -15,6 +15,10 @@ use common::ui_element::{UiElement, UiElementError as RootUiElementError};
 pub struct TooltipController {
     /// Provides access to the graphics `Display`. Internally this is just an Rc.
     display: Display,
+    /// Holds the entity currently selected by the cursor.
+    current_target: Option<Entity>,
+    /// Holds the currently active tooltip. There may only be one tooltip at a time.
+    current_tooltip: Option<Uuid>,
 }
 
 impl TooltipController {
@@ -22,10 +26,12 @@ impl TooltipController {
     pub fn new(display: &Display) -> Self {
         TooltipController {
             display: display.clone(),
+            current_target: None,
+            current_tooltip: None,
         }
     }
     /// Creates a new tooltip, if the supplied target has a `TooltipData` component.
-    fn create_tooltip(&self, entities: &mut Assembly, aux: &mut Singletons, target: &Entity) -> Result<(), TooltipError> {
+    fn create_tooltip(&mut self, entities: &mut Assembly, aux: &mut Singletons, target: &Entity) -> Result<(), TooltipError> {
         if let Ok(tooltip_text) = entities.borrow_component::<TooltipData>(target).map(|t| t.text.to_owned()) {
             // Attempt to determine the location of the entity.
             let entity_pos_world = entities.borrow_component::<Model>(target)
@@ -58,19 +64,19 @@ impl TooltipController {
             // Create and register the element.
             let id = Uuid::new_v4();
             ui_state.elements.insert(id, element);
-            ui_state.current_tooltip = Some(id);
+            self.current_tooltip = Some(id);
         }
 
         Ok(())
     }
     /// Removes the current tooltip (if any) from the `UiElement` registry.
-    fn destroy_tooltip(&self, entities: &mut Assembly) {
+    fn destroy_tooltip(&mut self, entities: &mut Assembly) {
         entities.ws1::<UiState>()
             .map(|(_, u)| {
-                if let Some(ref id) = u.current_tooltip {
+                if let Some(ref id) = self.current_tooltip {
                     u.elements.remove(id);
                 }
-                u.current_tooltip = None;
+                self.current_tooltip = None;
             })
             .expect("Could not access the UiState component")
     }
@@ -93,8 +99,8 @@ impl SystemTrait<EngineEvent, Singletons> for TooltipController {
     fn handle_event(&mut self, entities: &mut Assembly, aux: &mut Singletons, event: &EngineEvent) -> DispatchEvents<EngineEvent> {
         match *event {
             EngineEvent::CursorPosition(position) => {
-                let (menu_active, current_target) = entities.rs1::<UiState>()
-                    .map(|(_, u)| (u.menu_active, u.current_target.clone()))
+                let menu_active = entities.rs1::<UiState>()
+                    .map(|(_, u)| u.menu_active)
                     .expect("Could not access the UiState component");
 
                 if menu_active {
@@ -107,31 +113,25 @@ impl SystemTrait<EngineEvent, Singletons> for TooltipController {
                         .expect("Could not access the Camera component");
 
                     if let Some(hit) = aux.physics.raycast(entities, &cursor_ray) {
-                        if let Some(tgt) = current_target {
+                        if let Some(tgt) = self.current_target {
                             if hit.target != tgt {
                                 // A new object was hit (two objects probably intersect from the
                                 // pov of the camera).
                                 self.destroy_tooltip(entities);
                                 self.create_tooltip(entities, aux, &hit.target)
                                     .unwrap_or_else(|e| warn!("Unable to create a tooltip: {}", e));
-                                entities.ws1::<UiState>()
-                                    .map(|(_, u)| u.current_target = Some(hit.target.clone()))
-                                    .expect("Could not access the UiState component");
+                                self.current_target = Some(hit.target.clone());
                             }
                         } else {
                             // A new object was hit, where none was hit before.
                             self.create_tooltip(entities, aux, &hit.target)
                                 .unwrap_or_else(|e| warn!("Unable to create a tooltip: {}", e));
-                            entities.ws1::<UiState>()
-                                .map(|(_, u)| u.current_target = Some(hit.target.clone()))
-                                .expect("Could not access the UiState component");
+                            self.current_target = Some(hit.target.clone());
                         }
-                    } else if current_target.is_some() {
+                    } else if self.current_target.is_some() {
                         // The current object was exited.
                         self.destroy_tooltip(entities);
-                        entities.ws1::<UiState>()
-                            .map(|(_, u)| u.current_target = None)
-                            .expect("Could not access the UiState component");
+                        self.current_target = None;
                     }
                 }
             },
