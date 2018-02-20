@@ -35,10 +35,10 @@ impl SystemTrait<EngineEvent, Singletons> for EventInterface {
     }
     /// `EventInterface` subscribes to the update call.
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
-        LoopStageFlag::UPDATE
+        LoopStageFlag::DYNAMIC_UPDATE
     }
     /// Polls for operating system events and relays them to the ECS event queue.
-    fn update(&mut self, _: &mut Assembly, _: &mut Singletons, _: &Duration, _: &Duration) -> DispatchEvents<EngineEvent> {
+    fn dynamic_update(&mut self, _: &mut Assembly, _: &mut Singletons, _: &Duration, _: &Duration) -> DispatchEvents<EngineEvent> {
         let mut pd = Vec::new();
         let mut d = Vec::new();
 

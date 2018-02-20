@@ -5,8 +5,9 @@ use std::time::Duration;
 use nalgebra;
 use nalgebra::{Point3, Vector3};
 use engine::{Orchestrator, EventMonitor, DebugConsole, DebugShell, Renderer, EventInterface, Model,
-    Description, Mesh, SpeechBubbleController, TooltipController, UiState, SpeechBubble, Camera, Tooltip, TooltipData,
-    ShaderGroup, TextureGroup, BoundingVolume, Cursor, CursorController, FontGroup, DebugMover};
+    Description, Mesh, SpeechBubbleController, TooltipController, UiState, SpeechBubble, Camera,
+    Tooltip, TooltipData, ShaderGroup, TextureGroup, BoundingVolume, Cursor, CursorController,
+    FontGroup, DebugMover, DebugUi};
 
 pub fn run(resource_path: &Path, debugging: bool) {
     // The following variables set up the state of the engine.
@@ -172,6 +173,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             o.world.add_system(DebugMover::new("test-entity-c").into()).unwrap();
             o.world.add_system(DebugConsole::new(io::stdin()).into()).unwrap();
             o.world.add_system(DebugShell::new().into()).unwrap();
+            o.world.add_system(DebugUi::new(&renderer.display).into()).unwrap();
         }
         o.world.add_system(CursorController::new().into()).unwrap();
         o.world.add_system(TooltipController::new(&renderer.display).into()).unwrap();

@@ -94,7 +94,7 @@ impl SystemTrait<EngineEvent, Singletons> for SpeechBubbleController {
     }
     /// `SpeechBubbleController` subscribes to the `handle_event` and update calls.
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
-        LoopStageFlag::HANDLE_EVENT | LoopStageFlag::UPDATE
+        LoopStageFlag::HANDLE_EVENT | LoopStageFlag::DYNAMIC_UPDATE
     }
     /// `SpeechBubbleController` subscribes to the `SpeechBubble` event.
     fn get_event_filter(&self) -> EngineEventFlag {
@@ -110,7 +110,7 @@ impl SystemTrait<EngineEvent, Singletons> for SpeechBubbleController {
         }
         (None, None)
     }
-    fn update(&mut self, entities: &mut Assembly, _: &mut Singletons, _: &Duration, _: &Duration) -> DispatchEvents<EngineEvent> {
+    fn dynamic_update(&mut self, entities: &mut Assembly, _: &mut Singletons, _: &Duration, _: &Duration) -> DispatchEvents<EngineEvent> {
         self.update_lifetimes(entities);
         (None, None)
     }

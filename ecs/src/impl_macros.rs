@@ -60,6 +60,13 @@ macro_rules! impl_system_group {
                     )+
                 }
             }
+            fn dynamic_update(&mut self, entities: &mut Assembly, aux: &mut $aux_type, time: &Duration, delta_time: &Duration) -> DispatchEvents<$event_type> {
+                match *self {
+                    $(
+                        $name::$variant(ref mut s) => s.dynamic_update(entities, aux, time, delta_time),
+                    )+
+                }
+            }
             fn render(&mut self, entities: &Assembly, aux: &mut $aux_type, time: &Duration, delta_time: &Duration) {
                 match *self {
                     $(

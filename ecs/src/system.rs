@@ -35,6 +35,9 @@ pub trait SystemTrait<E: EventTrait, A> {
     fn update(&mut self, _entities: &mut Assembly, _aux: &mut A, _time: &Duration, _delta_time: &Duration) -> DispatchEvents<E> {
         unimplemented!("Did you forget to implement the update method for your system?");
     }
+    fn dynamic_update(&mut self, _entities: &mut Assembly, _aux: &mut A, _time: &Duration, _delta_time: &Duration) -> DispatchEvents<E> {
+        unimplemented!("Did you forget to implement the dynamic_update method for your system?");
+    }
     /// Renders the `World` state.
     fn render(&mut self, _entities: &Assembly, _aux: &mut A, _time: &Duration, _delta_time: &Duration) {
         unimplemented!("Did you forget to implement the render method for your system?");

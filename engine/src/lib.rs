@@ -48,6 +48,7 @@ pub use self::systems::cursor_controller::CursorController;
 pub use self::systems::debug_mover::DebugMover;
 pub use self::systems::debug_console::DebugConsole;
 pub use self::systems::debug_shell::DebugShell;
+pub use self::systems::debug_ui::DebugUi;
 pub use self::systems::event_interface::EventInterface;
 pub use self::systems::event_monitor::EventMonitor;
 pub use self::systems::renderer::Renderer;

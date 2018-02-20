@@ -75,7 +75,7 @@ impl<E: EventTrait, A: Default, S: SystemTrait<E, A>> World<E, A, S> {
         true
     }
     /// Updates the current simulation of the `World` by iterating through all systems that
-    /// subscribe to the update call.
+    /// subscribe to the update call. This update call should be performed at fixed time steps.
     pub fn update(&mut self, time: &Duration, delta_time: &Duration) {
         let mut priority_events = Vec::new();
         let mut events = Vec::new();
@@ -83,6 +83,32 @@ impl<E: EventTrait, A: Default, S: SystemTrait<E, A>> World<E, A, S> {
         for system in &mut self.systems {
             if LoopStage::Update.match_filter(system.get_loop_stage_filter()) {
                 let (pe, e) = system.update(&mut self.assembly, &mut self.aux, time, delta_time);
+
+                if let Some(mut pe) = pe {
+                    priority_events.append(&mut pe);
+                }
+                if let Some(mut e) = e {
+                    events.append(&mut e);
+                }
+            }
+        }
+
+        for pe in priority_events {
+            self.dispatch_immediate(&pe);
+        }
+        for e in events {
+            self.dispatch(e);
+        }
+    }
+    /// Updates the current simulation of the `World` by iterating through all systems that
+    /// subscribe to the update call. This update call should be performed at variable time steps.
+    pub fn dynamic_update(&mut self, time: &Duration, delta_time: &Duration) {
+        let mut priority_events = Vec::new();
+        let mut events = Vec::new();
+
+        for system in &mut self.systems {
+            if LoopStage::DynamicUpdate.match_filter(system.get_loop_stage_filter()) {
+                let (pe, e) = system.dynamic_update(&mut self.assembly, &mut self.aux, time, delta_time);
 
                 if let Some(mut pe) = pe {
                     priority_events.append(&mut pe);

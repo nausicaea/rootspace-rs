@@ -47,9 +47,10 @@ impl Orchestrator {
         Ok(path)
     }
     /// Runs the actual game loop. This loop uses a fixed time-step method to ensure that
-    /// `World::update` is called at a fixed interval, always. After a cycle of update calls,
-    /// the loop then issues calls to `World::render` and `World::handle_events`. The return value
-    /// of `World::handle_events` is used to terminate the loop.
+    /// `World::update` is called at a fixed interval, always. After a cycle of update calls, the
+    /// loop then issues calls to `World::dynamic_update`, `World::render` and
+    /// `World::handle_events`. The return value of `World::handle_events` is used to terminate the
+    /// loop.
     fn main_loop(&mut self) {
         let mut game_time = Duration::new(0, 0);
         let mut accumulator = Duration::new(0, 0);
@@ -67,8 +68,8 @@ impl Orchestrator {
                 accumulator -= self.delta_time;
             }
 
-            self.world.render(&game_time, &self.delta_time);
-
+            self.world.dynamic_update(&game_time, &frame_time);
+            self.world.render(&game_time, &frame_time);
             running = self.world.handle_events();
         }
     }

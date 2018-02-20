@@ -2,9 +2,10 @@ use std::u8;
 
 bitflags! {
     pub struct LoopStageFlag: u8 {
-        const HANDLE_EVENT = 0b001;
-        const UPDATE = 0b010;
-        const RENDER = 0b100;
+        const HANDLE_EVENT = 0b0001;
+        const UPDATE = 0b0010;
+        const DYNAMIC_UPDATE = 0b0100;
+        const RENDER = 0b1000;
         const ALL_STAGES = u8::MAX;
     }
 }
@@ -15,6 +16,7 @@ bitflags! {
 pub enum LoopStage {
     HandleEvent,
     Update,
+    DynamicUpdate,
     Render,
 }
 
@@ -31,6 +33,7 @@ impl From<LoopStage> for LoopStageFlag {
         match value {
             HandleEvent => LoopStageFlag::HANDLE_EVENT,
             Update => LoopStageFlag::UPDATE,
+            DynamicUpdate => LoopStageFlag::DYNAMIC_UPDATE,
             Render => LoopStageFlag::RENDER,
         }
     }
@@ -46,6 +49,8 @@ mod test {
         assert!(lsf == LoopStageFlag::HANDLE_EVENT);
         let lsf: LoopStageFlag = LoopStage::Update.into();
         assert!(lsf == LoopStageFlag::UPDATE);
+        let lsf: LoopStageFlag = LoopStage::DynamicUpdate.into();
+        assert!(lsf == LoopStageFlag::DYNAMIC_UPDATE);
         let lsf: LoopStageFlag = LoopStage::Render.into();
         assert!(lsf == LoopStageFlag::RENDER);
     }
@@ -54,9 +59,10 @@ mod test {
     fn test_match_filter() {
         assert!(LoopStage::HandleEvent.match_filter(LoopStageFlag::HANDLE_EVENT));
         assert!(LoopStage::Update.match_filter(LoopStageFlag::UPDATE));
+        assert!(LoopStage::DynamicUpdate.match_filter(LoopStageFlag::DYNAMIC_UPDATE));
         assert!(LoopStage::Render.match_filter(LoopStageFlag::RENDER));
 
-        for ls in &[LoopStage::HandleEvent, LoopStage::Update, LoopStage::Render] {
+        for ls in &[LoopStage::HandleEvent, LoopStage::Update, LoopStage::DynamicUpdate, LoopStage::Render] {
             assert!(ls.match_filter(LoopStageFlag::ALL_STAGES));
         }
     }

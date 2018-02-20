@@ -2,6 +2,7 @@ pub mod cursor_controller;
 pub mod debug_console;
 pub mod debug_mover;
 pub mod debug_shell;
+pub mod debug_ui;
 pub mod event_monitor;
 pub mod event_interface;
 pub mod renderer;
@@ -17,6 +18,7 @@ impl_system_group! {
         DebugConsoleSys(debug_console::DebugConsole),
         DebugMoverSys(debug_mover::DebugMover),
         DebugShellSys(debug_shell::DebugShell),
+        DebugUiSys(debug_ui::DebugUi),
         EventMonitorSys(event_monitor::EventMonitor),
         EventInterfaceSys(event_interface::EventInterface),
         RendererSys(renderer::Renderer),
