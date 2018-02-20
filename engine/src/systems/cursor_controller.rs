@@ -1,6 +1,7 @@
 use glium::glutin::ElementState;
 use ecs::{SystemTrait, LoopStageFlag, Assembly, DispatchEvents};
 use event::{EngineEvent, EngineEventFlag};
+use singletons::Singletons;
 use components::cursor::{Cursor, FlankDirection};
 
 /// Updates data within the `Cursor` component and emits events on mouse button state changes.
@@ -14,7 +15,7 @@ impl CursorController {
     }
 }
 
-impl<A> SystemTrait<EngineEvent, A> for CursorController {
+impl SystemTrait<EngineEvent, Singletons> for CursorController {
     /// The `CursorController` requires exactly one `Cursor` component.
     fn verify_requirements(&self, entities: &Assembly) -> bool {
         entities.count1::<Cursor>() == 1
@@ -31,7 +32,7 @@ impl<A> SystemTrait<EngineEvent, A> for CursorController {
     /// updated. Upon receiving a `MouseInput` event, the new button state is compared to the
     /// previous one and a `MouseInputFlank` event is dispatched upon state changes. This allows
     /// other systems to listen for state changes and not just for button press events.
-    fn handle_event(&mut self, entities: &mut Assembly, _: &mut A, event: &EngineEvent) -> DispatchEvents<EngineEvent> {
+    fn handle_event(&mut self, entities: &mut Assembly, _: &mut Singletons, event: &EngineEvent) -> DispatchEvents<EngineEvent> {
         match *event {
             EngineEvent::CursorPosition(position) => {
                 // Update the cursor component's position.

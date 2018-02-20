@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::num::ParseIntError;
 use clap::{App, Arg, AppSettings};
 use ecs::{Assembly, LoopStageFlag, SystemTrait, DispatchEvents};
+use singletons::Singletons;
 use event::{EngineEventFlag, EngineEvent};
 
 /// The `DebugShell` listens for `ConsoleCommand` events and interprets them as commands. The shell
@@ -102,7 +103,7 @@ impl DebugShell {
     }
 }
 
-impl<A> SystemTrait<EngineEvent, A> for DebugShell {
+impl SystemTrait<EngineEvent, Singletons> for DebugShell {
     /// `DebugShell` has no requirements wrt. the `Assembly`.
     fn verify_requirements(&self, _: &Assembly) -> bool {
         true
@@ -117,7 +118,7 @@ impl<A> SystemTrait<EngineEvent, A> for DebugShell {
     }
     /// Interprets a `ConsoleCommand` event as a command to the engine and executes the respective
     /// actions, while printing the output to the console.
-    fn handle_event(&mut self, _: &mut Assembly, _: &mut A, event: &EngineEvent) -> DispatchEvents<EngineEvent> {
+    fn handle_event(&mut self, _: &mut Assembly, _: &mut Singletons, event: &EngineEvent) -> DispatchEvents<EngineEvent> {
         match *event {
             EngineEvent::ConsoleCommand(ref c) => self.interpret(c).unwrap_or_else(|e| {println!("{}", e); (None, None)}),
             _ => (None, None),

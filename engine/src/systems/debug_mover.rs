@@ -1,6 +1,8 @@
 use std::time::Duration;
 use nalgebra::{Vector3, zero};
-use ecs::{SystemTrait, Assembly, LoopStageFlag, DispatchEvents, EventTrait, Entity};
+use ecs::{SystemTrait, Assembly, LoopStageFlag, DispatchEvents, Entity};
+use event::EngineEvent;
+use singletons::Singletons;
 use components::description::Description;
 use components::model::Model;
 
@@ -22,7 +24,7 @@ impl DebugMover {
     }
 }
 
-impl<E: EventTrait, A> SystemTrait<E, A> for DebugMover {
+impl SystemTrait<EngineEvent, Singletons> for DebugMover {
     /// `DebugMover` has no requirements.
     fn verify_requirements(&self, _: &Assembly) -> bool {
         true
@@ -31,7 +33,7 @@ impl<E: EventTrait, A> SystemTrait<E, A> for DebugMover {
     fn get_loop_stage_filter(&self) -> LoopStageFlag {
         LoopStageFlag::UPDATE
     }
-    fn update(&mut self, entities: &mut Assembly, _: &mut A, time: &Duration, _: &Duration) -> DispatchEvents<E> {
+    fn update(&mut self, entities: &mut Assembly, _: &mut Singletons, time: &Duration, _: &Duration) -> DispatchEvents<EngineEvent> {
         if self.target.is_none() {
             let (target, target_position) = entities.rsf2::<_, Description, Model>(|&(_, d, _)| d.name == self.target_name)
             .map(|(e, _, m)| (Some(e), *m.translation()))

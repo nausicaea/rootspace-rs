@@ -10,7 +10,7 @@ use error::EcsError;
 
 /// Encapsulates a set of systems, entities and components that describe an abstract universe of
 /// data and behaviour.
-pub struct World<E: EventTrait, A: Default> {
+pub struct World<E: EventTrait, A: Default, S: SystemTrait<E, A>> {
     /// This field stores an arbitrary auxiliary object, that is passed to systems during the
     /// update and event-handling calls. Consider using this for caching, file-system persistence,
     /// global state, singleton objects, etc.
@@ -21,13 +21,13 @@ pub struct World<E: EventTrait, A: Default> {
     /// event-handling calls.
     event_queue: VecDeque<E>,
     /// Stores all systems as boxed trait objects. Systems primarily encode behaviour.
-    systems: Vec<Box<SystemTrait<E, A>>>,
+    systems: Vec<S>,
     /// The `Assembly` stores entities and their components. A reference is passed to systems
     /// during the update, event-handling and render calls.
     assembly: Assembly,
 }
 
-impl<E: EventTrait, A: Default> Default for World<E, A> {
+impl<E: EventTrait, A: Default, S: SystemTrait<E, A>> Default for World<E, A, S> {
     /// Creates a default instance of `World`.
     fn default() -> Self {
         World {
@@ -40,15 +40,15 @@ impl<E: EventTrait, A: Default> Default for World<E, A> {
     }
 }
 
-impl<E: EventTrait, A: Default> World<E, A> {
+impl<E: EventTrait, A: Default, S: SystemTrait<E, A>> World<E, A, S> {
     /// Creates a new, empty instance of `World`.
     pub fn new() -> Self {
         Default::default()
     }
     /// Adds a new system to the `World`.
-    pub fn add_system<S: SystemTrait<E, A> + 'static>(&mut self, system: S) -> Result<(), EcsError> {
+    pub fn add_system(&mut self, system: S) -> Result<(), EcsError> {
         if system.verify_requirements(&self.assembly) {
-            self.systems.push(Box::new(system));
+            self.systems.push(system);
             Ok(())
         } else {
             Err(EcsError::UnsatisfiedRequirements)
@@ -143,7 +143,7 @@ impl<E: EventTrait, A: Default> World<E, A> {
     }
 }
 
-impl<E: EventTrait, F: Default> Deref for World<E, F> {
+impl<E: EventTrait, A: Default, S: SystemTrait<E, A>> Deref for World<E, A, S> {
     type Target = Assembly;
 
     fn deref(&self) -> &Self::Target {
@@ -151,7 +151,7 @@ impl<E: EventTrait, F: Default> Deref for World<E, F> {
     }
 }
 
-impl<E: EventTrait, F: Default> DerefMut for World<E, F> {
+impl<E: EventTrait, A: Default, S: SystemTrait<E, A>> DerefMut for World<E, A, S> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.assembly
     }

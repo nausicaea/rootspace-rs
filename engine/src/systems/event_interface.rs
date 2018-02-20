@@ -2,6 +2,7 @@ use std::time::Duration;
 use nalgebra::Point2;
 use glium::glutin::{Event, WindowEvent, EventsLoop};
 use ecs::{SystemTrait, LoopStageFlag, Assembly, DispatchEvents};
+use singletons::Singletons;
 use event::EngineEvent;
 
 /// The task of the `EventInterface` is to regularly poll for events from the operating system and
@@ -27,7 +28,7 @@ impl EventInterface {
     }
 }
 
-impl<A> SystemTrait<EngineEvent, A> for EventInterface {
+impl SystemTrait<EngineEvent, Singletons> for EventInterface {
     /// `EventInterface` does not have any requirements wrt. to the `Assembly`.
     fn verify_requirements(&self, _: &Assembly) -> bool {
         true
@@ -37,7 +38,7 @@ impl<A> SystemTrait<EngineEvent, A> for EventInterface {
         LoopStageFlag::UPDATE
     }
     /// Polls for operating system events and relays them to the ECS event queue.
-    fn update(&mut self, _: &mut Assembly, _: &mut A, _: &Duration, _: &Duration) -> DispatchEvents<EngineEvent> {
+    fn update(&mut self, _: &mut Assembly, _: &mut Singletons, _: &Duration, _: &Duration) -> DispatchEvents<EngineEvent> {
         let mut pd = Vec::new();
         let mut d = Vec::new();
 

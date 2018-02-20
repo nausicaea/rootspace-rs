@@ -168,15 +168,15 @@ pub fn run(resource_path: &Path, debugging: bool) {
 
         // Add systems to the world.
         if o.debug {
-            o.world.add_system(EventMonitor::new()).unwrap();
-            o.world.add_system(DebugMover::new("test-entity-c")).unwrap();
-            o.world.add_system(DebugConsole::new(io::stdin())).unwrap();
-            o.world.add_system(DebugShell::new()).unwrap();
+            o.world.add_system(EventMonitor::new().into()).unwrap();
+            o.world.add_system(DebugMover::new("test-entity-c").into()).unwrap();
+            o.world.add_system(DebugConsole::new(io::stdin()).into()).unwrap();
+            o.world.add_system(DebugShell::new().into()).unwrap();
         }
-        o.world.add_system(CursorController::new()).unwrap();
-        o.world.add_system(TooltipController::new(&renderer.display)).unwrap();
-        o.world.add_system(SpeechBubbleController::new(&renderer.display)).unwrap();
-        o.world.add_system(renderer).unwrap();
-        o.world.add_system(event_interface).unwrap();
+        o.world.add_system(CursorController::new().into()).unwrap();
+        o.world.add_system(TooltipController::new(&renderer.display).into()).unwrap();
+        o.world.add_system(SpeechBubbleController::new(&renderer.display).into()).unwrap();
+        o.world.add_system(renderer.into()).unwrap();
+        o.world.add_system(event_interface.into()).unwrap();
     });
 }

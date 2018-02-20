@@ -20,6 +20,7 @@ extern crate uuid;
 extern crate unicode_normalization;
 extern crate rusttype;
 extern crate daggy;
+#[macro_use]
 extern crate ecs;
 #[macro_use]
 extern crate ecs_derive;
@@ -43,6 +44,7 @@ pub use self::components::mesh::Mesh;
 pub use self::components::model::Model;
 pub use self::components::tooltip::TooltipData;
 pub use self::components::ui_state::UiState;
+pub use self::systems::SystemGroup;
 pub use self::systems::cursor_controller::CursorController;
 pub use self::systems::debug_mover::DebugMover;
 pub use self::systems::debug_console::DebugConsole;

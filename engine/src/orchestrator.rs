@@ -5,12 +5,13 @@ use std::time::{Instant, Duration};
 use ecs::World;
 use event::EngineEvent;
 use singletons::Singletons;
+use systems::SystemGroup;
 use common::file_manipulation::{verify_accessible_file, FileError};
 
 /// The `Orchestrator` owns the `World` and manages time (and the game loop).
 pub struct Orchestrator {
     /// Holds an instance of the `World`.
-    pub world: World<EngineEvent, Singletons>,
+    pub world: World<EngineEvent, Singletons, SystemGroup>,
     /// If `true`, activate debugging functionality.
     pub debug: bool,
     /// Specifies the path to the resource tree.

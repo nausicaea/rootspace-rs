@@ -1,3 +1,76 @@
+#[macro_export]
+macro_rules! impl_system_group {
+    (
+        pub enum $name:ident<$event_type:ty, $event_flag: ty, $aux_type:ty> {
+            $(
+                $variant:ident($inner:path),
+            )+
+        }
+    ) => {
+        use std::time::Duration;
+        use ecs::{SystemTrait, Assembly, LoopStageFlag, DispatchEvents};
+
+        pub enum $name {
+            $(
+                $variant($inner),
+            )+
+        }
+
+        $(
+        impl From<$inner> for $name {
+            fn from(value: $inner) -> Self {
+                $name::$variant(value)
+            }
+        }
+        )+
+
+        impl SystemTrait<$event_type, $aux_type> for $name {
+            fn verify_requirements(&self, entities: &Assembly) -> bool {
+                match *self {
+                    $(
+                        $name::$variant(ref s) => s.verify_requirements(entities),
+                    )+
+                }
+            }
+            fn get_loop_stage_filter(&self) -> LoopStageFlag {
+                match *self {
+                    $(
+                        $name::$variant(ref s) => s.get_loop_stage_filter(),
+                    )+
+                }
+            }
+            fn get_event_filter(&self) -> $event_flag {
+                match *self {
+                    $(
+                        $name::$variant(ref s) => s.get_event_filter(),
+                    )+
+                }
+            }
+            fn handle_event(&mut self, entities: &mut Assembly, aux: &mut $aux_type, event: &EngineEvent) -> DispatchEvents<$event_type> {
+                match *self {
+                    $(
+                        $name::$variant(ref mut s) => s.handle_event(entities, aux, event),
+                    )+
+                }
+            }
+            fn update(&mut self, entities: &mut Assembly, aux: &mut $aux_type, time: &Duration, delta_time: &Duration) -> DispatchEvents<$event_type> {
+                match *self {
+                    $(
+                        $name::$variant(ref mut s) => s.update(entities, aux, time, delta_time),
+                    )+
+                }
+            }
+            fn render(&mut self, entities: &Assembly, aux: &mut $aux_type, time: &Duration, delta_time: &Duration) {
+                match *self {
+                    $(
+                        $name::$variant(ref mut s) => s.render(entities, aux, time, delta_time),
+                    )+
+                }
+            }
+        }
+    };
+}
+
 macro_rules! impl_count {
     ($name:ident, $t:tt) => {
         /// Counts the number of entities with the specified component.
