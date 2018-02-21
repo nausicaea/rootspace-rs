@@ -60,6 +60,9 @@ impl SystemTrait<EngineEvent, Singletons> for DebugUi {
             ui_state.elements.insert(id, element);
             self.element = Some(id);
         }
+
+        // Once the elemente is defined, we need to access the text primitive and update it's text.
+
         (None, None)
     }
 }
