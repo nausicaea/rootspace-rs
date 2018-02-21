@@ -2,7 +2,7 @@ use std::cmp;
 use std::path::{PathBuf, Path};
 use std::time::{Instant, Duration};
 
-use ecs::World;
+use ecs::{World, EcsError};
 use event::EngineEvent;
 use singletons::Singletons;
 use systems::SystemGroup;
@@ -45,6 +45,9 @@ impl Orchestrator {
         let path = self.resource_path.join(category).join(filename);
         verify_accessible_file(&path)?;
         Ok(path)
+    }
+    pub fn add_system<S: Into<SystemGroup>>(&mut self, system: S) -> Result<(), EcsError> {
+        self.world.add_system(system.into())
     }
     /// Runs the actual game loop. This loop uses a fixed time-step method to ensure that
     /// `World::update` is called at a fixed interval, always. After a cycle of update calls, the
