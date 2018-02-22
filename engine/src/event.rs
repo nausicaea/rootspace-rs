@@ -1,7 +1,7 @@
 use std::u64;
 use nalgebra::Point2;
-use glium::glutin::{MouseButton, ElementState};
-use ecs::{EventTrait, EcsEvent};
+use glium::glutin::{ElementState, MouseButton};
+use ecs::{EcsEvent, EventTrait};
 use components::cursor::FlankDirection;
 
 bitflags! {

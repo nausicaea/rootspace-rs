@@ -1,4 +1,4 @@
-use std::collections::hash_map::{HashMap, DefaultHasher};
+use std::collections::hash_map::{DefaultHasher, HashMap};
 use std::hash::{Hash, Hasher};
 use glium::Display;
 use common::resource_group::{ShaderGroup, TextureGroup};
@@ -21,11 +21,19 @@ impl ComponentFactory {
     }
     /// Creates a new `Material` component or returns a cached instance with the specified
     /// parameters.
-    pub fn new_material(&mut self, display: &Display, shaders: &ShaderGroup, textures: &TextureGroup) -> Result<Material, FactoryError> {
+    pub fn new_material(
+        &mut self,
+        display: &Display,
+        shaders: &ShaderGroup,
+        textures: &TextureGroup,
+    ) -> Result<Material, FactoryError> {
         let hash = self.calculate_material_hash(shaders, textures);
 
         if self.materials.contains_key(&hash) {
-            Ok(self.materials.get(&hash).unwrap_or_else(|| unreachable!()).clone())
+            Ok(self.materials
+                .get(&hash)
+                .unwrap_or_else(|| unreachable!())
+                .clone())
         } else {
             let material = Material::new(display, shaders.clone(), textures.clone())?;
             self.materials.insert(hash, material.clone());
@@ -43,8 +51,7 @@ impl ComponentFactory {
 /// Operations of the `ComponentFactory` may fail with the following errors.
 #[derive(Debug, Fail)]
 pub enum FactoryError {
-    #[fail(display = "{}", _0)]
-    MaterialCreationError(#[cause] MaterialError),
+    #[fail(display = "{}", _0)] MaterialCreationError(#[cause] MaterialError),
 }
 
 impl From<MaterialError> for FactoryError {

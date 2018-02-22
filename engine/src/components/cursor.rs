@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use nalgebra::Point2;
-use glium::glutin::{MouseButton, ElementState};
+use glium::glutin::{ElementState, MouseButton};
 
 /// The `Cursor` stores information about the pointing device in use by the operating system.
 #[derive(Component)]

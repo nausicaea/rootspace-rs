@@ -46,28 +46,34 @@ macro_rules! impl_system_group {
                     )+
                 }
             }
-            fn handle_event(&mut self, entities: &mut Assembly, aux: &mut $aux_type, event: &EngineEvent) -> DispatchEvents<$event_type> {
+            fn handle_event(&mut self, entities: &mut Assembly, aux: &mut $aux_type,
+                            event: &EngineEvent) -> DispatchEvents<$event_type> {
                 match *self {
                     $(
                         $name::$variant(ref mut s) => s.handle_event(entities, aux, event),
                     )+
                 }
             }
-            fn update(&mut self, entities: &mut Assembly, aux: &mut $aux_type, time: &Duration, delta_time: &Duration) -> DispatchEvents<$event_type> {
+            fn update(&mut self, entities: &mut Assembly, aux: &mut $aux_type, time: &Duration,
+                      delta_time: &Duration) -> DispatchEvents<$event_type> {
                 match *self {
                     $(
                         $name::$variant(ref mut s) => s.update(entities, aux, time, delta_time),
                     )+
                 }
             }
-            fn dynamic_update(&mut self, entities: &mut Assembly, aux: &mut $aux_type, time: &Duration, delta_time: &Duration) -> DispatchEvents<$event_type> {
+            fn dynamic_update(&mut self, entities: &mut Assembly, aux: &mut $aux_type,
+                              time: &Duration, delta_time: &Duration)
+                    -> DispatchEvents<$event_type> {
                 match *self {
                     $(
-                        $name::$variant(ref mut s) => s.dynamic_update(entities, aux, time, delta_time),
+                        $name::$variant(ref mut s) => s.dynamic_update(entities, aux, time,
+                                                                       delta_time),
                     )+
                 }
             }
-            fn render(&mut self, entities: &Assembly, aux: &mut $aux_type, time: &Duration, delta_time: &Duration) {
+            fn render(&mut self, entities: &Assembly, aux: &mut $aux_type, time: &Duration,
+                      delta_time: &Duration) {
                 match *self {
                     $(
                         $name::$variant(ref mut s) => s.render(entities, aux, time, delta_time),
@@ -127,7 +133,8 @@ macro_rules! impl_read_filtered {
     ($name:ident, $t:tt) => {
         /// Borrows all instances of the specified component, if their values pass the specified
         /// filter.
-        pub fn $name<F, $t: ComponentTrait>(&self, filter: F) -> Vec<(Entity, &$t)> where for<'r> F: FnMut(&'r (Entity, &$t)) -> bool {
+        pub fn $name<F, $t: ComponentTrait>(&self, filter: F) -> Vec<(Entity, &$t)>
+                where for<'r> F: FnMut(&'r (Entity, &$t)) -> bool {
             self.entities.iter()
                 .filter(|&(_, ref g)| g.has::<$t>())
                 .map(|(e, g)| (e.clone(), g.borrow::<$t>().unwrap_or_else(|_| unreachable!())))
@@ -138,7 +145,8 @@ macro_rules! impl_read_filtered {
     ($name:ident, $($t:tt),*) => {
         /// Borrows from all entities that have all specified components and whose values pass the
         /// specified filter.
-        pub fn $name<F, $($t: ComponentTrait),*>(&self, filter: F) -> Vec<(Entity, $(&$t),*)> where for<'r> F: FnMut(&'r (Entity, $(&$t),*)) -> bool {
+        pub fn $name<F, $($t: ComponentTrait),*>(&self, filter: F) -> Vec<(Entity, $(&$t),*)>
+                where for<'r> F: FnMut(&'r (Entity, $(&$t),*)) -> bool {
             self.entities.iter()
                 .filter(|&(_, ref g)| $(g.has::<$t>())&&*)
                 .map(|(e, g)| (e.clone(), $(g.borrow::<$t>().unwrap_or_else(|_| unreachable!())),*))
@@ -185,7 +193,8 @@ macro_rules! impl_read_single_filtered {
     ($name:ident, $base:ident, $t:tt) => {
         /// Borrows the specified component, ensuring that only a single entity matches the given
         /// conditions (defined by the component and filter).
-        pub fn $name<F, $t: ComponentTrait>(&self, filter: F) -> Result<(Entity, &$t), EcsError> where for<'r> F: FnMut(&'r (Entity, &$t)) -> bool {
+        pub fn $name<F, $t: ComponentTrait>(&self, filter: F) -> Result<(Entity, &$t), EcsError>
+                where for<'r> F: FnMut(&'r (Entity, &$t)) -> bool {
             let mut components = self.$base::<F, $t>(filter);
 
             match components.len() {
@@ -198,7 +207,9 @@ macro_rules! impl_read_single_filtered {
     ($name:ident, $base:ident, $($t:tt),*) => {
         /// Borrows the specified components, ensuring that only a single entity matches the given
         /// conditions (defined by the components and filter).
-        pub fn $name<F, $($t: ComponentTrait),*>(&self, filter: F) -> Result<(Entity, $(&$t),*), EcsError> where for<'r> F: FnMut(&'r (Entity, $(&$t),*)) -> bool{
+        pub fn $name<F, $($t: ComponentTrait),*>(&self, filter: F)
+                -> Result<(Entity, $(&$t),*), EcsError>
+                where for<'r> F: FnMut(&'r (Entity, $(&$t),*)) -> bool{
             let mut components = self.$base::<F, $($t),*>(filter);
 
             match components.len() {
@@ -209,4 +220,3 @@ macro_rules! impl_read_single_filtered {
         }
     };
 }
-

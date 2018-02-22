@@ -10,8 +10,6 @@ pub struct Description {
 impl Description {
     /// Creates a new `Description` component.
     pub fn new(name: &str) -> Self {
-        Description {
-            name: name.into(),
-        }
+        Description { name: name.into() }
     }
 }

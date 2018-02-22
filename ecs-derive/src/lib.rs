@@ -1,9 +1,9 @@
 //! Provides a custom derive `Component` to allow to name components more easily.
 
 extern crate proc_macro;
-extern crate syn;
 #[macro_use]
 extern crate quote;
+extern crate syn;
 
 use proc_macro::TokenStream;
 

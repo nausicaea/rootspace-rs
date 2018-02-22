@@ -62,7 +62,12 @@ mod test {
         assert!(LoopStage::DynamicUpdate.match_filter(LoopStageFlag::DYNAMIC_UPDATE));
         assert!(LoopStage::Render.match_filter(LoopStageFlag::RENDER));
 
-        for ls in &[LoopStage::HandleEvent, LoopStage::Update, LoopStage::DynamicUpdate, LoopStage::Render] {
+        for ls in &[
+            LoopStage::HandleEvent,
+            LoopStage::Update,
+            LoopStage::DynamicUpdate,
+            LoopStage::Render,
+        ] {
             assert!(ls.match_filter(LoopStageFlag::ALL_STAGES));
         }
     }

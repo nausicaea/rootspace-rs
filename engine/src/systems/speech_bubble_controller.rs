@@ -1,9 +1,9 @@
 use std::collections::HashMap;
-use std::time::{Instant, Duration};
+use std::time::{Duration, Instant};
 use glium::Display;
 use nalgebra::{Point3, Vector2};
 use uuid::Uuid;
-use ecs::{SystemTrait, Assembly, EcsError, LoopStageFlag, DispatchEvents};
+use ecs::{Assembly, DispatchEvents, EcsError, LoopStageFlag, SystemTrait};
 use event::{EngineEvent, EngineEventFlag};
 use singletons::Singletons;
 use common::ui_element::{UiElement, UiElementError as RootUiElementError};
@@ -27,39 +27,59 @@ impl SpeechBubbleController {
         }
     }
     /// Creates a new speech-bubble `UiElement` and attaches it to the `UiState`.
-    fn create_speech_bubble(&mut self, entities: &mut Assembly, aux: &mut Singletons, target: &str, content: &str, lifetime: u64) -> Result<(), SpeechBubbleError> {
+    fn create_speech_bubble(
+        &mut self,
+        entities: &mut Assembly,
+        aux: &mut Singletons,
+        target: &str,
+        content: &str,
+        lifetime: u64,
+    ) -> Result<(), SpeechBubbleError> {
         // Attempt to find the entity named in `target` and retreive its world position.
-        let entity_pos_world = entities.rsf2::<_, Description, Model>(|&(_, d, _)| d.name == target)
+        let entity_pos_world = entities
+            .rsf2::<_, Description, Model>(|&(_, d, _)| d.name == target)
             .map(|(_, _, m)| Point3::from_coordinates(*m.translation()))
             .map_err(|e| SpeechBubbleError::EntityNameNotFound(target.into(), e))?;
 
         // Project the entity position to normalized device coordinates (this requires the camera
         // entity).
-        let (entity_pos_ndc, dimensions) = entities.rs1::<Camera>()
-            .map(|(_, c)| (c.world_point_to_ndc(&entity_pos_world), Vector2::new(c.dimensions[0] as f32, c.dimensions[1] as f32)))
+        let (entity_pos_ndc, dimensions) = entities
+            .rs1::<Camera>()
+            .map(|(_, c)| {
+                (
+                    c.world_point_to_ndc(&entity_pos_world),
+                    Vector2::new(c.dimensions[0] as f32, c.dimensions[1] as f32),
+                )
+            })
             .expect("Could not access the Camera component");
 
         // Obtain a mutable reference to the `UiState`.
-        let (_, ui_state) = entities.ws1::<UiState>()
+        let (_, ui_state) = entities
+            .ws1::<UiState>()
             .expect("Could not access the UiState component");
 
         // Create the text box
-        let element = UiElement::create_textbox(&self.display, &mut aux.factory,
-                                                &mut ui_state.font_cache,
-                                                &ui_state.speech_bubble.margin,
-                                                &ui_state.speech_bubble.font,
-                                                &ui_state.speech_bubble.rect_shaders,
-                                                &ui_state.speech_bubble.rect_textures,
-                                                &ui_state.speech_bubble.text_shaders,
-                                                &entity_pos_ndc.coords,
-                                                &ui_state.speech_bubble.relative_position_offset,
-                                                &dimensions, ui_state.speech_bubble.text_width,
-                                                &content)?;
+        let element = UiElement::create_textbox(
+            &self.display,
+            &mut aux.factory,
+            &mut ui_state.font_cache,
+            &ui_state.speech_bubble.margin,
+            &ui_state.speech_bubble.font,
+            &ui_state.speech_bubble.rect_shaders,
+            &ui_state.speech_bubble.rect_textures,
+            &ui_state.speech_bubble.text_shaders,
+            &entity_pos_ndc.coords,
+            &ui_state.speech_bubble.relative_position_offset,
+            &dimensions,
+            ui_state.speech_bubble.text_width,
+            &content,
+        )?;
 
         // Create and register the element.
         let id = Uuid::new_v4();
         ui_state.elements.insert(id, element);
-        self.lifetimes.insert(id, (Instant::now(), Duration::new(lifetime, 0)));
+        self.lifetimes
+            .insert(id, (Instant::now(), Duration::new(lifetime, 0)));
 
         Ok(())
     }
@@ -67,19 +87,20 @@ impl SpeechBubbleController {
     /// lifetimes.
     fn update_lifetimes(&mut self, entities: &mut Assembly) {
         if !self.lifetimes.is_empty() {
-            let to_delete = self.lifetimes.iter()
+            let to_delete = self.lifetimes
+                .iter()
                 .filter(|&(_, l)| l.0.elapsed() >= l.1)
                 .map(|(i, _)| i)
                 .cloned()
                 .collect::<Vec<_>>();
 
-            entities.ws1::<UiState>()
+            entities
+                .ws1::<UiState>()
                 .map(|(_, u)| {
-                    to_delete.iter()
-                        .for_each(|i| {
-                            u.elements.remove(i);
-                            self.lifetimes.remove(i);
-                        });
+                    to_delete.iter().for_each(|i| {
+                        u.elements.remove(i);
+                        self.lifetimes.remove(i);
+                    });
                 })
                 .expect("Could not access the UiState component")
         }
@@ -100,17 +121,28 @@ impl SystemTrait<EngineEvent, Singletons> for SpeechBubbleController {
     fn get_event_filter(&self) -> EngineEventFlag {
         EngineEventFlag::SPEECH_BUBBLE
     }
-    fn handle_event(&mut self, entities: &mut Assembly, aux: &mut Singletons, event: &EngineEvent) -> DispatchEvents<EngineEvent> {
+    fn handle_event(
+        &mut self,
+        entities: &mut Assembly,
+        aux: &mut Singletons,
+        event: &EngineEvent,
+    ) -> DispatchEvents<EngineEvent> {
         match *event {
             EngineEvent::SpeechBubble(ref t, ref c, l) => {
                 self.create_speech_bubble(entities, aux, t, c, l)
                     .unwrap_or_else(|e| warn!("Could not create a speech bubble: {}", e))
-            },
+            }
             _ => (),
         }
         (None, None)
     }
-    fn dynamic_update(&mut self, entities: &mut Assembly, _: &mut Singletons, _: &Duration, _: &Duration) -> DispatchEvents<EngineEvent> {
+    fn dynamic_update(
+        &mut self,
+        entities: &mut Assembly,
+        _: &mut Singletons,
+        _: &Duration,
+        _: &Duration,
+    ) -> DispatchEvents<EngineEvent> {
         self.update_lifetimes(entities);
         (None, None)
     }
@@ -120,8 +152,7 @@ impl SystemTrait<EngineEvent, Singletons> for SpeechBubbleController {
 pub enum SpeechBubbleError {
     #[fail(display = "The entity name '{}' could not be uniquely identified.", _0)]
     EntityNameNotFound(String, #[cause] EcsError),
-    #[fail(display = "{}", _0)]
-    UiElementError(#[cause] RootUiElementError),
+    #[fail(display = "{}", _0)] UiElementError(#[cause] RootUiElementError),
 }
 
 impl From<RootUiElementError> for SpeechBubbleError {

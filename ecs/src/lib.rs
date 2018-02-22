@@ -6,11 +6,11 @@
 //! latter must be linked to an `Entity` however, which must first be created by the `Assembly` (or
 //! the `World` via Deref trait).
 
+#[macro_use]
+extern crate bitflags;
 extern crate failure;
 #[macro_use]
 extern crate failure_derive;
-#[macro_use]
-extern crate bitflags;
 
 #[macro_use]
 mod impl_macros;
@@ -25,9 +25,9 @@ mod world;
 
 pub use self::error::EcsError;
 pub use self::event::{EcsEvent, EventTrait};
-pub use self::loop_stage::{LoopStageFlag, LoopStage};
+pub use self::loop_stage::{LoopStage, LoopStageFlag};
 pub use self::entity::Entity;
 pub use self::system::{DispatchEvents, SystemTrait};
-pub use self::component_group::{ComponentTrait, ComponentGroup};
+pub use self::component_group::{ComponentGroup, ComponentTrait};
 pub use self::assembly::Assembly;
 pub use self::world::World;

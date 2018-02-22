@@ -1,8 +1,8 @@
 use glium::Display;
 use nalgebra::{Point3, Vector2};
 use uuid::Uuid;
-use ecs::{Entity, LoopStageFlag, SystemTrait, Assembly, EcsError, DispatchEvents};
-use event::{EngineEventFlag, EngineEvent};
+use ecs::{Assembly, DispatchEvents, EcsError, Entity, LoopStageFlag, SystemTrait};
+use event::{EngineEvent, EngineEventFlag};
 use singletons::Singletons;
 use components::camera::Camera;
 use components::model::Model;
@@ -31,35 +31,55 @@ impl TooltipController {
         }
     }
     /// Creates a new tooltip, if the supplied target has a `TooltipData` component.
-    fn create_tooltip(&mut self, entities: &mut Assembly, aux: &mut Singletons, target: &Entity) -> Result<(), TooltipError> {
-        if let Ok(tooltip_text) = entities.borrow_component::<TooltipData>(target).map(|t| t.text.to_owned()) {
+    fn create_tooltip(
+        &mut self,
+        entities: &mut Assembly,
+        aux: &mut Singletons,
+        target: &Entity,
+    ) -> Result<(), TooltipError> {
+        if let Ok(tooltip_text) = entities
+            .borrow_component::<TooltipData>(target)
+            .map(|t| t.text.to_owned())
+        {
             // Attempt to determine the location of the entity.
-            let entity_pos_world = entities.borrow_component::<Model>(target)
+            let entity_pos_world = entities
+                .borrow_component::<Model>(target)
                 .map(|m| Point3::from_coordinates(*m.translation()))
                 .map_err(|e| TooltipError::ComponentNotFound("Model".into(), target.clone(), e))?;
 
             // Project the entity position to normalized device coordinates (this requires the camera
             // entity).
-            let (entity_pos_ndc, dimensions) = entities.rs1::<Camera>()
-                .map(|(_, c)| (c.world_point_to_ndc(&entity_pos_world), Vector2::new(c.dimensions[0] as f32, c.dimensions[1] as f32)))
+            let (entity_pos_ndc, dimensions) = entities
+                .rs1::<Camera>()
+                .map(|(_, c)| {
+                    (
+                        c.world_point_to_ndc(&entity_pos_world),
+                        Vector2::new(c.dimensions[0] as f32, c.dimensions[1] as f32),
+                    )
+                })
                 .expect("Could not access the Camera component");
 
             // Obtain a mutable reference to the `UiState`.
-            let (_, ui_state) = entities.ws1::<UiState>()
+            let (_, ui_state) = entities
+                .ws1::<UiState>()
                 .expect("Could not access the UiState component");
 
             // Create the text box
-            let element = UiElement::create_textbox(&self.display, &mut aux.factory,
-                                                    &mut ui_state.font_cache,
-                                                    &ui_state.tooltip.margin,
-                                                    &ui_state.tooltip.font,
-                                                    &ui_state.tooltip.rect_shaders,
-                                                    &ui_state.tooltip.rect_textures,
-                                                    &ui_state.tooltip.text_shaders,
-                                                    &entity_pos_ndc.coords,
-                                                    &ui_state.tooltip.relative_position_offset,
-                                                    &dimensions, ui_state.tooltip.text_width,
-                                                    &tooltip_text)?;
+            let element = UiElement::create_textbox(
+                &self.display,
+                &mut aux.factory,
+                &mut ui_state.font_cache,
+                &ui_state.tooltip.margin,
+                &ui_state.tooltip.font,
+                &ui_state.tooltip.rect_shaders,
+                &ui_state.tooltip.rect_textures,
+                &ui_state.tooltip.text_shaders,
+                &entity_pos_ndc.coords,
+                &ui_state.tooltip.relative_position_offset,
+                &dimensions,
+                ui_state.tooltip.text_width,
+                &tooltip_text,
+            )?;
 
             // Create and register the element.
             let id = Uuid::new_v4();
@@ -71,7 +91,8 @@ impl TooltipController {
     }
     /// Removes the current tooltip (if any) from the `UiElement` registry.
     fn destroy_tooltip(&mut self, entities: &mut Assembly) {
-        entities.ws1::<UiState>()
+        entities
+            .ws1::<UiState>()
             .map(|(_, u)| {
                 if let Some(ref id) = self.current_tooltip {
                     u.elements.remove(id);
@@ -96,10 +117,16 @@ impl SystemTrait<EngineEvent, Singletons> for TooltipController {
     fn get_event_filter(&self) -> EngineEventFlag {
         EngineEventFlag::CURSOR_POSITION
     }
-    fn handle_event(&mut self, entities: &mut Assembly, aux: &mut Singletons, event: &EngineEvent) -> DispatchEvents<EngineEvent> {
+    fn handle_event(
+        &mut self,
+        entities: &mut Assembly,
+        aux: &mut Singletons,
+        event: &EngineEvent,
+    ) -> DispatchEvents<EngineEvent> {
         match *event {
             EngineEvent::CursorPosition(position) => {
-                let menu_active = entities.rs1::<UiState>()
+                let menu_active = entities
+                    .rs1::<UiState>()
                     .map(|(_, u)| u.menu_active)
                     .expect("Could not access the UiState component");
 
@@ -108,8 +135,12 @@ impl SystemTrait<EngineEvent, Singletons> for TooltipController {
                     unimplemented!();
                 } else {
                     // Perform 3D raycasting.
-                    let cursor_ray = entities.rs1::<Camera>()
-                        .map(|(_, c)| c.screen_point_to_ray(&position).expect("Could not translate the mouse coordinates to a ray"))
+                    let cursor_ray = entities
+                        .rs1::<Camera>()
+                        .map(|(_, c)| {
+                            c.screen_point_to_ray(&position)
+                                .expect("Could not translate the mouse coordinates to a ray")
+                        })
                         .expect("Could not access the Camera component");
 
                     if let Some(hit) = aux.physics.raycast(entities, &cursor_ray) {
@@ -134,7 +165,7 @@ impl SystemTrait<EngineEvent, Singletons> for TooltipController {
                         self.current_target = None;
                     }
                 }
-            },
+            }
             _ => (),
         }
         (None, None)
@@ -146,8 +177,7 @@ impl SystemTrait<EngineEvent, Singletons> for TooltipController {
 pub enum TooltipError {
     #[fail(display = "The entity {1} has no component '{0}'", _0, _1)]
     ComponentNotFound(String, Entity, #[cause] EcsError),
-    #[fail(display = "{}", _0)]
-    UiElementError(#[cause] RootUiElementError),
+    #[fail(display = "{}", _0)] UiElementError(#[cause] RootUiElementError),
 }
 
 impl From<RootUiElementError> for TooltipError {

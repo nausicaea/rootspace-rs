@@ -1,5 +1,5 @@
-use ecs::{LoopStageFlag, SystemTrait, Assembly, DispatchEvents};
-use event::{EngineEventFlag, EngineEvent};
+use ecs::{Assembly, DispatchEvents, LoopStageFlag, SystemTrait};
+use event::{EngineEvent, EngineEventFlag};
 use singletons::Singletons;
 
 /// Defines a system that logs all events on the bus to the console (log level TRACE).
@@ -27,7 +27,12 @@ impl SystemTrait<EngineEvent, Singletons> for EventMonitor {
         EngineEventFlag::ALL_EVENTS & !EngineEventFlag::CURSOR_POSITION
     }
     /// Issues a logging call (TRACE level) for each received event.
-    fn handle_event(&mut self, _: &mut Assembly, _: &mut Singletons, event: &EngineEvent) -> DispatchEvents<EngineEvent> {
+    fn handle_event(
+        &mut self,
+        _: &mut Assembly,
+        _: &mut Singletons,
+        event: &EngineEvent,
+    ) -> DispatchEvents<EngineEvent> {
         trace!("Received event '{:?}'", event);
         (None, None)
     }

@@ -63,11 +63,11 @@ impl<E: EventTrait, A: Default, S: SystemTrait<E, A>> World<E, A, S> {
             match e.as_ecs_event() {
                 Some(EcsEvent::ImmediateShutdown) => {
                     return false;
-                },
+                }
                 Some(EcsEvent::Shutdown) => {
                     self.dispatch_immediate(&e);
                     self.dispatch(EcsEvent::ImmediateShutdown.into())
-                },
+                }
                 _ => self.dispatch_immediate(&e),
             }
         }
@@ -108,7 +108,8 @@ impl<E: EventTrait, A: Default, S: SystemTrait<E, A>> World<E, A, S> {
 
         for system in &mut self.systems {
             if LoopStage::DynamicUpdate.match_filter(system.get_loop_stage_filter()) {
-                let (pe, e) = system.dynamic_update(&mut self.assembly, &mut self.aux, time, delta_time);
+                let (pe, e) =
+                    system.dynamic_update(&mut self.assembly, &mut self.aux, time, delta_time);
 
                 if let Some(mut pe) = pe {
                     priority_events.append(&mut pe);
@@ -148,7 +149,9 @@ impl<E: EventTrait, A: Default, S: SystemTrait<E, A>> World<E, A, S> {
         let mut events = Vec::new();
 
         for system in &mut self.systems {
-            if LoopStage::HandleEvent.match_filter(system.get_loop_stage_filter()) && event.match_filter(system.get_event_filter()) {
+            if LoopStage::HandleEvent.match_filter(system.get_loop_stage_filter())
+                && event.match_filter(system.get_event_filter())
+            {
                 let (pe, e) = system.handle_event(&mut self.assembly, &mut self.aux, event);
 
                 if let Some(mut pe) = pe {

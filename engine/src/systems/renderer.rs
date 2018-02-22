@@ -1,11 +1,11 @@
 use std::borrow::Borrow;
 use std::time::Duration;
 use glium;
-use glium::{Frame, Surface, Display, DrawParameters};
+use glium::{Display, DrawParameters, Frame, Surface};
 use glium::backend::glutin::DisplayCreationError;
-use glium::glutin::{Api, GlRequest, GlProfile, EventsLoop, WindowBuilder, ContextBuilder};
-use ecs::{LoopStageFlag, SystemTrait, Assembly, DispatchEvents};
-use event::{EngineEventFlag, EngineEvent};
+use glium::glutin::{Api, ContextBuilder, EventsLoop, GlProfile, GlRequest, WindowBuilder};
+use ecs::{Assembly, DispatchEvents, LoopStageFlag, SystemTrait};
+use event::{EngineEvent, EngineEventFlag};
 use singletons::Singletons;
 use components::camera::Camera;
 use components::mesh::Mesh;
@@ -26,7 +26,14 @@ pub struct Renderer {
 
 impl Renderer {
     /// Creates a new instance of `Renderer`.
-    pub fn new(events_loop: &EventsLoop, title: &str, dimensions: &[u32; 2], vsync: bool, msaa: u16, clear_color: &[f32; 4]) -> Result<Self, RendererError> {
+    pub fn new(
+        events_loop: &EventsLoop,
+        title: &str,
+        dimensions: &[u32; 2],
+        vsync: bool,
+        msaa: u16,
+        clear_color: &[f32; 4],
+    ) -> Result<Self, RendererError> {
         let window = WindowBuilder::new()
             .with_title(title)
             .with_dimensions(dimensions[0], dimensions[1]);
@@ -40,7 +47,7 @@ impl Renderer {
             depth: glium::Depth {
                 test: glium::draw_parameters::DepthTest::IfLess,
                 write: true,
-                .. Default::default()
+                ..Default::default()
             },
             blend: glium::Blend {
                 color: glium::BlendingFunction::Addition {
@@ -53,18 +60,30 @@ impl Renderer {
                 },
                 constant_value: (0.0, 0.0, 0.0, 0.0),
             },
-            .. Default::default()
+            ..Default::default()
         };
 
         Ok(Renderer {
             display: display,
             ready: false,
-            clear_color: (clear_color[0], clear_color[1], clear_color[2], clear_color[3]),
+            clear_color: (
+                clear_color[0],
+                clear_color[1],
+                clear_color[2],
+                clear_color[3],
+            ),
             draw_params: draw_params,
         })
     }
-    fn render_entities(&self, entities: &Assembly, aux: &Singletons, target: &mut Frame, params: &DrawParameters) {
-        entities.rs1::<Camera>()
+    fn render_entities(
+        &self,
+        entities: &Assembly,
+        aux: &Singletons,
+        target: &mut Frame,
+        params: &DrawParameters,
+    ) {
+        entities
+            .rs1::<Camera>()
             .map(|(_, c)| {
                 for node in aux.scene_graph.iter() {
                     if let Ok(mesh) = entities.borrow_component::<Mesh>(&node.key) {
@@ -72,7 +91,14 @@ impl Renderer {
                             let uniforms = Uniforms {
                                 pvm_matrix: c.matrix * node.data.matrix(),
                             };
-                            target.draw(&mesh.vertices, &mesh.indices, &material.shader, &uniforms, params)
+                            target
+                                .draw(
+                                    &mesh.vertices,
+                                    &mesh.indices,
+                                    &material.shader,
+                                    &uniforms,
+                                    params,
+                                )
                                 .expect("Unable to execute the draw call");
                         }
                     }
@@ -80,8 +106,14 @@ impl Renderer {
             })
             .expect("Failed to render entities");
     }
-    fn render_user_interface(&self, entities: &Assembly, target: &mut Frame, params: &DrawParameters) {
-        entities.rs1::<UiState>()
+    fn render_user_interface(
+        &self,
+        entities: &Assembly,
+        target: &mut Frame,
+        params: &DrawParameters,
+    ) {
+        entities
+            .rs1::<UiState>()
             .map(|(_, u)| {
                 for e in u.elements.values() {
                     for p in &e.primitives {
@@ -93,7 +125,14 @@ impl Renderer {
                             norm_tex: p.material.norm_tex.as_ref().map(|nt| nt.borrow()),
                         };
 
-                        target.draw(&p.mesh.vertices, &p.mesh.indices, &p.material.shader, &uniforms, params)
+                        target
+                            .draw(
+                                &p.mesh.vertices,
+                                &p.mesh.indices,
+                                &p.material.shader,
+                                &uniforms,
+                                params,
+                            )
                             .expect("Unable to execute the draw call");
                     }
                 }
@@ -123,18 +162,24 @@ impl SystemTrait<EngineEvent, Singletons> for Renderer {
     /// Once the `Ready` event has been received, the `Renderer` completes its initialization and
     /// emits a `RendererReady` event. Upon receiving a `ResizeWindow` event, the `Camera`
     /// component is updated.
-    fn handle_event(&mut self, entities: &mut Assembly, _: &mut Singletons, event: &EngineEvent) -> DispatchEvents<EngineEvent> {
+    fn handle_event(
+        &mut self,
+        entities: &mut Assembly,
+        _: &mut Singletons,
+        event: &EngineEvent,
+    ) -> DispatchEvents<EngineEvent> {
         match *event {
             EngineEvent::Ready => {
                 self.ready = true;
                 (None, Some(vec![EngineEvent::RendererReady]))
-            },
+            }
             EngineEvent::ResizeWindow(w, h) => {
-                entities.ws1::<Camera>()
+                entities
+                    .ws1::<Camera>()
                     .map(|(_, c)| c.set_dimensions([w, h]))
                     .expect("Unable to update the projection matrices.");
                 (None, None)
-            },
+            }
             _ => (None, None),
         }
     }
@@ -143,9 +188,11 @@ impl SystemTrait<EngineEvent, Singletons> for Renderer {
     /// defined in `UiState`.
     fn render(&mut self, entities: &Assembly, aux: &mut Singletons, _: &Duration, _: &Duration) {
         // Update the scene graph.
-        aux.scene_graph.update(&|entity, parent_component| {
-                let current_component = entities.borrow_component(entity)
-                    .expect("The internal state of the scene graph is irreparably out of sync with the assembly");
+        aux.scene_graph
+            .update(&|entity, parent_component| {
+                let current_component = entities
+                    .borrow_component(entity)
+                    .expect("The scene graph is irreparably out of sync with the assembly");
                 parent_component * current_component
             })
             .expect("Unable to update the scene graph");
@@ -160,7 +207,8 @@ impl SystemTrait<EngineEvent, Singletons> for Renderer {
         // Render the user interface.
         self.render_user_interface(entities, &mut target, &self.draw_params);
 
-        target.finish()
+        target
+            .finish()
             .expect("Unable to finalize the current frame");
     }
 }

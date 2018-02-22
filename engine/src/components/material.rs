@@ -4,7 +4,7 @@ use std::rc::Rc;
 use glium::{Display, Program, Texture2d};
 use glium::program;
 use glium::texture;
-use common::file_manipulation::{load_text_file, load_image_file, FileError as RootFileError};
+use common::file_manipulation::{load_image_file, load_text_file, FileError as RootFileError};
 use common::resource_group::{ShaderGroup, TextureGroup};
 
 /// The `Material` represents an abstraction of a real-world material of an object.
@@ -22,7 +22,11 @@ pub struct Material {
 
 impl Material {
     /// Creates a new `Material` from multiple shader files.
-    pub fn new(display: &Display, shaders: ShaderGroup, textures: TextureGroup) -> Result<Self, MaterialError> {
+    pub fn new(
+        display: &Display,
+        shaders: ShaderGroup,
+        textures: TextureGroup,
+    ) -> Result<Self, MaterialError> {
         let vss = load_text_file(&shaders.vertex)?;
         let fss = load_text_file(&shaders.fragment)?;
         let gss = match shaders.geometry {
@@ -33,19 +37,24 @@ impl Material {
             Some(ref dp) => {
                 let di = load_image_file(dp)?;
                 Some(Rc::new(Texture2d::new(display, di)?))
-            },
+            }
             None => None,
         };
         let ntt = match textures.normal {
             Some(ref np) => {
                 let ni = load_image_file(np)?;
                 Some(Rc::new(Texture2d::new(display, ni)?))
-            },
+            }
             None => None,
         };
 
         Ok(Material {
-            shader: Rc::new(Program::from_source(display, &vss, &fss, gss.as_ref().map(|g| &**g))?),
+            shader: Rc::new(Program::from_source(
+                display,
+                &vss,
+                &fss,
+                gss.as_ref().map(|g| &**g),
+            )?),
             diff_tex: dtt,
             norm_tex: ntt,
             shader_origins: shaders,
@@ -57,12 +66,9 @@ impl Material {
 /// Operations with `Material` may fail. `MaterialError` describes those errors.
 #[derive(Debug, Fail)]
 pub enum MaterialError {
-    #[fail(display = "{}", _0)]
-    ShaderError(#[cause] program::ProgramCreationError),
-    #[fail(display = "{}", _0)]
-    FileError(#[cause] RootFileError),
-    #[fail(display = "{}", _0)]
-    TextureError(#[cause] texture::TextureCreationError),
+    #[fail(display = "{}", _0)] ShaderError(#[cause] program::ProgramCreationError),
+    #[fail(display = "{}", _0)] FileError(#[cause] RootFileError),
+    #[fail(display = "{}", _0)] TextureError(#[cause] texture::TextureCreationError),
 }
 
 impl From<program::ProgramCreationError> for MaterialError {

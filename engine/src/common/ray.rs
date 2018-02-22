@@ -1,19 +1,25 @@
 use std::fmt;
-use nalgebra::{Point3, Vector3, Scalar, Unit, Real};
+use nalgebra::{Point3, Real, Scalar, Unit, Vector3};
 use ecs::Entity;
 use common::affine_transform::AffineTransform;
 
 /// A `Ray` characterises a ray (a line segment with an origin, direction and infinite length in
 /// that direction).
 #[derive(Debug, Clone, PartialEq)]
-pub struct Ray<N> where N: Scalar + Real {
+pub struct Ray<N>
+where
+    N: Scalar + Real,
+{
     /// Specifies the origin of the `Ray`.
     pub origin: Point3<N>,
     /// Specifies the direction of the `Ray`.
     pub direction: Unit<Vector3<N>>,
 }
 
-impl<N> Ray<N> where N: Scalar + Real {
+impl<N> Ray<N>
+where
+    N: Scalar + Real,
+{
     /// Creates a new `Ray`.
     pub fn new(origin: Point3<N>, direction: Unit<Vector3<N>>) -> Self {
         Ray {
@@ -29,7 +35,10 @@ impl<N> Ray<N> where N: Scalar + Real {
     /// matrix.
     pub fn transform(&self, transform: &AffineTransform<N>) -> Option<Self> {
         let new_origin = transform.transform_point(&self.origin);
-        let new_direction = Unit::try_new(transform.transform_vector(&self.direction), N::default_epsilon())?;
+        let new_direction = Unit::try_new(
+            transform.transform_vector(&self.direction),
+            N::default_epsilon(),
+        )?;
 
         Some(Ray {
             origin: new_origin,
@@ -39,7 +48,10 @@ impl<N> Ray<N> where N: Scalar + Real {
     /// Applies the inverse of the supplied `AffineTransform` matrix to the `Ray`.
     pub fn inverse_transform(&self, transform: &AffineTransform<N>) -> Option<Self> {
         let new_origin = transform.inverse_transform_point(&self.origin);
-        let new_direction = Unit::try_new(transform.inverse_transform_vector(&self.direction), N::default_epsilon())?;
+        let new_direction = Unit::try_new(
+            transform.inverse_transform_vector(&self.direction),
+            N::default_epsilon(),
+        )?;
 
         Some(Ray {
             origin: new_origin,
@@ -48,16 +60,27 @@ impl<N> Ray<N> where N: Scalar + Real {
     }
 }
 
-impl<N> fmt::Display for Ray<N> where N: Scalar + Real {
+impl<N> fmt::Display for Ray<N>
+where
+    N: Scalar + Real,
+{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Ray {{origin: {}, direction: {}}}", self.origin, self.direction.unwrap())
+        write!(
+            f,
+            "Ray {{origin: {}, direction: {}}}",
+            self.origin,
+            self.direction.unwrap()
+        )
     }
 }
 
 /// When performing raycasting, the `ObjectHit` structure indicates a positive intersection test
 /// between a `Ray` and a `BoundingVolume`.
 #[derive(Debug, Clone, PartialEq)]
-pub struct ObjectHit<N> where N: Scalar + Real {
+pub struct ObjectHit<N>
+where
+    N: Scalar + Real,
+{
     /// Names the `Entity` that was hit by the `Ray`.
     pub target: Entity,
     /// Names the point in world space closest to the `Ray` origin at which the intersection took
@@ -65,9 +88,16 @@ pub struct ObjectHit<N> where N: Scalar + Real {
     pub point: Point3<N>,
 }
 
-impl<N> fmt::Display for ObjectHit<N> where N: Scalar + Real {
+impl<N> fmt::Display for ObjectHit<N>
+where
+    N: Scalar + Real,
+{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "ObjectHit {{target: {}, point: {}}}", self.target, self.point)
+        write!(
+            f,
+            "ObjectHit {{target: {}, point: {}}}",
+            self.target, self.point
+        )
     }
 }
 

@@ -1,6 +1,6 @@
 use alga::linear::Transformation;
 use ecs::Assembly;
-use common::ray::{Ray, ObjectHit};
+use common::ray::{ObjectHit, Ray};
 use components::model::Model;
 use components::bounding_volume::BoundingVolume;
 

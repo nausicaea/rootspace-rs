@@ -1,19 +1,17 @@
-use std::io::{Read, Error};
+use std::io::{Error, Read};
 use std::string::FromUtf8Error;
 use std::sync::mpsc::{channel, Receiver, TryRecvError};
 use std::time::Duration;
 use std::thread::spawn;
-use ecs::{LoopStageFlag, SystemTrait, Assembly, DispatchEvents};
+use ecs::{Assembly, DispatchEvents, LoopStageFlag, SystemTrait};
 use event::EngineEvent;
 use singletons::Singletons;
 use common::text_manipulation::split_arguments;
 
 #[derive(Debug, Fail)]
 enum DebugConsoleError {
-    #[fail(display = "{}", _0)]
-    IoError(#[cause] Error),
-    #[fail(display = "{}", _0)]
-    Utf8Error(#[cause] FromUtf8Error),
+    #[fail(display = "{}", _0)] IoError(#[cause] Error),
+    #[fail(display = "{}", _0)] Utf8Error(#[cause] FromUtf8Error),
 }
 
 /// Describes a system that captures user input from a stream in a non-blocking fashion (via
@@ -27,7 +25,10 @@ pub struct DebugConsole {
 
 impl DebugConsole {
     /// Given an input stream (e.g. stdin), creates a new `DebugConsole`.
-    pub fn new<S>(mut stream: S) -> Self where S: Read + Send + 'static {
+    pub fn new<S>(mut stream: S) -> Self
+    where
+        S: Read + Send + 'static,
+    {
         let (tx, rx) = channel();
 
         // Spawn a new thread that continuously waits for user input from the specified readable
@@ -49,8 +50,9 @@ impl DebugConsole {
                         } else {
                             buf.push(byte[0])
                         }
-                    },
-                    Err(e) => tx.send(Err(DebugConsoleError::IoError(e))).expect("Unable to send error information via mpsc channel"),
+                    }
+                    Err(e) => tx.send(Err(DebugConsoleError::IoError(e)))
+                        .expect("Unable to send error information via mpsc channel"),
                 }
             }
         });
@@ -85,11 +87,17 @@ impl SystemTrait<EngineEvent, Singletons> for DebugConsole {
     /// Attempts to retrieve data from the worker thread and emits a `ConsoleCommand` event once a
     /// full line of input has been received. Also performs argument splitting before emitting the
     /// event.
-    fn dynamic_update(&mut self, _: &mut Assembly, _: &mut Singletons, _: &Duration, _: &Duration) -> DispatchEvents<EngineEvent> {
-         let event = self.try_read_line()
+    fn dynamic_update(
+        &mut self,
+        _: &mut Assembly,
+        _: &mut Singletons,
+        _: &Duration,
+        _: &Duration,
+    ) -> DispatchEvents<EngineEvent> {
+        let event = self.try_read_line()
             .map(|s| split_arguments(&s, self.escape_char, self.quote_char))
             .map(|c| vec![EngineEvent::ConsoleCommand(c)]);
 
-         (None, event)
+        (None, event)
     }
 }

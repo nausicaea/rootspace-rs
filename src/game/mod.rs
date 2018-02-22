@@ -4,10 +4,10 @@ use std::path::Path;
 use std::time::Duration;
 use nalgebra;
 use nalgebra::{Point3, Vector3};
-use engine::{Orchestrator, EventMonitor, DebugConsole, DebugShell, Renderer, EventInterface, Model,
-    Description, Mesh, SpeechBubbleController, TooltipController, UiState, SpeechBubble, Camera,
-    Tooltip, TooltipData, ShaderGroup, TextureGroup, BoundingVolume, Cursor, CursorController,
-    FontGroup, DebugMover, DebugUi};
+use engine::{BoundingVolume, Camera, Cursor, CursorController, DebugConsole, DebugMover,
+             DebugShell, DebugUi, Description, EventInterface, EventMonitor, FontGroup, Mesh,
+             Model, Orchestrator, Renderer, ShaderGroup, SpeechBubble, SpeechBubbleController,
+             TextureGroup, Tooltip, TooltipController, TooltipData, UiState};
 
 pub fn run(resource_path: &Path, debugging: bool) {
     // The following variables set up the state of the engine.
@@ -25,8 +25,14 @@ pub fn run(resource_path: &Path, debugging: bool) {
     orchestrator.run(move |o| {
         // Create the renderer (and dependencies).
         let event_interface = EventInterface::new();
-        let renderer = Renderer::new(&event_interface.events_loop, &title, &dimensions, vsync, msaa, &clear_color)
-            .unwrap();
+        let renderer = Renderer::new(
+            &event_interface.events_loop,
+            &title,
+            &dimensions,
+            vsync,
+            msaa,
+            &clear_color,
+        ).unwrap();
 
         // Assemble the camera entity.
         {
@@ -59,7 +65,12 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let text_shaders = ShaderGroup::new(&tvs, &tfs, None).unwrap();
             let rect_shaders = ShaderGroup::new(&rvs, &rfs, None).unwrap();
             let rect_textures = TextureGroup::new(Some(&rdt), None).unwrap();
-            let speech_bubble = SpeechBubble::new(font_group, text_shaders.clone(), rect_shaders.clone(), rect_textures);
+            let speech_bubble = SpeechBubble::new(
+                font_group,
+                text_shaders.clone(),
+                rect_shaders.clone(),
+                rect_textures,
+            );
             let rdt = o.get_file("textures", "tooltip.png").unwrap();
             let rect_textures = TextureGroup::new(Some(&rdt), None).unwrap();
             let font_group = FontGroup::new(&font_path, font_scale, font_color).unwrap();
@@ -67,7 +78,13 @@ pub fn run(resource_path: &Path, debugging: bool) {
 
             let canvas = o.world.create_entity();
             let d = Description::new("canvas");
-            let u = UiState::new(&renderer.display, &dimensions, hi_dpi_factor, speech_bubble, tooltip).unwrap();
+            let u = UiState::new(
+                &renderer.display,
+                &dimensions,
+                hi_dpi_factor,
+                speech_bubble,
+                tooltip,
+            ).unwrap();
 
             o.world.add_component(&canvas, d).unwrap();
             o.world.add_component(&canvas, u).unwrap();
@@ -98,17 +115,27 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let tooltip = TooltipData::new("Hi, I'm a quad!");
             let model = Model::new(position, axisangle, scale);
             let mesh = Mesh::new_quad(&renderer.display).unwrap();
-            let material = o.world.aux.factory.new_material(&renderer.display, &shaders, &textures).unwrap();
+            let material = o.world
+                .aux
+                .factory
+                .new_material(&renderer.display, &shaders, &textures)
+                .unwrap();
             let bounding_volume = BoundingVolume::from_mesh_aabb(&mesh).unwrap();
 
-            o.world.aux.scene_graph.insert(test_entity_a.clone(), model.clone()).unwrap();
+            o.world
+                .aux
+                .scene_graph
+                .insert(test_entity_a.clone(), model.clone())
+                .unwrap();
 
             o.world.add_component(&test_entity_a, d).unwrap();
             o.world.add_component(&test_entity_a, tooltip).unwrap();
             o.world.add_component(&test_entity_a, model).unwrap();
             o.world.add_component(&test_entity_a, mesh).unwrap();
             o.world.add_component(&test_entity_a, material).unwrap();
-            o.world.add_component(&test_entity_a, bounding_volume).unwrap();
+            o.world
+                .add_component(&test_entity_a, bounding_volume)
+                .unwrap();
         }
 
         // Assemble the second test entity.
@@ -126,17 +153,27 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let tooltip = TooltipData::new("Hi, I'm a cube!");
             let model = Model::new(position, axisangle, scale);
             let mesh = Mesh::new_cube(&renderer.display).unwrap();
-            let material = o.world.aux.factory.new_material(&renderer.display, &shaders, &textures).unwrap();
+            let material = o.world
+                .aux
+                .factory
+                .new_material(&renderer.display, &shaders, &textures)
+                .unwrap();
             let bounding_volume = BoundingVolume::from_mesh_aabb(&mesh).unwrap();
 
-            o.world.aux.scene_graph.insert(test_entity_b.clone(), model.clone()).unwrap();
+            o.world
+                .aux
+                .scene_graph
+                .insert(test_entity_b.clone(), model.clone())
+                .unwrap();
 
             o.world.add_component(&test_entity_b, d).unwrap();
             o.world.add_component(&test_entity_b, tooltip).unwrap();
             o.world.add_component(&test_entity_b, model).unwrap();
             o.world.add_component(&test_entity_b, mesh).unwrap();
             o.world.add_component(&test_entity_b, material).unwrap();
-            o.world.add_component(&test_entity_b, bounding_volume).unwrap();
+            o.world
+                .add_component(&test_entity_b, bounding_volume)
+                .unwrap();
         }
 
         // Assemble the third test entity.
@@ -154,17 +191,27 @@ pub fn run(resource_path: &Path, debugging: bool) {
             let tooltip = TooltipData::new("Hi, I'm a moving cube!");
             let model = Model::new(position, axisangle, scale);
             let mesh = Mesh::new_cube(&renderer.display).unwrap();
-            let material = o.world.aux.factory.new_material(&renderer.display, &shaders, &textures).unwrap();
+            let material = o.world
+                .aux
+                .factory
+                .new_material(&renderer.display, &shaders, &textures)
+                .unwrap();
             let bounding_volume = BoundingVolume::from_mesh_aabb(&mesh).unwrap();
 
-            o.world.aux.scene_graph.insert(test_entity_c.clone(), model.clone()).unwrap();
+            o.world
+                .aux
+                .scene_graph
+                .insert(test_entity_c.clone(), model.clone())
+                .unwrap();
 
             o.world.add_component(&test_entity_c, d).unwrap();
             o.world.add_component(&test_entity_c, tooltip).unwrap();
             o.world.add_component(&test_entity_c, model).unwrap();
             o.world.add_component(&test_entity_c, mesh).unwrap();
             o.world.add_component(&test_entity_c, material).unwrap();
-            o.world.add_component(&test_entity_c, bounding_volume).unwrap();
+            o.world
+                .add_component(&test_entity_c, bounding_volume)
+                .unwrap();
         }
 
         // Add systems to the world.
@@ -176,8 +223,10 @@ pub fn run(resource_path: &Path, debugging: bool) {
             o.add_system(DebugUi::new(&renderer.display)).unwrap();
         }
         o.add_system(CursorController::new()).unwrap();
-        o.add_system(TooltipController::new(&renderer.display)).unwrap();
-        o.add_system(SpeechBubbleController::new(&renderer.display)).unwrap();
+        o.add_system(TooltipController::new(&renderer.display))
+            .unwrap();
+        o.add_system(SpeechBubbleController::new(&renderer.display))
+            .unwrap();
         o.add_system(renderer).unwrap();
         o.add_system(event_interface).unwrap();
     });

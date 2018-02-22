@@ -2,8 +2,8 @@
 //! but should run on all operating systems supported by the Rust compiler.
 
 extern crate clap;
-extern crate log;
 extern crate fern;
+extern crate log;
 extern crate nalgebra;
 
 extern crate ecs;
@@ -13,7 +13,7 @@ mod game;
 
 use std::io;
 use std::path::PathBuf;
-use clap::{Arg, App};
+use clap::{App, Arg};
 use log::LevelFilter;
 use fern::Dispatch;
 
@@ -23,20 +23,26 @@ fn main() {
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
-        .arg(Arg::with_name("debugging")
-             .short("d")
-             .long("debug")
-             .help("Enables debugging features"))
-        .arg(Arg::with_name("verbosity")
-             .short("v")
-             .long("verbose")
-             .multiple(true)
-             .help("Determines the amount of output logged"))
-        .arg(Arg::with_name("quiet")
-             .short("q")
-             .long("quiet")
-             .conflicts_with("verbosity")
-             .help("Disables all output"))
+        .arg(
+            Arg::with_name("debugging")
+                .short("d")
+                .long("debug")
+                .help("Enables debugging features"),
+        )
+        .arg(
+            Arg::with_name("verbosity")
+                .short("v")
+                .long("verbose")
+                .multiple(true)
+                .help("Determines the amount of output logged"),
+        )
+        .arg(
+            Arg::with_name("quiet")
+                .short("q")
+                .long("quiet")
+                .conflicts_with("verbosity")
+                .help("Disables all output"),
+        )
         .get_matches();
 
     // Obtain the command line arguments.

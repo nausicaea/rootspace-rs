@@ -66,18 +66,47 @@ mod test {
     fn simple_argument_list() {
         let args = split_arguments("command -f flagvalue  positional_argument 100 ", '\\', '"');
 
-        assert!(args == vec!["command", "-f", "flagvalue", "positional_argument", "100"], "Got {:?} instead", args);
+        assert!(
+            args == vec!["command", "-f", "flagvalue", "positional_argument", "100"],
+            "Got {:?} instead",
+            args
+        );
     }
     #[test]
     fn quoted_argument_list() {
-        let args = split_arguments("command -f \"flag value\"  \"positional argument\" 100 ", '\\', '"');
+        let args = split_arguments(
+            "command -f \"flag value\"  \"positional argument\" 100 ",
+            '\\',
+            '"',
+        );
 
-        assert!(args == vec!["command", "-f", "flag value", "positional argument", "100"], "Got {:?} instead", args);
+        assert!(
+            args == vec!["command", "-f", "flag value", "positional argument", "100"],
+            "Got {:?} instead",
+            args
+        );
     }
     #[test]
     fn escaped_argument_list() {
-        let args = split_arguments(r"command -f flag\\ value  positional argument 100 ", '\\', '"');
+        let args = split_arguments(
+            r"command -f flag\\ value  positional argument 100 ",
+            '\\',
+            '"',
+        );
 
-        assert!(args == vec!["command", "-f", "flag\\", "value", "positional", "argument", "100"], "Got {:?} instead", args);
+        assert!(
+            args
+                == vec![
+                    "command",
+                    "-f",
+                    "flag\\",
+                    "value",
+                    "positional",
+                    "argument",
+                    "100",
+                ],
+            "Got {:?} instead",
+            args
+        );
     }
 }

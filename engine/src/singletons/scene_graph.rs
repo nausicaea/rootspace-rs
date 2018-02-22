@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::hash::Hash;
 use daggy::{Dag, NodeIndex, Walker};
-use daggy::petgraph::graph::{Node, DefaultIx};
+use daggy::petgraph::graph::{DefaultIx, Node};
 use daggy::petgraph::visit::Bfs;
 
 /// Given a set of identifying keys and corresponding data, `SceneGraph` allows users to establish
@@ -72,8 +72,9 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> SceneGraph<K, V> {
     /// Updates each node in breadth first search order. Refer to `SceneNode.update` for more
     /// information.
     pub fn update<F>(&mut self, merge_fn: &F) -> Result<(), GraphError>
-            where for<'r> F: Fn(&'r K, &'r V) -> V {
-
+    where
+        for<'r> F: Fn(&'r K, &'r V) -> V,
+    {
         // Obtain the index of the root node.
         let root_idx = self.get_index(&self.root_key)?;
 
@@ -82,11 +83,13 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> SceneGraph<K, V> {
         while let Some(nidx) = bfs.next(self.graph.graph()) {
             let mut parents = self.graph.parents(nidx);
             if let Some(parent_idx) = parents.next_node(&self.graph) {
-                let parent_data = self.graph.node_weight(parent_idx)
+                let parent_data = self.graph
+                    .node_weight(parent_idx)
                     .map(|n| n.data.clone())
                     .ok_or(GraphError::NodeNotFound)?;
 
-                self.graph.node_weight_mut(nidx)
+                self.graph
+                    .node_weight_mut(nidx)
                     .map(|n| n.update(&parent_data, merge_fn))
                     .ok_or(GraphError::NodeNotFound)?;
             }
@@ -97,14 +100,16 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> SceneGraph<K, V> {
     /// Borrows the data from the `SceneNode` identified by the specified key.
     pub fn borrow(&self, key: &K) -> Result<&V, GraphError> {
         let node_idx = self.get_index(key)?;
-        self.graph.node_weight(node_idx)
+        self.graph
+            .node_weight(node_idx)
             .map(|n| &n.data)
             .ok_or(GraphError::KeyNotFound)
     }
     /// Mutably borrows the data from the `SceneNode` defined by the specified key.
     pub fn borrow_mut(&mut self, key: &K) -> Result<&mut V, GraphError> {
         let node_idx = self.get_index(key)?;
-        self.graph.node_weight_mut(node_idx)
+        self.graph
+            .node_weight_mut(node_idx)
             .map(|n| &mut n.data)
             .ok_or(GraphError::KeyNotFound)
     }
@@ -114,15 +119,15 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> SceneGraph<K, V> {
     }
     /// Returns the `NodeIndex` for a particular key.
     fn get_index(&self, key: &K) -> Result<NodeIndex, GraphError> {
-        self.index.get(key)
-            .cloned()
-            .ok_or(GraphError::KeyNotFound)
+        self.index.get(key).cloned().ok_or(GraphError::KeyNotFound)
     }
     /// Rebuilds the `Key`-`SceneNode` index from the underlying `Graph`.
     fn rebuild_index(&mut self) {
         self.index.clear();
         for idx in self.graph.graph().node_indices() {
-            let node = self.graph.node_weight(idx).unwrap_or_else(|| unreachable!());
+            let node = self.graph
+                .node_weight(idx)
+                .unwrap_or_else(|| unreachable!());
             self.index.insert(node.key.clone(), idx);
         }
     }
@@ -149,7 +154,10 @@ impl<K, V: Clone + Default> SceneNode<K, V> {
     /// This allows users to establish hierarchical relationships between instances of a type.
     /// As arguments, the closure will receive the current node's key and a reference to its parent
     /// node's data.
-    pub fn update<F>(&mut self, parent_data: &V, merge_fn: &F) where for<'r> F: Fn(&'r K, &'r V) -> V {
+    pub fn update<F>(&mut self, parent_data: &V, merge_fn: &F)
+    where
+        for<'r> F: Fn(&'r K, &'r V) -> V,
+    {
         self.data = merge_fn(&self.key, parent_data)
     }
 }
@@ -186,12 +194,8 @@ impl<'a, K: 'a, V: 'a + Clone + Default> Iterator for GraphIter<'a, K, V> {
 
 #[derive(Debug, Fail)]
 pub enum GraphError {
-    #[fail(display = "The key was not found.")]
-    KeyNotFound,
-    #[fail(display = "The key was found more than once.")]
-    MultipleKeysFound,
-    #[fail(display = "The root node may not be removed.")]
-    CannotRemoveRootNode,
-    #[fail(display = "The specified node was not found.")]
-    NodeNotFound,
+    #[fail(display = "The key was not found.")] KeyNotFound,
+    #[fail(display = "The key was found more than once.")] MultipleKeysFound,
+    #[fail(display = "The root node may not be removed.")] CannotRemoveRootNode,
+    #[fail(display = "The specified node was not found.")] NodeNotFound,
 }

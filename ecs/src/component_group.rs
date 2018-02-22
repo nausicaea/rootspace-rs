@@ -11,7 +11,7 @@ pub trait ComponentTrait: Any {}
 /// Groups multiple components of different types together.
 #[derive(Default, Debug)]
 pub struct ComponentGroup {
-    components: HashMap<TypeId, Box<Any>>
+    components: HashMap<TypeId, Box<Any>>,
 }
 
 impl ComponentGroup {
@@ -34,8 +34,7 @@ impl ComponentGroup {
     }
     /// Returns `true` if the group contains a component of the specified type.
     pub fn has<C: ComponentTrait>(&self) -> bool {
-        self.components
-            .contains_key(&TypeId::of::<C>())
+        self.components.contains_key(&TypeId::of::<C>())
     }
     /// Borrows an instance of a component of the specified type.
     pub fn borrow<C: ComponentTrait>(&self) -> Result<&C, EcsError> {
@@ -115,7 +114,10 @@ mod test {
 
         assert!(cg.borrow_mut::<Component>().is_err());
         assert!(cg.insert(Component(0)).is_none());
-        let c = cg.borrow_mut::<Component>().map(|x| {x.0 += 1; x});
+        let c = cg.borrow_mut::<Component>().map(|x| {
+            x.0 += 1;
+            x
+        });
         assert!(c.is_ok() && c.unwrap() == &mut Component(1));
     }
 }

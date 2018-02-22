@@ -1,29 +1,29 @@
-extern crate failure;
-#[macro_use]
-extern crate failure_derive;
+extern crate alga;
 #[macro_use]
 extern crate bitflags;
 extern crate clap;
-#[macro_use]
-extern crate log;
-extern crate fern;
-#[macro_use]
-extern crate glium;
-extern crate alga;
-#[macro_use]
-extern crate serde_derive;
-extern crate serde;
-extern crate num_traits;
-extern crate nalgebra;
-extern crate image;
-extern crate uuid;
-extern crate unicode_normalization;
-extern crate rusttype;
 extern crate daggy;
 #[macro_use]
 extern crate ecs;
 #[macro_use]
 extern crate ecs_derive;
+extern crate failure;
+#[macro_use]
+extern crate failure_derive;
+extern crate fern;
+#[macro_use]
+extern crate glium;
+extern crate image;
+#[macro_use]
+extern crate log;
+extern crate nalgebra;
+extern crate num_traits;
+extern crate rusttype;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate unicode_normalization;
+extern crate uuid;
 
 pub mod event;
 pub mod singletons;

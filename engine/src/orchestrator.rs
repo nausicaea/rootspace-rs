@@ -1,8 +1,8 @@
 use std::cmp;
-use std::path::{PathBuf, Path};
-use std::time::{Instant, Duration};
+use std::path::{Path, PathBuf};
+use std::time::{Duration, Instant};
 
-use ecs::{World, EcsError};
+use ecs::{EcsError, World};
 use event::EngineEvent;
 use singletons::Singletons;
 use systems::SystemGroup;
@@ -35,7 +35,10 @@ impl Orchestrator {
     }
     /// Initializes state and starts the game loop. Using the supplied closure, the state of the
     /// `Orchestrator` and subsequently the `World` may be initialized.
-    pub fn run<I>(&mut self, init: I) where I: FnOnce(&mut Orchestrator) {
+    pub fn run<I>(&mut self, init: I)
+    where
+        I: FnOnce(&mut Orchestrator),
+    {
         init(self);
         self.world.dispatch(EngineEvent::Ready);
         self.main_loop();

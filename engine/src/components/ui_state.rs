@@ -24,7 +24,13 @@ pub struct UiState {
 
 impl UiState {
     /// Creates a new `UiState` component.
-    pub fn new(display: &Display, dimensions: &[u32; 2], hi_dpi_factor: f32, speech_bubble: SpeechBubble, tooltip: Tooltip) -> Result<Self, ResourceError> {
+    pub fn new(
+        display: &Display,
+        dimensions: &[u32; 2],
+        hi_dpi_factor: f32,
+        speech_bubble: SpeechBubble,
+        tooltip: Tooltip,
+    ) -> Result<Self, ResourceError> {
         let cache = FontCacheGroup::new(display, dimensions, hi_dpi_factor as u32)?;
 
         Ok(UiState {

@@ -1,7 +1,7 @@
 //! The `model` module provides access to the `Model` component.
 
 use std::ops::Mul;
-use nalgebra::{Vector3, Isometry3, Affine3, Matrix4, UnitQuaternion};
+use nalgebra::{Affine3, Isometry3, Matrix4, UnitQuaternion, Vector3};
 use common::affine_transform::AffineTransform;
 
 /// `Model` provides an abstraction for the model matrix for each 3D object.
@@ -25,10 +25,24 @@ impl Model {
     /// scale.
     pub fn new(translation: Vector3<f32>, axisangle: Vector3<f32>, scale: Vector3<f32>) -> Self {
         let isometry = Isometry3::new(translation, axisangle);
-        let scale_matrix = Affine3::from_matrix_unchecked(Matrix4::new(scale.x, 0.0, 0.0, 0.0,
-                                                                       0.0, scale.y, 0.0, 0.0,
-                                                                       0.0, 0.0, scale.z, 0.0,
-                                                                       0.0, 0.0, 0.0, 1.0));
+        let scale_matrix = Affine3::from_matrix_unchecked(Matrix4::new(
+            scale.x,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            scale.y,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            scale.z,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+        ));
         Model {
             inner: isometry * scale_matrix,
             decomp: AffineTransform::from_parts(isometry.translation, isometry.rotation, scale),

@@ -1,5 +1,5 @@
-use nalgebra::{Real, Scalar, Affine3, Translation3, UnitQuaternion, Vector3, Rotation3, U3, U1,
-               norm, zero, one, Matrix4, Point3};
+use nalgebra::{norm, one, zero, Affine3, Matrix4, Point3, Real, Rotation3, Scalar, Translation3,
+               U1, U3, UnitQuaternion, Vector3};
 use alga::linear::ProjectiveTransformation;
 
 /// Unfortunately, `nalgebra` does not provide a decomposed affine matrix representation
@@ -7,7 +7,10 @@ use alga::linear::ProjectiveTransformation;
 /// components). `AffineTransform` implements this instead. `Affine3` instances can be converted to
 /// and from `AffineTransform`, assuming they contain no shear component.
 #[derive(Clone, Copy, Serialize, Deserialize)]
-pub struct AffineTransform<N> where N: Scalar + Real {
+pub struct AffineTransform<N>
+where
+    N: Scalar + Real,
+{
     /// Holds the translational component of the TRS matrix.
     pub translation: Translation3<N>,
     /// Holds the rotational component of the TRS matrix.
@@ -16,7 +19,10 @@ pub struct AffineTransform<N> where N: Scalar + Real {
     pub scale: Vector3<N>,
 }
 
-impl<N> AffineTransform<N> where N: Scalar + Real {
+impl<N> AffineTransform<N>
+where
+    N: Scalar + Real,
+{
     /// Creates a new, identity `AffineTransform` matrix.
     pub fn identity() -> Self {
         AffineTransform {
@@ -26,7 +32,11 @@ impl<N> AffineTransform<N> where N: Scalar + Real {
         }
     }
     /// Creates a new instance of `AffineTransform` from its parts.
-    pub fn from_parts(translation: Translation3<N>, rotation: UnitQuaternion<N>, scale: Vector3<N>) -> Self {
+    pub fn from_parts(
+        translation: Translation3<N>,
+        rotation: UnitQuaternion<N>,
+        scale: Vector3<N>,
+    ) -> Self {
         AffineTransform {
             translation,
             rotation,
@@ -35,7 +45,8 @@ impl<N> AffineTransform<N> where N: Scalar + Real {
     }
     /// Transforms the specified point.
     pub fn transform_point(&self, point: &Point3<N>) -> Point3<N> {
-        self.translation * self.rotation * Point3::from_coordinates(self.scale.component_mul(&point.coords))
+        self.translation * self.rotation
+            * Point3::from_coordinates(self.scale.component_mul(&point.coords))
     }
     /// Transforms the specified vector.
     pub fn transform_vector(&self, vector: &Vector3<N>) -> Vector3<N> {
@@ -55,14 +66,30 @@ impl<N> AffineTransform<N> where N: Scalar + Real {
     /// Assembles the internal scale vector into an `Affine3` matrix.
     fn scale_matrix(&self) -> Affine3<N> {
         Affine3::from_matrix_unchecked(Matrix4::new(
-            self.scale.x, zero(), zero(), zero(),
-            zero(), self.scale.y, zero(), zero(),
-            zero(), zero(), self.scale.z, zero(),
-            zero(), zero(), zero(), one()))
+            self.scale.x,
+            zero(),
+            zero(),
+            zero(),
+            zero(),
+            self.scale.y,
+            zero(),
+            zero(),
+            zero(),
+            zero(),
+            self.scale.z,
+            zero(),
+            zero(),
+            zero(),
+            zero(),
+            one(),
+        ))
     }
 }
 
-impl<N> From<Affine3<N>> for AffineTransform<N> where N: Scalar + Real {
+impl<N> From<Affine3<N>> for AffineTransform<N>
+where
+    N: Scalar + Real,
+{
     /// Decomposes an affine T*R*S matrix into their constituents, where T corresponds to the
     /// translational component, R refers to a rotation, and S refers to non-uniform scaling
     /// (without shear).
@@ -71,18 +98,18 @@ impl<N> From<Affine3<N>> for AffineTransform<N> where N: Scalar + Real {
         let t = Translation3::from_vector(value.matrix().fixed_slice::<U3, U1>(0, 3).into_owned());
 
         // Obtain the non-uniform scaling component.
-        let s = Vector3::new(norm(&value.matrix().column(0).into_owned()),
-                                 norm(&value.matrix().column(1).into_owned()),
-                                 norm(&value.matrix().column(2).into_owned()));
+        let s = Vector3::new(
+            norm(&value.matrix().column(0).into_owned()),
+            norm(&value.matrix().column(1).into_owned()),
+            norm(&value.matrix().column(2).into_owned()),
+        );
 
         // Obtain the rotational component.
         let mut r = value.matrix().fixed_slice::<U3, U3>(0, 0).into_owned();
-        s.iter()
-            .enumerate()
-            .for_each(|(i, scale_component)| {
-                let mut temp = r.column_mut(i);
-                temp /= *scale_component;
-            });
+        s.iter().enumerate().for_each(|(i, scale_component)| {
+            let mut temp = r.column_mut(i);
+            temp /= *scale_component;
+        });
 
         let r = UnitQuaternion::from_rotation_matrix(&Rotation3::from_matrix_unchecked(r));
 
@@ -94,7 +121,10 @@ impl<N> From<Affine3<N>> for AffineTransform<N> where N: Scalar + Real {
     }
 }
 
-impl<N> Into<Affine3<N>> for AffineTransform<N> where N: Scalar + Real {
+impl<N> Into<Affine3<N>> for AffineTransform<N>
+where
+    N: Scalar + Real,
+{
     /// Recomposes a TRS matrix (`AffineTransform`) into an `Affine3` matrix.
     fn into(self) -> Affine3<N> {
         self.translation * self.rotation * self.scale_matrix()
@@ -116,10 +146,23 @@ mod test {
     #[test]
     fn test_from_and_into_affine3() {
         let a = Affine3::from_matrix_unchecked(Matrix4::new(
-            1.0, 0.0, 0.0, 0.1,
-            0.0, 2.0, 0.0, 0.2,
-            0.0, 0.0, 3.0, 0.3,
-            0.0, 0.0, 0.0, 1.0));
+            1.0,
+            0.0,
+            0.0,
+            0.1,
+            0.0,
+            2.0,
+            0.0,
+            0.2,
+            0.0,
+            0.0,
+            3.0,
+            0.3,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+        ));
 
         let b: AffineTransform<f32> = a.into();
 
@@ -132,34 +175,66 @@ mod test {
     }
     #[test]
     fn test_transform_point() {
-        let a = AffineTransform::from_parts(Translation3::from_vector(Vector3::new(0.1, 0.2, 0.3)), UnitQuaternion::identity(), Vector3::new(1.0, 2.0, 3.0));
+        let a = AffineTransform::from_parts(
+            Translation3::from_vector(Vector3::new(0.1, 0.2, 0.3)),
+            UnitQuaternion::identity(),
+            Vector3::new(1.0, 2.0, 3.0),
+        );
         let b = Point3::new(1.0, 1.0, 1.0);
         let c = a.transform_point(&b);
 
-        assert!(c.x == 1.1 && c.y == 2.2 && c.z == 3.3, "Got {:?} instead", c);
+        assert!(
+            c.x == 1.1 && c.y == 2.2 && c.z == 3.3,
+            "Got {:?} instead",
+            c
+        );
     }
     #[test]
     fn test_transform_vector() {
-        let a = AffineTransform::from_parts(Translation3::from_vector(Vector3::new(0.1, 0.2, 0.3)), UnitQuaternion::identity(), Vector3::new(1.0, 2.0, 3.0));
+        let a = AffineTransform::from_parts(
+            Translation3::from_vector(Vector3::new(0.1, 0.2, 0.3)),
+            UnitQuaternion::identity(),
+            Vector3::new(1.0, 2.0, 3.0),
+        );
         let b = Vector3::new(1.0, 1.0, 1.0);
         let c = a.transform_vector(&b);
 
-        assert!(c.x == 1.0 && c.y == 2.0 && c.z == 3.0, "Got {:?} instead", c);
+        assert!(
+            c.x == 1.0 && c.y == 2.0 && c.z == 3.0,
+            "Got {:?} instead",
+            c
+        );
     }
     #[test]
     fn test_inverse_transform_point() {
-        let a = AffineTransform::from_parts(Translation3::from_vector(Vector3::new(0.1, 0.2, 0.3)), UnitQuaternion::identity(), Vector3::new(1.0, 2.0, 3.0));
+        let a = AffineTransform::from_parts(
+            Translation3::from_vector(Vector3::new(0.1, 0.2, 0.3)),
+            UnitQuaternion::identity(),
+            Vector3::new(1.0, 2.0, 3.0),
+        );
         let b = Point3::new(1.1, 2.2, 3.3);
         let c = a.inverse_transform_point(&b);
 
-        assert!(c.x == 1.0 && c.y == 1.0 && c.z == 1.0, "Got {:?} instead", c);
+        assert!(
+            c.x == 1.0 && c.y == 1.0 && c.z == 1.0,
+            "Got {:?} instead",
+            c
+        );
     }
     #[test]
     fn test_inverse_transform_vector() {
-        let a = AffineTransform::from_parts(Translation3::from_vector(Vector3::new(0.1, 0.2, 0.3)), UnitQuaternion::identity(), Vector3::new(1.0, 2.0, 3.0));
+        let a = AffineTransform::from_parts(
+            Translation3::from_vector(Vector3::new(0.1, 0.2, 0.3)),
+            UnitQuaternion::identity(),
+            Vector3::new(1.0, 2.0, 3.0),
+        );
         let b = Vector3::new(1.0, 2.0, 3.0);
         let c = a.inverse_transform_vector(&b);
 
-        assert!(c.x == 1.0 && c.y == 1.0 && c.z == 1.0, "Got {:?} instead", c);
+        assert!(
+            c.x == 1.0 && c.y == 1.0 && c.z == 1.0,
+            "Got {:?} instead",
+            c
+        );
     }
 }

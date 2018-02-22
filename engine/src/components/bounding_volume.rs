@@ -13,9 +13,15 @@ use common::ray::Ray;
 #[derive(Debug, Clone, Component)]
 pub enum BoundingVolume {
     /// Defines a spherical bounding volume.
-    Sphere {center: Point3<f32>, square_radius: f32},
+    Sphere {
+        center: Point3<f32>,
+        square_radius: f32,
+    },
     /// Defines an axis-aligned bounding box (AABB).
-    Aabb {center: Point3<f32>, extents: Vector3<f32>},
+    Aabb {
+        center: Point3<f32>,
+        extents: Vector3<f32>,
+    },
     /// Defines a discrete oriented polytope (k-DOP).
     KDop(Vec<(Vector3<f32>, f32, f32)>),
 }
@@ -26,49 +32,49 @@ impl BoundingVolume {
     /// subsequently calculating the sphere radius as the largest center-vertex distance.
     pub fn new_sphere(vertices: &[Vertex]) -> Self {
         // Iterate through all vertices and grab both minima and maxima.
-        let init = (Vector3::new(f32::INFINITY, f32::INFINITY, f32::INFINITY),
-            Vector3::new(-f32::INFINITY, -f32::INFINITY, -f32::INFINITY));
+        let init = (
+            Vector3::new(f32::INFINITY, f32::INFINITY, f32::INFINITY),
+            Vector3::new(-f32::INFINITY, -f32::INFINITY, -f32::INFINITY),
+        );
 
-        let (min, max) = vertices.iter()
-            .fold(init, |s, v| {
-                let mut next_s = s;
-                let p = Vector3::new(v.position[0], v.position[1], v.position[2]);
+        let (min, max) = vertices.iter().fold(init, |s, v| {
+            let mut next_s = s;
+            let p = Vector3::new(v.position[0], v.position[1], v.position[2]);
 
-                if p.x < s.0.x {
-                    next_s.0.x = p.x
-                } else if p.x > s.1.x {
-                    next_s.1.x = p.x
-                }
-                if p.y < s.0.y {
-                    next_s.0.y = p.y
-                } else if p.y > s.1.y {
-                    next_s.1.y = p.y
-                }
-                if p.z < s.0.z {
-                    next_s.0.z = p.z
-                } else if p.z > s.1.z {
-                    next_s.1.z = p.z
-                }
-                next_s
-            });
+            if p.x < s.0.x {
+                next_s.0.x = p.x
+            } else if p.x > s.1.x {
+                next_s.1.x = p.x
+            }
+            if p.y < s.0.y {
+                next_s.0.y = p.y
+            } else if p.y > s.1.y {
+                next_s.1.y = p.y
+            }
+            if p.z < s.0.z {
+                next_s.0.z = p.z
+            } else if p.z > s.1.z {
+                next_s.1.z = p.z
+            }
+            next_s
+        });
 
         // Calculate the bounding volume center.
         let center = (min + max) / 2.0;
 
         // Calculate the radius of the sphere in a second pass as the largest center-vertex
         // distance.
-        let square_radius = vertices.iter()
-            .fold(0.0, |s, v| {
-                let p = Vector3::new(v.position[0], v.position[1], v.position[2]);
-                let d = p - center;
-                let next_s = d.dot(&d);
+        let square_radius = vertices.iter().fold(0.0, |s, v| {
+            let p = Vector3::new(v.position[0], v.position[1], v.position[2]);
+            let d = p - center;
+            let next_s = d.dot(&d);
 
-                if next_s > s {
-                    next_s
-                } else {
-                    s
-                }
-            });
+            if next_s > s {
+                next_s
+            } else {
+                s
+            }
+        });
 
         BoundingVolume::Sphere {
             center: Point3::from_coordinates(center),
@@ -79,31 +85,32 @@ impl BoundingVolume {
     /// determining the minimum and maximum extents of the `Vertex` positions.
     pub fn new_aabb(vertices: &[Vertex]) -> Self {
         // Iterate through all vertices and grab both minima and maxima.
-        let init = (Vector3::new(f32::INFINITY, f32::INFINITY, f32::INFINITY),
-            Vector3::new(-f32::INFINITY, -f32::INFINITY, -f32::INFINITY));
+        let init = (
+            Vector3::new(f32::INFINITY, f32::INFINITY, f32::INFINITY),
+            Vector3::new(-f32::INFINITY, -f32::INFINITY, -f32::INFINITY),
+        );
 
-        let (min, max) = vertices.iter()
-            .fold(init, |s, v| {
-                let mut next_s = s;
-                let p = Vector3::new(v.position[0], v.position[1], v.position[2]);
+        let (min, max) = vertices.iter().fold(init, |s, v| {
+            let mut next_s = s;
+            let p = Vector3::new(v.position[0], v.position[1], v.position[2]);
 
-                if p.x < s.0.x {
-                    next_s.0.x = p.x
-                } else if p.x > s.1.x {
-                    next_s.1.x = p.x
-                }
-                if p.y < s.0.y {
-                    next_s.0.y = p.y
-                } else if p.y > s.1.y {
-                    next_s.1.y = p.y
-                }
-                if p.z < s.0.z {
-                    next_s.0.z = p.z
-                } else if p.z > s.1.z {
-                    next_s.1.z = p.z
-                }
-                next_s
-            });
+            if p.x < s.0.x {
+                next_s.0.x = p.x
+            } else if p.x > s.1.x {
+                next_s.1.x = p.x
+            }
+            if p.y < s.0.y {
+                next_s.0.y = p.y
+            } else if p.y > s.1.y {
+                next_s.1.y = p.y
+            }
+            if p.z < s.0.z {
+                next_s.0.z = p.z
+            } else if p.z > s.1.z {
+                next_s.1.z = p.z
+            }
+            next_s
+        });
 
         // Calculate the bounding volume center.
         let center = (min + max) / 2.0;
@@ -124,25 +131,23 @@ impl BoundingVolume {
         ];
 
         let mut dop_data = Vec::new();
-        normals.into_iter()
-            .for_each(|n| {
-                // Iterate through all vertices and grab both minima and maxima.
-                let init = (f32::INFINITY, -f32::INFINITY);
+        normals.into_iter().for_each(|n| {
+            // Iterate through all vertices and grab both minima and maxima.
+            let init = (f32::INFINITY, -f32::INFINITY);
 
-                let (min, max) = vertices.iter()
-                    .fold(init, |s, v| {
-                        let mut next_s = s;
-                        let d = Vector3::new(v.position[0], v.position[1], v.position[2]).dot(n);
+            let (min, max) = vertices.iter().fold(init, |s, v| {
+                let mut next_s = s;
+                let d = Vector3::new(v.position[0], v.position[1], v.position[2]).dot(n);
 
-                        if d < s.0 {
-                            next_s.0 = d
-                        } else if d > s.1 {
-                            next_s.1 = d
-                        }
-                        next_s
-                    });
-                dop_data.push((*n, min, max));
+                if d < s.0 {
+                    next_s.0 = d
+                } else if d > s.1 {
+                    next_s.1 = d
+                }
+                next_s
             });
+            dop_data.push((*n, min, max));
+        });
 
         BoundingVolume::KDop(dop_data)
     }
@@ -165,7 +170,10 @@ impl BoundingVolume {
     /// Optionally returns a tuple of `Ray` position and intersection point.
     pub fn intersect_ray(&self, ray: &Ray<f32>) -> Option<(f32, Point3<f32>)> {
         match *self {
-            BoundingVolume::Sphere {ref center, ref square_radius} => {
+            BoundingVolume::Sphere {
+                ref center,
+                ref square_radius,
+            } => {
                 let l = center.coords - ray.origin.coords;
                 let s = l.dot(&ray.direction);
                 let l_square = l.dot(&l);
@@ -189,8 +197,11 @@ impl BoundingVolume {
                 };
 
                 Some((t, ray.at(t)))
-            },
-            BoundingVolume::Aabb {ref center, ref extents} => {
+            }
+            BoundingVolume::Aabb {
+                ref center,
+                ref extents,
+            } => {
                 let epsilon = 0.001;
                 let mut t_min = -f32::INFINITY;
                 let mut t_max = f32::INFINITY;
@@ -227,7 +238,7 @@ impl BoundingVolume {
                 } else {
                     Some((t_max, ray.at(t_max)))
                 }
-            },
+            }
             _ => unimplemented!(),
         }
     }
@@ -249,10 +260,13 @@ mod test {
         ];
 
         match BoundingVolume::new_sphere(&vertices) {
-            BoundingVolume::Sphere {center: c, square_radius: r} => {
+            BoundingVolume::Sphere {
+                center: c,
+                square_radius: r,
+            } => {
                 assert!(c == Point3::origin(), "Got {:?} instead", c);
                 assert!(r == 0.5, "Got {:?} instead", r);
-            },
+            }
             bv => panic!("Expected a sphere enum variant, got {:?} instead", bv),
         }
     }
@@ -268,10 +282,13 @@ mod test {
         ];
 
         match BoundingVolume::new_aabb(&vertices) {
-            BoundingVolume::Aabb {center: c, extents: r} => {
+            BoundingVolume::Aabb {
+                center: c,
+                extents: r,
+            } => {
                 assert!(c == Point3::origin(), "Got {:?} instead", c);
                 assert!(r == Vector3::new(0.5, 0.5, 0.0), "Got {:?} instead", r);
-            },
+            }
             bv => panic!("Expected an AABB enum variant, got {:?} instead", bv),
         }
     }
@@ -301,7 +318,7 @@ mod test {
                 assert!(d[3].0 == Vector3::new(-1.0, 1.0, 1.0).normalize());
                 assert!(d[3].1 == -0.57735026, "Got {:?} instead", d[3].1);
                 assert!(d[3].2 == 0.0, "Got {:?} instead", d[3].2);
-            },
+            }
             bv => panic!("Expected a k-DOP enum variant, got {:?} instead", bv),
         }
     }

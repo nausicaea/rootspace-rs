@@ -8,8 +8,6 @@ pub struct TooltipData {
 impl TooltipData {
     /// Creates a new `TooltipData` component.
     pub fn new(text: &str) -> Self {
-        TooltipData {
-            text: text.into(),
-        }
+        TooltipData { text: text.into() }
     }
 }

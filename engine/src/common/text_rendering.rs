@@ -1,15 +1,20 @@
 use std::borrow::Cow;
 use glium::Rect;
-use glium::texture::{Texture2d, ClientFormat, RawImage2d};
+use glium::texture::{ClientFormat, RawImage2d, Texture2d};
 use glium::index::PrimitiveType;
-use rusttype::{PositionedGlyph, Font, Scale, point, vector, Rect as RusttypeRect};
+use rusttype::{point, vector, Font, PositionedGlyph, Rect as RusttypeRect, Scale};
 use rusttype::gpu_cache::{Cache, CacheWriteErr};
 use unicode_normalization::UnicodeNormalization;
 use common::vertex::Vertex;
 
 /// Given a string of text, font parameters and a text width, generates a set of positioned glyphs.
 /// TODO: Write a better word-wrapping algorithm based on [StackOverflow](https://stackoverflow.com/a/857770)
-pub fn layout_paragraph<'a>(font: &Font<'a>, scale: f32, width: u32, text: &str) -> (Vec<PositionedGlyph<'a>>, [u32; 2]) {
+pub fn layout_paragraph<'a>(
+    font: &Font<'a>,
+    scale: f32,
+    width: u32,
+    text: &str,
+) -> (Vec<PositionedGlyph<'a>>, [u32; 2]) {
     let mut result = Vec::new();
     let scale = Scale::uniform(scale);
     let v_metrics = font.v_metrics(scale);
@@ -51,7 +56,14 @@ pub fn layout_paragraph<'a>(font: &Font<'a>, scale: f32, width: u32, text: &str)
 }
 
 /// Layouts a paragraph of text using the GPU cache.
-pub fn layout_paragraph_cached<'a>(cache: &mut Cache<'a>, cache_tex: &Texture2d, font: &Font<'a>, scale: f32, width: u32, text: &str) -> Result<(Vec<PositionedGlyph<'a>>, [u32; 2]), TextRenderError> {
+pub fn layout_paragraph_cached<'a>(
+    cache: &mut Cache<'a>,
+    cache_tex: &Texture2d,
+    font: &Font<'a>,
+    scale: f32,
+    width: u32,
+    text: &str,
+) -> Result<(Vec<PositionedGlyph<'a>>, [u32; 2]), TextRenderError> {
     let (glyphs, text_dims) = layout_paragraph(font, scale, width, text);
 
     enqueue_glyphs(cache, &glyphs);
@@ -63,7 +75,12 @@ pub fn layout_paragraph_cached<'a>(cache: &mut Cache<'a>, cache_tex: &Texture2d,
 
 /// Given a set of glyphs, generates the vertices where every glyph is represented as a textured
 /// rectangle.
-pub fn generate_vertices(cache: &Cache, screen_dims: &[f32; 2], text_dims: &[f32; 2], glyphs: &[PositionedGlyph]) -> (Vec<Vertex>, Vec<u16>, PrimitiveType) {
+pub fn generate_vertices(
+    cache: &Cache,
+    screen_dims: &[f32; 2],
+    text_dims: &[f32; 2],
+    glyphs: &[PositionedGlyph],
+) -> (Vec<Vertex>, Vec<u16>, PrimitiveType) {
     let mut vertices = Vec::new();
     let mut indices = Vec::new();
 
@@ -73,14 +90,38 @@ pub fn generate_vertices(cache: &Cache, screen_dims: &[f32; 2], text_dims: &[f32
     glyphs.iter().for_each(|g| {
         if let Ok(Some((uv_rect, screen_rect))) = cache.rect_for(0, g) {
             let ndc_rect = RusttypeRect {
-                min: origin + vector(screen_rect.min.x as f32 / screen_dims[0], -screen_rect.min.y as f32 / screen_dims[1]),
-                max: origin + vector(screen_rect.max.x as f32 / screen_dims[0], -screen_rect.max.y as f32 / screen_dims[1]),
+                min: origin
+                    + vector(
+                        screen_rect.min.x as f32 / screen_dims[0],
+                        -screen_rect.min.y as f32 / screen_dims[1],
+                    ),
+                max: origin
+                    + vector(
+                        screen_rect.max.x as f32 / screen_dims[0],
+                        -screen_rect.max.y as f32 / screen_dims[1],
+                    ),
             };
 
-            vertices.push(Vertex::new([ndc_rect.min.x, ndc_rect.max.y, 0.0], [uv_rect.min.x, uv_rect.max.y], [0.0, 0.0, 1.0]));
-            vertices.push(Vertex::new([ndc_rect.min.x, ndc_rect.min.y, 0.0], [uv_rect.min.x, uv_rect.min.y], [0.0, 0.0, 1.0]));
-            vertices.push(Vertex::new([ndc_rect.max.x, ndc_rect.min.y, 0.0], [uv_rect.max.x, uv_rect.min.y], [0.0, 0.0, 1.0]));
-            vertices.push(Vertex::new([ndc_rect.max.x, ndc_rect.max.y, 0.0], [uv_rect.max.x, uv_rect.max.y], [0.0, 0.0, 1.0]));
+            vertices.push(Vertex::new(
+                [ndc_rect.min.x, ndc_rect.max.y, 0.0],
+                [uv_rect.min.x, uv_rect.max.y],
+                [0.0, 0.0, 1.0],
+            ));
+            vertices.push(Vertex::new(
+                [ndc_rect.min.x, ndc_rect.min.y, 0.0],
+                [uv_rect.min.x, uv_rect.min.y],
+                [0.0, 0.0, 1.0],
+            ));
+            vertices.push(Vertex::new(
+                [ndc_rect.max.x, ndc_rect.min.y, 0.0],
+                [uv_rect.max.x, uv_rect.min.y],
+                [0.0, 0.0, 1.0],
+            ));
+            vertices.push(Vertex::new(
+                [ndc_rect.max.x, ndc_rect.max.y, 0.0],
+                [uv_rect.max.x, uv_rect.max.y],
+                [0.0, 0.0, 1.0],
+            ));
 
             let stride = quad_counter * 4;
             indices.push(stride);
@@ -106,17 +147,20 @@ fn enqueue_glyphs<'a>(cache: &mut Cache<'a>, glyphs: &[PositionedGlyph<'a>]) {
 /// Given an up-to-date font cache (CPU side), updates the specified texture (e.g. the GPU side).
 fn update_cache(cache: &mut Cache, cache_tex: &Texture2d) -> Result<(), TextRenderError> {
     cache.cache_queued(|rect, data| {
-        cache_tex.main_level().write(Rect {
-            left: rect.min.x,
-            bottom: rect.min.y,
-            width: rect.width(),
-            height: rect.height()
-        }, RawImage2d {
-            data: Cow::Borrowed(data),
-            width: rect.width(),
-            height: rect.height(),
-            format: ClientFormat::U8
-        });
+        cache_tex.main_level().write(
+            Rect {
+                left: rect.min.x,
+                bottom: rect.min.y,
+                width: rect.width(),
+                height: rect.height(),
+            },
+            RawImage2d {
+                data: Cow::Borrowed(data),
+                width: rect.width(),
+                height: rect.height(),
+                format: ClientFormat::U8,
+            },
+        );
     })?;
 
     Ok(())

@@ -11,10 +11,22 @@ pub struct UiUniforms<'t> {
 }
 
 impl<'t> uniforms::Uniforms for UiUniforms<'t> {
-    fn visit_values<'a, F>(&'a self, mut f: F) where F: FnMut(&str, uniforms::UniformValue<'a>) {
-        f("pvm_matrix", uniforms::UniformValue::Mat4(self.pvm_matrix.into()));
-        f("font_cache", uniforms::UniformValue::Texture2d(self.font_cache, None));
-        f("font_color", uniforms::UniformValue::Vec3(self.font_color.into()));
+    fn visit_values<'a, F>(&'a self, mut f: F)
+    where
+        F: FnMut(&str, uniforms::UniformValue<'a>),
+    {
+        f(
+            "pvm_matrix",
+            uniforms::UniformValue::Mat4(self.pvm_matrix.into()),
+        );
+        f(
+            "font_cache",
+            uniforms::UniformValue::Texture2d(self.font_cache, None),
+        );
+        f(
+            "font_color",
+            uniforms::UniformValue::Vec3(self.font_color.into()),
+        );
         if let Some(t) = self.diff_tex {
             f("diff_tex", uniforms::UniformValue::Texture2d(t, None));
         }

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use error::EcsError;
 use entity::Entity;
-use component_group::{ComponentTrait, ComponentGroup};
+use component_group::{ComponentGroup, ComponentTrait};
 
 /// Defines a collection of `Entity`s and their components.
 #[derive(Default, Debug)]
@@ -37,52 +37,82 @@ impl Assembly {
     }
     /// Adds a component to the group assigned to the specified `Entity`.
     pub fn add_component<C>(&mut self, entity: &Entity, component: C) -> Result<Option<C>, EcsError>
-            where C: ComponentTrait {
-        self.entities.get_mut(entity)
+    where
+        C: ComponentTrait,
+    {
+        self.entities
+            .get_mut(entity)
             .ok_or_else(|| EcsError::EntityNotFound(entity.clone()))
             .map(|g| g.insert(component))
     }
     /// Removes the component of the secified type from the group assigned to the specified `Entity`.
     pub fn remove_component<C>(&mut self, entity: &Entity) -> Result<Option<C>, EcsError>
-            where C: ComponentTrait {
-        self.entities.get_mut(entity)
+    where
+        C: ComponentTrait,
+    {
+        self.entities
+            .get_mut(entity)
             .ok_or_else(|| EcsError::EntityNotFound(entity.clone()))
             .map(|g| g.remove::<C>())
     }
     /// Checks whether the supplied `Entity` has the specified component type.
     pub fn has_component<C>(&self, entity: &Entity) -> Result<bool, EcsError>
-            where C: ComponentTrait {
-        self.entities.get(entity)
+    where
+        C: ComponentTrait,
+    {
+        self.entities
+            .get(entity)
             .ok_or_else(|| EcsError::EntityNotFound(entity.clone()))
             .map(|g| g.has::<C>())
     }
     /// Borrows a single component from the specified `Entity`.
     pub fn borrow_component<C>(&self, entity: &Entity) -> Result<&C, EcsError>
-            where C: ComponentTrait {
-        self.entities.get(entity)
+    where
+        C: ComponentTrait,
+    {
+        self.entities
+            .get(entity)
             .ok_or_else(|| EcsError::EntityNotFound(entity.clone()))
             .and_then(|g| g.borrow::<C>())
     }
     /// Mutably borrows a single component from the specified `Entity`.
     pub fn borrow_component_mut<C>(&mut self, entity: &Entity) -> Result<&mut C, EcsError>
-            where C: ComponentTrait {
-        self.entities.get_mut(entity)
+    where
+        C: ComponentTrait,
+    {
+        self.entities
+            .get_mut(entity)
             .ok_or_else(|| EcsError::EntityNotFound(entity.clone()))
             .and_then(|g| g.borrow_mut::<C>())
     }
     /// Provides mutable access to all instances of the specified component type.
     pub fn w1<C: ComponentTrait>(&mut self) -> Vec<(Entity, &mut C)> {
-        self.entities.iter_mut()
+        self.entities
+            .iter_mut()
             .filter(|&(_, ref g)| g.has::<C>())
-            .map(|(e, g)| (e.clone(), g.borrow_mut::<C>().unwrap_or_else(|_| unreachable!())))
+            .map(|(e, g)| {
+                (
+                    e.clone(),
+                    g.borrow_mut::<C>().unwrap_or_else(|_| unreachable!()),
+                )
+            })
             .collect()
     }
     /// Provides mutable access to all entities' components that match the specified type and
     /// supplied filter.
-    pub fn wf1<F, C: ComponentTrait>(&mut self, filter: F) -> Vec<(Entity, &mut C)> where for<'r> F: FnMut(&'r (Entity, &mut C)) -> bool {
-        self.entities.iter_mut()
+    pub fn wf1<F, C: ComponentTrait>(&mut self, filter: F) -> Vec<(Entity, &mut C)>
+    where
+        for<'r> F: FnMut(&'r (Entity, &mut C)) -> bool,
+    {
+        self.entities
+            .iter_mut()
             .filter(|&(_, ref g)| g.has::<C>())
-            .map(|(e, g)| (e.clone(), g.borrow_mut::<C>().unwrap_or_else(|_| unreachable!())))
+            .map(|(e, g)| {
+                (
+                    e.clone(),
+                    g.borrow_mut::<C>().unwrap_or_else(|_| unreachable!()),
+                )
+            })
             .filter(filter)
             .collect()
     }
@@ -100,7 +130,9 @@ impl Assembly {
     /// Ensures that only a single entity matches the bounds given by the specified component
     /// type and filter. Errors otherwise. Mutable version.
     pub fn wsf1<F, C: ComponentTrait>(&mut self, filter: F) -> Result<(Entity, &mut C), EcsError>
-            where for<'r> F: FnMut(&'r (Entity, &mut C)) -> bool {
+    where
+        for<'r> F: FnMut(&'r (Entity, &mut C)) -> bool,
+    {
         let mut components = self.wf1::<F, C>(filter);
 
         match components.len() {

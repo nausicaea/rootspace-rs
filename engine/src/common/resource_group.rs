@@ -1,12 +1,13 @@
 use std::borrow::Cow;
 use std::path::{Path, PathBuf};
 use glium::Display;
-use glium::texture::{Texture2d, RawImage2d, ClientFormat, UncompressedFloatFormat, MipmapsOption,
-    TextureCreationError as RootTextureCreationError};
+use glium::texture::{ClientFormat, MipmapsOption, RawImage2d, Texture2d,
+                     TextureCreationError as RootTextureCreationError, UncompressedFloatFormat};
 use nalgebra::Vector3;
-use rusttype::{FontCollection, Font};
+use rusttype::{Font, FontCollection};
 use rusttype::gpu_cache::Cache;
-use common::file_manipulation::{load_binary_file, verify_accessible_file, FileError as RootFileError};
+use common::file_manipulation::{load_binary_file, verify_accessible_file,
+                                FileError as RootFileError};
 
 /// Encapsulates font data as a path to the font, the font scale and the font itself.
 #[derive(Clone)]
@@ -27,8 +28,7 @@ impl FontGroup {
         verify_accessible_file(path)?;
         let font_data = load_binary_file(path)?;
         let collection = FontCollection::from_bytes(font_data);
-        let font = collection.into_font()
-            .ok_or(ResourceError::FontError)?;
+        let font = collection.into_font().ok_or(ResourceError::FontError)?;
 
         Ok(FontGroup {
             path: path.into(),
@@ -45,19 +45,33 @@ pub struct FontCacheGroup {
 }
 
 impl FontCacheGroup {
-    pub fn new(display: &Display, dimensions: &[u32; 2], hi_dpi_factor: u32) -> Result<Self, ResourceError> {
+    pub fn new(
+        display: &Display,
+        dimensions: &[u32; 2],
+        hi_dpi_factor: u32,
+    ) -> Result<Self, ResourceError> {
         let cache_width = dimensions[0] * hi_dpi_factor;
         let cache_height = dimensions[1] * hi_dpi_factor;
         let scale_tolerance = 0.1;
         let position_tolerance = 0.1;
-        let cpu_cache = Cache::new(cache_width, cache_height, scale_tolerance, position_tolerance);
+        let cpu_cache = Cache::new(
+            cache_width,
+            cache_height,
+            scale_tolerance,
+            position_tolerance,
+        );
         let raw_tex = RawImage2d {
             data: Cow::Owned(vec![128u8; cache_width as usize * cache_height as usize]),
             width: cache_width,
             height: cache_height,
-            format: ClientFormat::U8
+            format: ClientFormat::U8,
         };
-        let gpu_cache = Texture2d::with_format(display, raw_tex, UncompressedFloatFormat::U8, MipmapsOption::NoMipmap)?;
+        let gpu_cache = Texture2d::with_format(
+            display,
+            raw_tex,
+            UncompressedFloatFormat::U8,
+            MipmapsOption::NoMipmap,
+        )?;
 
         Ok(FontCacheGroup {
             cpu: cpu_cache,
@@ -80,7 +94,11 @@ pub struct ShaderGroup {
 impl ShaderGroup {
     /// Creates a new `ShaderGroup` while ensuring the existence of the specified shader source
     /// files.
-    pub fn new(vertex: &Path, fragment: &Path, geometry: Option<&Path>) -> Result<Self, ResourceError> {
+    pub fn new(
+        vertex: &Path,
+        fragment: &Path,
+        geometry: Option<&Path>,
+    ) -> Result<Self, ResourceError> {
         verify_accessible_file(vertex)?;
         verify_accessible_file(fragment)?;
         if let Some(geom) = geometry {
@@ -130,12 +148,9 @@ impl TextureGroup {
 
 #[derive(Debug, Fail)]
 pub enum ResourceError {
-    #[fail(display = "{}", _0)]
-    FileError(#[cause] RootFileError),
-    #[fail(display = "{}", _0)]
-    TextureCreationError(#[cause] RootTextureCreationError),
-    #[fail(display = "Could not convert the FontCollection to a single Font.")]
-    FontError,
+    #[fail(display = "{}", _0)] FileError(#[cause] RootFileError),
+    #[fail(display = "{}", _0)] TextureCreationError(#[cause] RootTextureCreationError),
+    #[fail(display = "Could not convert the FontCollection to a single Font.")] FontError,
 }
 
 impl From<RootFileError> for ResourceError {
