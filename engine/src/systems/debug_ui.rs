@@ -1,3 +1,4 @@
+use std::collections::VecDeque;
 use std::time::Duration;
 use glium::Display;
 use nalgebra::{Vector2, Vector3};
@@ -12,13 +13,24 @@ use components::ui_state::UiState;
 pub struct DebugUi {
     display: Display,
     element: Option<Uuid>,
+    dt_history: VecDeque<Duration>,
+    window_size: usize,
+    last_display_time: Duration,
+    display_interval: Duration,
 }
 
 impl DebugUi {
     pub fn new(display: &Display) -> Self {
+        let window_size = 10;
+        let display_interval = Duration::new(1, 0);
+
         DebugUi {
             display: display.clone(),
             element: None,
+            dt_history: VecDeque::with_capacity(window_size + 1),
+            window_size: window_size,
+            last_display_time: Duration::new(0, 0),
+            display_interval: display_interval,
         }
     }
 }
@@ -34,9 +46,16 @@ impl SystemTrait<EngineEvent, Singletons> for DebugUi {
         &mut self,
         entities: &mut Assembly,
         aux: &mut Singletons,
-        _: &Duration,
-        _: &Duration,
+        time: &Duration,
+        delta_time: &Duration,
     ) -> DispatchEvents<EngineEvent> {
+        // Update the buffer of past delta time values.
+        self.dt_history.push_back(*delta_time);
+        while self.dt_history.len() > self.window_size {
+            self.dt_history.pop_front();
+        }
+
+        // Create the display element, or update it.
         if self.element.is_none() {
             // Obtain the viewport dimensions.
             let dimensions = entities
@@ -70,9 +89,13 @@ impl SystemTrait<EngineEvent, Singletons> for DebugUi {
             let id = Uuid::new_v4();
             ui_state.elements.insert(id, element);
             self.element = Some(id);
-        }
+        } else if *time - self.last_display_time >= self.display_interval {
+            self.last_display_time = *time;
 
-        // Once the elemente is defined, we need to access the text primitive and update it's text.
+            let dt_sum: Duration = self.dt_history.iter().sum();
+            let frame_time = (dt_sum.as_secs() as f32 + (dt_sum.subsec_nanos() as f32 * 1e-9)) / (self.dt_history.len() as f32);
+            trace!("Frame time: {} ms ({} FPS)", frame_time * 1e3, 1.0 / frame_time);
+        }
 
         (None, None)
     }
