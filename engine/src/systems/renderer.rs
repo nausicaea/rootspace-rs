@@ -85,7 +85,7 @@ impl Renderer {
         entities
             .rs1::<Camera>()
             .map(|(_, c)| {
-                for node in aux.scene_graph.iter() {
+                for node in aux.hierarchy.iter() {
                     if let Ok(mesh) = entities.borrow_component::<Mesh>(&node.key) {
                         if let Ok(material) = entities.borrow_component::<Material>(&node.key) {
                             let uniforms = Uniforms {
@@ -183,12 +183,12 @@ impl SystemTrait<EngineEvent, Singletons> for Renderer {
             _ => (None, None),
         }
     }
-    /// First updates the `SceneGraph` to receive accurate and current hierarchical model data.
+    /// First updates the `Hierarchy` to receive accurate and current hierarchical model data.
     /// Subsequently renders the `Entity`s to the frame, followed by the user interface state as
     /// defined in `UiState`.
     fn render(&mut self, entities: &Assembly, aux: &mut Singletons, _: &Duration, _: &Duration) {
         // Update the scene graph.
-        aux.scene_graph
+        aux.hierarchy
             .update(&|entity, parent_component| {
                 let current_component = entities
                     .borrow_component(entity)

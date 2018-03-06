@@ -124,7 +124,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
 
             o.world
                 .aux
-                .scene_graph
+                .hierarchy
                 .insert(test_entity_a.clone(), model.clone())
                 .unwrap();
 
@@ -162,7 +162,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
 
             o.world
                 .aux
-                .scene_graph
+                .hierarchy
                 .insert(test_entity_b.clone(), model.clone())
                 .unwrap();
 
@@ -200,7 +200,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
 
             o.world
                 .aux
-                .scene_graph
+                .hierarchy
                 .insert(test_entity_c.clone(), model.clone())
                 .unwrap();
 
