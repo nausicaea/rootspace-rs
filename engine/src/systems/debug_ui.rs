@@ -94,7 +94,9 @@ impl SystemTrait<EngineEvent, Singletons> for DebugUi {
 
             let dt_sum: Duration = self.dt_history.iter().sum();
             let frame_time = (dt_sum.as_secs() as f32 + (dt_sum.subsec_nanos() as f32 * 1e-9)) / (self.dt_history.len() as f32);
-            trace!("Frame time: {} ms ({} FPS)", frame_time * 1e3, 1.0 / frame_time);
+            let frame_time_ms = (frame_time * 1e3).round();
+            let fps = (1.0 / frame_time).round();
+            trace!("{:04.0} ms ({:03.0} FPS)", frame_time_ms, fps);
         }
 
         (None, None)
