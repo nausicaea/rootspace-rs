@@ -1,12 +1,8 @@
-pub mod factory;
-pub mod physics;
-pub mod hierarchy;
-
 use ecs::Entity;
+use common::factory::ComponentFactory;
+use common::physics::PhysicsController;
+use common::hierarchy::Hierarchy;
 use components::model::Model;
-use self::factory::ComponentFactory;
-use self::physics::PhysicsController;
-use self::hierarchy::Hierarchy;
 
 #[derive(Default)]
 pub struct Singletons {

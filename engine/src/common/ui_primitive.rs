@@ -4,10 +4,10 @@ use rusttype::PositionedGlyph;
 use rusttype::gpu_cache::Cache;
 use common::resource_group::{ShaderGroup, TextureGroup};
 use common::text_rendering::generate_vertices;
+use common::factory::{ComponentFactory, FactoryError as RootFactoryError};
 use components::model::Model;
 use components::mesh::{BufferType, Mesh, MeshError as RootMeshError};
 use components::material::Material;
-use singletons::factory::{ComponentFactory, FactoryError as RootFactoryError};
 
 /// A `UiPrimitive` encodes all data necessary to render the primitive to the display (vertices,
 /// indices, material, uniforms).

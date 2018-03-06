@@ -4,8 +4,8 @@ use common::layout_group::MarginGroup;
 use common::resource_group::{FontCacheGroup, FontGroup, ShaderGroup, TextureGroup};
 use common::text_rendering::{layout_paragraph_cached, TextRenderError as RootTextRenderError};
 use common::ui_primitive::{UiPrimitive, UiPrimitiveError as RootUiPrimitiveError};
+use common::factory::ComponentFactory;
 use components::model::Model;
-use singletons::factory::ComponentFactory;
 
 /// A `UiElement` stands for a single object in the user interface. It may be composed of one or
 /// more `UiPrimitive`s.
