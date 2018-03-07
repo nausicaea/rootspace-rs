@@ -7,6 +7,7 @@ use ecs::{Assembly, DispatchEvents, LoopStageFlag, SystemTrait};
 use event::EngineEvent;
 use singletons::Singletons;
 use common::ui_element::UiElement;
+use common::physics::duration_as_float;
 use components::camera::Camera;
 use components::ui_state::UiState;
 
@@ -93,7 +94,7 @@ impl SystemTrait<EngineEvent, Singletons> for DebugUi {
             self.last_display_time = *time;
 
             let dt_sum: Duration = self.dt_history.iter().sum();
-            let frame_time = (dt_sum.as_secs() as f32 + (dt_sum.subsec_nanos() as f32 * 1e-9)) / (self.dt_history.len() as f32);
+            let frame_time = duration_as_float::<f32>(dt_sum).unwrap() / (self.dt_history.len() as f32);
             let frame_time_ms = (frame_time * 1e3).round();
             let fps = (1.0 / frame_time).round();
             trace!("{:04.0} ms ({:03.0} FPS)", frame_time_ms, fps);
