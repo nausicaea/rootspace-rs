@@ -77,6 +77,7 @@ impl SpeechBubbleController {
 
         // Create and register the element.
         let id = Uuid::new_v4();
+        aux.ui_hierarchy.insert(id, element.model.clone());
         ui_state.elements.insert(id, element);
         self.lifetimes
             .insert(id, (Instant::now(), Duration::new(lifetime, 0)));
@@ -85,7 +86,7 @@ impl SpeechBubbleController {
     }
     /// Checks the lifetimes of the registered `UiElement`s and removes those with expired
     /// lifetimes.
-    fn update_lifetimes(&mut self, entities: &mut Assembly) {
+    fn update_lifetimes(&mut self, entities: &mut Assembly, aux: &mut Singletons) {
         if !self.lifetimes.is_empty() {
             let to_delete = self.lifetimes
                 .iter()
@@ -99,6 +100,7 @@ impl SpeechBubbleController {
                 .map(|(_, u)| {
                     to_delete.iter().for_each(|i| {
                         u.elements.remove(i);
+                        aux.ui_hierarchy.remove(i).unwrap_or_else(|_| unreachable!());
                         self.lifetimes.remove(i);
                     });
                 })
@@ -139,11 +141,11 @@ impl SystemTrait<EngineEvent, Singletons> for SpeechBubbleController {
     fn dynamic_update(
         &mut self,
         entities: &mut Assembly,
-        _: &mut Singletons,
+        aux: &mut Singletons,
         _: &Duration,
         _: &Duration,
     ) -> DispatchEvents<EngineEvent> {
-        self.update_lifetimes(entities);
+        self.update_lifetimes(entities, aux);
         (None, None)
     }
 }

@@ -5,6 +5,7 @@ use uuid::Uuid;
 use glium::Display;
 use common::resource_group::{FontCacheGroup, ResourceError};
 use common::ui_element::UiElement;
+use common::ui_primitive::UiPrimitive;
 use common::ui_styles::{SpeechBubble, Tooltip};
 
 /// The `UiState` component encodes information about the user interface.

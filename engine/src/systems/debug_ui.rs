@@ -88,6 +88,7 @@ impl SystemTrait<EngineEvent, Singletons> for DebugUi {
 
             // Create and register the element.
             let id = Uuid::new_v4();
+            aux.ui_hierarchy.insert(id, element.model.clone());
             ui_state.elements.insert(id, element);
             self.element = Some(id);
         } else if *time - self.last_display_time >= self.display_interval {

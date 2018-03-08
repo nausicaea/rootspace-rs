@@ -124,9 +124,8 @@ pub fn run(resource_path: &Path, debugging: bool) {
 
             o.world
                 .aux
-                .hierarchy
-                .insert(test_entity_a.clone(), model.clone())
-                .unwrap();
+                .scene_graph
+                .insert(test_entity_a.clone(), model.clone());
 
             o.world.add_component(&test_entity_a, d).unwrap();
             o.world.add_component(&test_entity_a, tooltip).unwrap();
@@ -162,9 +161,8 @@ pub fn run(resource_path: &Path, debugging: bool) {
 
             o.world
                 .aux
-                .hierarchy
-                .insert(test_entity_b.clone(), model.clone())
-                .unwrap();
+                .scene_graph
+                .insert(test_entity_b.clone(), model.clone());
 
             o.world.add_component(&test_entity_b, d).unwrap();
             o.world.add_component(&test_entity_b, tooltip).unwrap();
@@ -200,9 +198,8 @@ pub fn run(resource_path: &Path, debugging: bool) {
 
             o.world
                 .aux
-                .hierarchy
-                .insert(test_entity_c.clone(), model.clone())
-                .unwrap();
+                .scene_graph
+                .insert(test_entity_c.clone(), model.clone());
 
             o.world.add_component(&test_entity_c, d).unwrap();
             o.world.add_component(&test_entity_c, tooltip).unwrap();

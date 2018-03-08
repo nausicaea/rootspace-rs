@@ -53,9 +53,9 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Hierarchy<K, V> {
         Ok(())
     }
     /// Inserts a `HierNode` as child of the root `HierNode`.
-    pub fn insert(&mut self, child: K, data: V) -> Result<(), GraphError> {
+    pub fn insert(&mut self, child: K, data: V) {
         let parent = self.root_key.clone();
-        self.insert_child(&parent, child, data)
+        self.insert_child(&parent, child, data).unwrap_or_else(|_| unreachable!())
     }
     /// Inserts a `HierNode` as child of another `HierNode` identified by its key.
     pub fn insert_child(&mut self, parent: &K, child: K, data: V) -> Result<(), GraphError> {

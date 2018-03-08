@@ -83,6 +83,7 @@ impl TooltipController {
 
             // Create and register the element.
             let id = Uuid::new_v4();
+            aux.ui_hierarchy.insert(id, element.model.clone());
             ui_state.elements.insert(id, element);
             self.current_tooltip = Some(id);
         }
@@ -90,12 +91,13 @@ impl TooltipController {
         Ok(())
     }
     /// Removes the current tooltip (if any) from the `UiElement` registry.
-    fn destroy_tooltip(&mut self, entities: &mut Assembly) {
+    fn destroy_tooltip(&mut self, entities: &mut Assembly, aux: &mut Singletons) {
         entities
             .ws1::<UiState>()
             .map(|(_, u)| {
                 if let Some(ref id) = self.current_tooltip {
                     u.elements.remove(id);
+                    aux.ui_hierarchy.remove(id).unwrap_or_else(|_| unreachable!());
                 }
                 self.current_tooltip = None;
             })
@@ -148,7 +150,7 @@ impl SystemTrait<EngineEvent, Singletons> for TooltipController {
                             if hit.target != tgt {
                                 // A new object was hit (two objects probably intersect from the
                                 // pov of the camera).
-                                self.destroy_tooltip(entities);
+                                self.destroy_tooltip(entities, aux);
                                 self.create_tooltip(entities, aux, &hit.target)
                                     .unwrap_or_else(|e| warn!("Unable to create a tooltip: {}", e));
                                 self.current_target = Some(hit.target.clone());
@@ -161,7 +163,7 @@ impl SystemTrait<EngineEvent, Singletons> for TooltipController {
                         }
                     } else if self.current_target.is_some() {
                         // The current object was exited.
-                        self.destroy_tooltip(entities);
+                        self.destroy_tooltip(entities, aux);
                         self.current_target = None;
                     }
                 }

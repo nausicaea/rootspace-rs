@@ -1,3 +1,4 @@
+use uuid::Uuid;
 use ecs::Entity;
 use common::factory::ComponentFactory;
 use common::physics::PhysicsController;
@@ -8,5 +9,6 @@ use components::model::Model;
 pub struct Singletons {
     pub factory: ComponentFactory,
     pub physics: PhysicsController,
-    pub hierarchy: Hierarchy<Entity, Model>,
+    pub scene_graph: Hierarchy<Entity, Model>,
+    pub ui_hierarchy: Hierarchy<Uuid, Model>,
 }

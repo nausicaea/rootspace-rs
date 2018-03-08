@@ -78,14 +78,24 @@ impl Renderer {
     fn render_entities(
         &self,
         entities: &Assembly,
-        aux: &Singletons,
+        aux: &mut Singletons,
         target: &mut Frame,
         params: &DrawParameters,
     ) {
+        // Update the scene graph.
+        aux.scene_graph
+            .update(&|entity, parent_component| {
+                let current_component = entities
+                    .borrow_component(entity)
+                    .expect("The scene graph is irreparably out of sync with the assembly");
+                parent_component * current_component
+            })
+            .expect("Unable to update the scene graph");
+
         entities
             .rs1::<Camera>()
             .map(|(_, c)| {
-                for node in aux.hierarchy.iter() {
+                for node in aux.scene_graph.iter() {
                     if let Ok(mesh) = entities.borrow_component::<Mesh>(&node.key) {
                         if let Ok(material) = entities.borrow_component::<Material>(&node.key) {
                             let uniforms = Uniforms {
@@ -109,12 +119,20 @@ impl Renderer {
     fn render_user_interface(
         &self,
         entities: &Assembly,
+        aux: &mut Singletons,
         target: &mut Frame,
         params: &DrawParameters,
     ) {
         entities
             .rs1::<UiState>()
             .map(|(_, u)| {
+                aux.ui_hierarchy
+                    .update(&|id, parent_component| {
+                        let current_component = u.elements.get(id).expect("The requested entity was not found.");
+                        parent_component * &current_component.model
+                    })
+                    .expect("Unable to update the UI scene graph.");
+
                 for e in u.elements.values() {
                     for p in &e.primitives {
                         let uniforms = UiUniforms {
@@ -187,16 +205,6 @@ impl SystemTrait<EngineEvent, Singletons> for Renderer {
     /// Subsequently renders the `Entity`s to the frame, followed by the user interface state as
     /// defined in `UiState`.
     fn render(&mut self, entities: &Assembly, aux: &mut Singletons, _: &Duration, _: &Duration) {
-        // Update the scene graph.
-        aux.hierarchy
-            .update(&|entity, parent_component| {
-                let current_component = entities
-                    .borrow_component(entity)
-                    .expect("The scene graph is irreparably out of sync with the assembly");
-                parent_component * current_component
-            })
-            .expect("Unable to update the scene graph");
-
         // Create the current frame.
         let mut target = self.display.draw();
         target.clear_color_and_depth(self.clear_color, 1.0);
@@ -205,7 +213,7 @@ impl SystemTrait<EngineEvent, Singletons> for Renderer {
         self.render_entities(entities, aux, &mut target, &self.draw_params);
 
         // Render the user interface.
-        self.render_user_interface(entities, &mut target, &self.draw_params);
+        self.render_user_interface(entities, aux, &mut target, &self.draw_params);
 
         target
             .finish()
