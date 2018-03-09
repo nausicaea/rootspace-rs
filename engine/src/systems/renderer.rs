@@ -84,11 +84,11 @@ impl Renderer {
     ) {
         // Update the scene graph.
         aux.scene_graph
-            .update(&|entity, parent_component| {
-                let current_component = entities
+            .update(&|entity, parent_model| {
+                let current_model = entities
                     .borrow_component(entity)
                     .ok()?;
-                Some(parent_component * current_component)
+                Some(parent_model * current_model)
             })
             .expect("Unable to update the scene graph");
 
@@ -128,31 +128,33 @@ impl Renderer {
             .rs1::<UiState>()
             .map(|(_, u)| {
                 aux.ui_hierarchy
-                    .update(&|id, parent_component| {
-                        let current_component = u.elements.get(id)?;
-                        Some(parent_component * &current_component.model)
+                    .update(&|id, parent_model| {
+                        let current_element = u.elements.get(id)?;
+                        Some(parent_model * &current_element.model)
                     })
                     .expect("Unable to update the UI scene graph.");
 
-                for e in u.elements.values() {
-                    for p in &e.primitives {
-                        let uniforms = UiUniforms {
-                            pvm_matrix: e.model.matrix() * p.model.matrix(),
-                            font_cache: &u.font_cache.gpu,
-                            font_color: p.text_color,
-                            diff_tex: p.material.diff_tex.as_ref().map(|dt| dt.borrow()),
-                            norm_tex: p.material.norm_tex.as_ref().map(|nt| nt.borrow()),
-                        };
+                for node in aux.ui_hierarchy.iter() {
+                    if let Some(e) = u.elements.get(&node.key) {
+                        for p in &e.primitives {
+                            let uniforms = UiUniforms {
+                                pvm_matrix: node.data.matrix() * p.model.matrix(),
+                                font_cache: &u.font_cache.gpu,
+                                font_color: p.text_color,
+                                diff_tex: p.material.diff_tex.as_ref().map(|dt| dt.borrow()),
+                                norm_tex: p.material.norm_tex.as_ref().map(|nt| nt.borrow()),
+                            };
 
-                        target
-                            .draw(
-                                &p.mesh.vertices,
-                                &p.mesh.indices,
-                                &p.material.shader,
-                                &uniforms,
-                                params,
-                            )
-                            .expect("Unable to execute the draw call");
+                            target
+                                .draw(
+                                    &p.mesh.vertices,
+                                    &p.mesh.indices,
+                                    &p.material.shader,
+                                    &uniforms,
+                                    params,
+                                )
+                                .expect("Unable to execute the draw call");
+                        }
                     }
                 }
             })
@@ -161,9 +163,10 @@ impl Renderer {
 }
 
 impl SystemTrait<EngineEvent, Singletons> for Renderer {
-    /// The `Renderer` depends on the presence of exactly one `Camera` component.
+    /// The `Renderer` depends on the presence of exactly one `Camera` component and one `UiState`
+    /// component.
     fn verify_requirements(&self, entities: &Assembly) -> bool {
-        entities.count1::<Camera>() == 1
+        entities.count1::<Camera>() == 1 && entities.count1::<UiState>() == 1
     }
     /// If the `Renderer` has completed initialization, it subscribes to the `handle_event` and
     /// render calls. Otherwise, it will only listen for events.
