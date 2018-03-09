@@ -73,7 +73,7 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Hierarchy<K, V> {
     /// information.
     pub fn update<F>(&mut self, merge_fn: &F) -> Result<(), GraphError>
     where
-        for<'r> F: Fn(&'r K, &'r V) -> V,
+        for<'r> F: Fn(&'r K, &'r V) -> Option<V>,
     {
         // Obtain the index of the root node.
         let root_idx = self.get_index(&self.root_key)?;
@@ -156,9 +156,11 @@ impl<K, V: Clone + Default> HierNode<K, V> {
     /// node's data.
     pub fn update<F>(&mut self, parent_data: &V, merge_fn: &F)
     where
-        for<'r> F: Fn(&'r K, &'r V) -> V,
+        for<'r> F: Fn(&'r K, &'r V) -> Option<V>,
     {
-        self.data = merge_fn(&self.key, parent_data)
+        if let Some(data) = merge_fn(&self.key, parent_data) {
+            self.data = data;
+        }
     }
 }
 

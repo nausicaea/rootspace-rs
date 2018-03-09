@@ -87,11 +87,12 @@ impl Renderer {
             .update(&|entity, parent_component| {
                 let current_component = entities
                     .borrow_component(entity)
-                    .expect("The scene graph is irreparably out of sync with the assembly");
-                parent_component * current_component
+                    .ok()?;
+                Some(parent_component * current_component)
             })
             .expect("Unable to update the scene graph");
 
+        // Render the scene.
         entities
             .rs1::<Camera>()
             .map(|(_, c)| {
@@ -128,8 +129,8 @@ impl Renderer {
             .map(|(_, u)| {
                 aux.ui_hierarchy
                     .update(&|id, parent_component| {
-                        let current_component = u.elements.get(id).expect("The requested entity was not found.");
-                        parent_component * &current_component.model
+                        let current_component = u.elements.get(id)?;
+                        Some(parent_component * &current_component.model)
                     })
                     .expect("Unable to update the UI scene graph.");
 
