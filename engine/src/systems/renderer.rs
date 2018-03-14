@@ -1,4 +1,5 @@
 use std::borrow::Borrow;
+use std::f32;
 use std::time::Duration;
 use glium;
 use glium::{Display, DrawParameters, Frame, Surface};
@@ -127,6 +128,7 @@ impl Renderer {
         entities
             .rs1::<UiState>()
             .map(|(_, u)| {
+                // Update the UI scene graph.
                 aux.ui_hierarchy
                     .update(&|id, parent_model| {
                         let current_element = u.elements.get(id)?;
@@ -134,7 +136,12 @@ impl Renderer {
                     })
                     .expect("Unable to update the UI scene graph.");
 
-                for node in aux.ui_hierarchy.iter() {
+                // Sort the UI scene graph nodes.
+                let mut nodes = aux.ui_hierarchy.iter().collect::<Vec<_>>();
+                nodes.sort_unstable_by_key(|n| (n.data.translation().z / f32::EPSILON).round() as i32);
+
+                // Render all UI elements.
+                for node in nodes {
                     if let Some(e) = u.elements.get(&node.key) {
                         for p in &e.primitives {
                             let uniforms = UiUniforms {
