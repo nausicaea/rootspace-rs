@@ -56,14 +56,14 @@ impl Assembly {
             .map(|g| g.remove::<C>())
     }
     /// Checks whether the supplied `Entity` has the specified component type.
-    pub fn has_component<C>(&self, entity: &Entity) -> Result<bool, EcsError>
+    pub fn has_component<C>(&self, entity: &Entity) -> bool
     where
         C: ComponentTrait,
     {
         self.entities
             .get(entity)
-            .ok_or_else(|| EcsError::EntityNotFound(entity.clone()))
             .map(|g| g.has::<C>())
+            .unwrap_or_default()
     }
     /// Borrows a single component from the specified `Entity`.
     pub fn borrow_component<C>(&self, entity: &Entity) -> Result<&C, EcsError>

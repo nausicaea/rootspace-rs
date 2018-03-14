@@ -9,8 +9,10 @@ use ecs::{Assembly, DispatchEvents, LoopStageFlag, SystemTrait};
 use event::{EngineEvent, EngineEventFlag};
 use singletons::Singletons;
 use components::camera::Camera;
-use components::mesh::Mesh;
 use components::material::Material;
+use components::mesh::Mesh;
+use components::model::Model;
+use components::render_mode::RenderMode;
 use common::uniforms::Uniforms;
 use components::ui_state::UiState;
 use common::ui_uniforms::UiUniforms;
@@ -76,47 +78,38 @@ impl Renderer {
             draw_params: draw_params,
         })
     }
-    fn render_entities(
-        &self,
-        entities: &Assembly,
-        aux: &mut Singletons,
-        target: &mut Frame,
-        params: &DrawParameters,
-    ) {
-        // Update the scene graph.
-        aux.scene_graph
-            .update(&|entity, parent_model| {
-                let current_model = entities
-                    .borrow_component(entity)
-                    .ok()?;
-                Some(parent_model * current_model)
-            })
-            .expect("Unable to update the scene graph");
+    fn render_world_entity(&self, target: &mut Frame, camera: &Camera, model: &Model, mesh: &Mesh, material: &Material, params: &DrawParameters) {
+        let uniforms = Uniforms {
+            pvm_matrix: camera.matrix * model.matrix(),
+        };
+        target
+            .draw(
+                &mesh.vertices,
+                &mesh.indices,
+                &material.shader,
+                &uniforms,
+                params,
+                )
+            .expect("Unable to execute the draw call");
+    }
+    fn render_ui_entity(&self, target: &mut Frame, ui_state: &UiState, model: &Model, mesh: &Mesh, material: &Material, params: &DrawParameters) {
+        let uniforms = UiUniforms {
+            pvm_matrix: *model.matrix(),
+            font_cache: &ui_state.font_cache.gpu,
+            font_color: text_color,
+            diff_tex: material.diff_tex.as_ref().map(|dt| dt.borrow()),
+            norm_tex: material.norm_tex.as_ref().map(|nt| nt.borrow()),
+        };
 
-        // Render the scene.
-        entities
-            .rs1::<Camera>()
-            .map(|(_, c)| {
-                for node in aux.scene_graph.iter() {
-                    if let Ok(mesh) = entities.borrow_component::<Mesh>(&node.key) {
-                        if let Ok(material) = entities.borrow_component::<Material>(&node.key) {
-                            let uniforms = Uniforms {
-                                pvm_matrix: c.matrix * node.data.matrix(),
-                            };
-                            target
-                                .draw(
-                                    &mesh.vertices,
-                                    &mesh.indices,
-                                    &material.shader,
-                                    &uniforms,
-                                    params,
-                                )
-                                .expect("Unable to execute the draw call");
-                        }
-                    }
-                }
-            })
-            .expect("Failed to render entities");
+        target
+            .draw(
+                &mesh.vertices,
+                &mesh.indices,
+                &material.shader,
+                &uniforms,
+                params,
+                )
+            .expect("Unable to execute the draw call");
     }
     fn render_user_interface(
         &self,
@@ -220,8 +213,39 @@ impl SystemTrait<EngineEvent, Singletons> for Renderer {
         let mut target = self.display.draw();
         target.clear_color_and_depth(self.clear_color, 1.0);
 
-        // Render all entities.
-        self.render_entities(entities, aux, &mut target, &self.draw_params);
+        // Update the scene graph.
+        aux.scene_graph
+            .update(&|entity, parent_model| {
+                let current_model = entities
+                    .borrow_component(entity)
+                    .ok()?;
+                Some(parent_model * current_model)
+            })
+            .expect("Unable to update the scene graph");
+
+        // Get a reference to the camera.
+        let (_, camera) = entities.rs1::<Camera>().expect("Could not access the camera component.");
+
+        // Get a reference to the UI state.
+        let (_, ui_state) = entities.rs1::<UiState>().expect("Could not access the UI state component.");
+
+        // Sort the nodes according to their z-value.
+        let mut nodes = aux.scene_graph.iter().collect::<Vec<_>>();
+        nodes.sort_unstable_by_key(|n| (n.data.translation().z / f32::EPSILON).round() as i32);
+
+        // Render all entities
+        for node in nodes {
+            if entities.has_component::<Mesh>(&node.key) && entities.has_component::<Material>(&node.key) && entities.has_component::<RenderMode>(&node.key) {
+                let mesh = entities.borrow_component::<Mesh>(&node.key).unwrap();
+                let material = entities.borrow_component::<Material>(&node.key).unwrap();
+                let render_mode = entities.borrow_component::<RenderMode>(&node.key).unwrap();
+
+                match render_mode {
+                    &RenderMode::World => self.render_world_entity(&mut target, camera, &node.data, mesh, material, params),
+                    &RenderMode::Ui => self.render_ui_entity(&mut target, ui_state, &node.data, mesh, material, params),
+                }
+            }
+        }
 
         // Render the user interface.
         self.render_user_interface(entities, aux, &mut target, &self.draw_params);

@@ -42,6 +42,7 @@ pub use self::components::description::Description;
 pub use self::components::material::Material;
 pub use self::components::mesh::Mesh;
 pub use self::components::model::Model;
+pub use self::components::render_mode::RenderMode;
 pub use self::components::tooltip::TooltipData;
 pub use self::components::ui_state::UiState;
 pub use self::systems::cursor_controller::CursorController;

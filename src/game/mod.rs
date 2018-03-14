@@ -7,7 +7,7 @@ use nalgebra::{Point3, Vector3};
 use engine::{BoundingVolume, Camera, Cursor, CursorController, DebugConsole, DebugMover,
              DebugShell, DebugUi, Description, EventInterface, EventMonitor, FontGroup, Mesh,
              Model, Orchestrator, Renderer, ShaderGroup, SpeechBubble, SpeechBubbleController,
-             TextureGroup, Tooltip, TooltipController, TooltipData, UiState};
+             TextureGroup, Tooltip, TooltipController, TooltipData, UiState, RenderMode};
 
 pub fn run(resource_path: &Path, debugging: bool) {
     // The following variables set up the state of the engine.
@@ -121,6 +121,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
                 .new_material(&renderer.display, &shaders, &textures)
                 .unwrap();
             let bounding_volume = BoundingVolume::from_mesh_aabb(&mesh).unwrap();
+            let render_mode = RenderMode::World;
 
             o.world
                 .aux
@@ -135,6 +136,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             o.world
                 .add_component(&test_entity_a, bounding_volume)
                 .unwrap();
+            o.world.add_component(&test_entity_a, render_mode).unwrap();
         }
 
         // Assemble the second test entity.
@@ -158,6 +160,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
                 .new_material(&renderer.display, &shaders, &textures)
                 .unwrap();
             let bounding_volume = BoundingVolume::from_mesh_aabb(&mesh).unwrap();
+            let render_mode = RenderMode::World;
 
             o.world
                 .aux
@@ -172,6 +175,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             o.world
                 .add_component(&test_entity_b, bounding_volume)
                 .unwrap();
+            o.world.add_component(&test_entity_b, render_mode).unwrap();
         }
 
         // Assemble the third test entity.
@@ -195,6 +199,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
                 .new_material(&renderer.display, &shaders, &textures)
                 .unwrap();
             let bounding_volume = BoundingVolume::from_mesh_aabb(&mesh).unwrap();
+            let render_mode = RenderMode::World;
 
             o.world
                 .aux
@@ -209,6 +214,7 @@ pub fn run(resource_path: &Path, debugging: bool) {
             o.world
                 .add_component(&test_entity_c, bounding_volume)
                 .unwrap();
+            o.world.add_component(&test_entity_c, render_mode).unwrap();
         }
 
         // Add systems to the world.
