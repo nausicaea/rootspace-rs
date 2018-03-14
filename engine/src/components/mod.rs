@@ -11,3 +11,4 @@ pub mod mesh;
 pub mod ui_state;
 pub mod bounding_volume;
 pub mod cursor;
+pub mod render_mode;
