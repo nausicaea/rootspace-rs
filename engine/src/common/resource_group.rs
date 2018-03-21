@@ -4,7 +4,7 @@ use glium::Display;
 use glium::texture::{ClientFormat, MipmapsOption, RawImage2d, Texture2d,
                      TextureCreationError as RootTextureCreationError, UncompressedFloatFormat};
 use nalgebra::Vector3;
-use rusttype::{Font, FontCollection};
+use rusttype::{Font, FontCollection, Error as RootFontError};
 use rusttype::gpu_cache::Cache;
 use common::file_manipulation::{load_binary_file, verify_accessible_file,
                                 FileError as RootFileError};
@@ -27,8 +27,8 @@ impl FontGroup {
     pub fn new(path: &Path, scale: f32, color: Vector3<f32>) -> Result<Self, ResourceError> {
         verify_accessible_file(path)?;
         let font_data = load_binary_file(path)?;
-        let collection = FontCollection::from_bytes(font_data);
-        let font = collection.into_font().ok_or(ResourceError::FontError)?;
+        let collection = FontCollection::from_bytes(font_data)?;
+        let font = collection.into_font()?;
 
         Ok(FontGroup {
             path: path.into(),
@@ -150,7 +150,7 @@ impl TextureGroup {
 pub enum ResourceError {
     #[fail(display = "{}", _0)] FileError(#[cause] RootFileError),
     #[fail(display = "{}", _0)] TextureCreationError(#[cause] RootTextureCreationError),
-    #[fail(display = "Could not convert the FontCollection to a single Font.")] FontError,
+    #[fail(display = "{}", _0)] FontError(#[cause] RootFontError),
 }
 
 impl From<RootFileError> for ResourceError {
@@ -162,5 +162,11 @@ impl From<RootFileError> for ResourceError {
 impl From<RootTextureCreationError> for ResourceError {
     fn from(value: RootTextureCreationError) -> Self {
         ResourceError::TextureCreationError(value)
+    }
+}
+
+impl From<RootFontError> for ResourceError {
+    fn from(value: RootFontError) -> Self {
+        ResourceError::FontError(value)
     }
 }

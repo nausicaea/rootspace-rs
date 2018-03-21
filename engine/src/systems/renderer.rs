@@ -5,6 +5,7 @@ use glium;
 use glium::{Display, DrawParameters, Frame, Surface};
 use glium::backend::glutin::DisplayCreationError;
 use glium::glutin::{Api, ContextBuilder, EventsLoop, GlProfile, GlRequest, WindowBuilder};
+use nalgebra::Vector3;
 use ecs::{Assembly, DispatchEvents, LoopStageFlag, SystemTrait};
 use event::{EngineEvent, EngineEventFlag};
 use singletons::Singletons;
@@ -96,7 +97,7 @@ impl Renderer {
         let uniforms = UiUniforms {
             pvm_matrix: *model.matrix(),
             font_cache: &ui_state.font_cache.gpu,
-            font_color: text_color,
+            font_color: Vector3::new(0.0, 0.0, 0.0),
             diff_tex: material.diff_tex.as_ref().map(|dt| dt.borrow()),
             norm_tex: material.norm_tex.as_ref().map(|nt| nt.borrow()),
         };
@@ -241,14 +242,14 @@ impl SystemTrait<EngineEvent, Singletons> for Renderer {
                 let render_mode = entities.borrow_component::<RenderMode>(&node.key).unwrap();
 
                 match render_mode {
-                    &RenderMode::World => self.render_world_entity(&mut target, camera, &node.data, mesh, material, params),
-                    &RenderMode::Ui => self.render_ui_entity(&mut target, ui_state, &node.data, mesh, material, params),
+                    &RenderMode::World => self.render_world_entity(&mut target, camera, &node.data, mesh, material, &self.draw_params),
+                    &RenderMode::Ui => self.render_ui_entity(&mut target, ui_state, &node.data, mesh, material, &self.draw_params),
                 }
             }
         }
 
         // Render the user interface.
-        self.render_user_interface(entities, aux, &mut target, &self.draw_params);
+        // self.render_user_interface(entities, aux, &mut target, &self.draw_params);
 
         target
             .finish()

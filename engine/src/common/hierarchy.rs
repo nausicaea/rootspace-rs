@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::hash::Hash;
-use daggy::{Dag, NodeIndex, Walker};
+use daggy::{Dag, NodeIndex};
 use daggy::petgraph::graph::{DefaultIx, Node};
-use daggy::petgraph::visit::Bfs;
+use daggy::petgraph::visit::{Bfs, Walker};
 
 /// Given a set of identifying keys and corresponding data, `Hierarchy` allows users to establish
 /// hierarchical relationships between individual instances of the data type.
@@ -82,7 +82,7 @@ impl<K: Clone + Default + Eq + Hash, V: Clone + Default> Hierarchy<K, V> {
         let mut bfs = Bfs::new(self.graph.graph(), root_idx);
         while let Some(nidx) = bfs.next(self.graph.graph()) {
             let mut parents = self.graph.parents(nidx);
-            if let Some(parent_idx) = parents.next_node(&self.graph) {
+            if let Some((_, parent_idx)) = parents.walk_next(&self.graph) {
                 let parent_data = self.graph
                     .node_weight(parent_idx)
                     .map(|n| n.data.clone())
