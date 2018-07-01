@@ -1,5 +1,5 @@
 [package]
-name = "rootspace-rs"
+name = "rootspace"
 description = "A game wrapped in uncertainty and mis(t)ery"
 version = "0.1.0"
 authors = ["Eleanore Young"]
